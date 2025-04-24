@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { createTable } from "./schema";
+import { createTable } from "./table-creator";
 import {
   uuid,
   decimal,
@@ -10,9 +10,9 @@ import {
 } from "drizzle-orm/pg-core";
 
 /**
- * Represents personal expenses.
+ * Represents expenses related to product inventory (entries and exits).
  */
-export const personalExpense = createTable("personal_expense", {
+export const productPurchase = createTable("product_purchase", {
   id: uuid("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
@@ -28,5 +28,5 @@ export const personalExpense = createTable("personal_expense", {
   ),
 });
 
-export type PersonalExpense = typeof personalExpense.$inferSelect;
-export type PersonalExpenseInsert = typeof personalExpense.$inferInsert;
+export type ProductPurchase = typeof productPurchase.$inferSelect;
+export type ProductPurchaseInsert = typeof productPurchase.$inferInsert;

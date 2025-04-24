@@ -1,11 +1,11 @@
 import { sql } from "drizzle-orm";
-import { createTable } from "./schema";
+import { createTable } from "./table-creator";
 import { uuid, decimal, date, timestamp } from "drizzle-orm/pg-core";
 
 /**
  * Represents daily cash register entries.
  */
-export const cashRegister = createTable("cash_register", (d) => ({
+export const cashRegister = createTable("cash_register", {
   id: uuid("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
@@ -17,7 +17,7 @@ export const cashRegister = createTable("cash_register", (d) => ({
   updatedAt: timestamp("updatedAt", { withTimezone: true }).$onUpdate(
     () => new Date(),
   ),
-}));
+});
 
 export type CashRegister = typeof cashRegister.$inferSelect;
 export type CashRegisterInsert = typeof cashRegister.$inferInsert;

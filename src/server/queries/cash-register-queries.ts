@@ -1,6 +1,9 @@
 import { db } from "../db";
-import { cashRegister } from "../db/cash-register";
-import type { CashRegister, CashRegisterInsert } from "../db/cash-register";
+import { cashRegister } from "../db/schema/cash-register";
+import type {
+  CashRegister,
+  CashRegisterInsert,
+} from "../db/schema/cash-register";
 import { eq, and, gte, lte, sum } from "drizzle-orm";
 
 // Create a new cash register entry

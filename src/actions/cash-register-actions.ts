@@ -9,7 +9,17 @@ import {
   sumCashRegisterByDateRange,
 } from "@/server/queries/cash-register-queries";
 import { revalidatePath } from "next/cache";
-import type { CashRegisterInsert } from "@/server/db/cash-register";
+import type { CashRegisterInsert } from "@/server/db/schema/cash-register";
+import { z } from "zod";
+
+const cashRegisterInsertSchema = z.object({
+  date: z.date().min(new Date("2024-01-01"), {
+    message: "Data inválida",
+  }),
+  amount: z.number().min(0, {
+    message: "Valor inválido",
+  }),
+});
 
 // Server action to create a cash register entry
 export async function actionCreateCashRegister(data: CashRegisterInsert) {
