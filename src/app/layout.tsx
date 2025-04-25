@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
+import { DatePicker } from "./_components/date-picker";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -19,7 +20,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR" className={`${geist.variable}`}>
-      <body>{children}</body>
+      <body>
+        <main className="mx-auto">{children}</main>
+      </body>
     </html>
   );
 }

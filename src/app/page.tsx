@@ -1,18 +1,14 @@
 import Link from "next/link";
-import { MonthPicker } from "@/app/_components/date-picker";
 import { sumCashRegisterByDateRange } from "@/server/queries/cash-register-queries";
 import { formatCurrency } from "@/lib/utils";
-
-interface SearchParams {
-  from?: string;
-  to?: string;
-  [key: string]: string | string[] | undefined; // Fallback for other dynamic keys
-}
+import AddCashRegister from "./_components/add-cash-register";
+import Header from "./_components/header";
+import { DatePicker } from "./_components/date-picker";
 
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<SearchParams>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
   const from = params.from;
@@ -28,7 +24,8 @@ export default async function HomePage({
 
   return (
     <main className="">
-      <MonthPicker />
+      <DatePicker />
+      <Header />
       <div className="container mx-auto flex max-w-screen-lg flex-col gap-4 p-5 pb-16">
         <div className="flex flex-col gap-4">
           <h5 className="text-xl font-bold">Lucro</h5>
@@ -70,6 +67,7 @@ export default async function HomePage({
             <p className="text-lg font-semibold">R$ 10.000,00</p>
           </Link>
         </div>
+        <AddCashRegister />
       </div>
     </main>
   );

@@ -1,34 +1,35 @@
 ---
 description: Forms, data insertion
-globs: 
+globs:
 alwaysApply: false
 ---
 ### Forms
 - Use zod and server actions when creating forms
+- Add the error/message field on the bottom of each input
 - Follow the nextjs guides:
 ```
 'use server'
- 
+
 import { z } from 'zod'
- 
+
 const schema = z.object({
   email: z.string({
     invalid_type_error: 'Invalid Email',
   }),
 })
- 
+
 export default async function createUser(formData: FormData) {
   const validatedFields = schema.safeParse({
     email: formData.get('email'),
   })
- 
+
   // Return early if the form data is invalid
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
     }
   }
- 
+
   // Mutate data
 }
 ```
@@ -40,17 +41,17 @@ useActionState is a React hook and therefore must be used in a Client Component.
 
 ```
 'use server'
- 
+
 import { redirect } from 'next/navigation'
- 
+
 export async function createUser(prevState: any, formData: FormData) {
   const res = await fetch('https://...')
   const json = await res.json()
- 
+
   if (!res.ok) {
     return { message: 'Please enter a valid email' }
   }
- 
+
   redirect('/dashboard')
 }
 ```
@@ -59,17 +60,17 @@ Then, you can pass your action to the useActionState hook and use the returned s
 
 ```
 'use client'
- 
+
 import { useActionState } from 'react'
 import { createUser } from '@/app/actions'
- 
+
 const initialState = {
   message: '',
 }
- 
+
 export function Signup() {
   const [state, formAction, pending] = useActionState(createUser, initialState)
- 
+
   return (
     <form action={formAction}>
       <label htmlFor="email">Email</label>

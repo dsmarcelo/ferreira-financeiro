@@ -17,17 +17,43 @@ const parseYYYYMM = (dateStr: string | null): Date => {
   return isValid(date) ? date : new Date();
 };
 
-export function MonthPicker() {
+// Key for storing the selected month in localStorage
+const LOCAL_STORAGE_KEY = "selectedMonth";
+
+export function DatePicker() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Get current date from search params or use current date
-  const currentDate = React.useMemo(() => {
+  // Get the initial month: prefer searchParams, fallback to localStorage, then today
+  const getInitialMonth = React.useCallback((): Date => {
     const fromParam = searchParams.get("from");
-    return parseYYYYMM(fromParam);
+    if (fromParam) {
+      // Save to localStorage for persistence
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, fromParam);
+      } catch {}
+      return parseYYYYMM(fromParam);
+    }
+    // Fallback to localStorage if no search param
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (stored) return parseYYYYMM(stored);
+    } catch {}
+    // Default to today
+    return new Date();
   }, [searchParams]);
 
-  // Function to update URL with new date range (first and last day of month)
+  // State for the current date (month)
+  const [currentDate, setCurrentDate] = React.useState<Date>(() =>
+    getInitialMonth(),
+  );
+
+  // Sync state with searchParams/localStorage on mount or when searchParams change
+  React.useEffect(() => {
+    setCurrentDate(getInitialMonth());
+  }, [getInitialMonth]);
+
+  // Function to update URL and localStorage with new date range (first and last day of month)
   const updateDate = (newDate: Date) => {
     const params = new URLSearchParams(searchParams.toString());
     // Get first and last day of the selected month
@@ -35,7 +61,11 @@ export function MonthPicker() {
     const to = format(endOfMonth(newDate), "yyyy-MM-dd");
     params.set("from", from);
     params.set("to", to);
-    router.push(`?${params.toString()}`);
+    // Update localStorage for persistence
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, from);
+    } catch {}
+    router.replace(`?${params.toString()}`);
   };
 
   // Navigate to previous/next month
@@ -46,11 +76,12 @@ export function MonthPicker() {
     } else {
       newDate.setMonth(newDate.getMonth() + 1);
     }
+    setCurrentDate(newDate); // Update local state immediately for UI responsiveness
     updateDate(newDate);
   };
 
   return (
-    <div className="bg-primary-foreground flex h-14 items-center justify-between gap-2 px-5">
+    <div className="flex h-14 items-center justify-between gap-2 px-5">
       <Button variant="ghost" size="icon" onClick={() => navigateMonth("prev")}>
         <ChevronLeft className="h-6 w-6" />
       </Button>

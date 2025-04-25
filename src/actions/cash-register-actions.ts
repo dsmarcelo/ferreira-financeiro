@@ -11,21 +11,51 @@ import {
 import { revalidatePath } from "next/cache";
 import type { CashRegisterInsert } from "@/server/db/schema/cash-register";
 import { z } from "zod";
+import { format } from "date-fns";
 
 const cashRegisterInsertSchema = z.object({
   date: z.date().min(new Date("2024-01-01"), {
     message: "Data inválida",
   }),
-  amount: z.number().min(0, {
+  value: z.number().min(0, {
     message: "Valor inválido",
   }),
 });
 
 // Server action to create a cash register entry
-export async function actionCreateCashRegister(data: CashRegisterInsert) {
-  const result = await createCashRegister(data);
-  revalidatePath("/caixa");
-  return result;
+export async function actionCreateCashRegister(
+  prevState: { message?: string } | undefined,
+  formData: FormData,
+): Promise<{ message: string }> {
+  // Parse form data
+  const dateStr = formData.get("date");
+  // Ensure dateStr is a string before converting
+  const date = typeof dateStr === "string" ? new Date(dateStr) : undefined;
+
+  const valueStr = formData.get("amount"); // 'amount' is the form field, 'value' is the DB field
+  // Ensure valueStr is a string before converting
+  const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
+
+  // Validate using Zod
+  const result = cashRegisterInsertSchema.safeParse({ date, value });
+  if (!result.success) {
+    // Return error messages for useActionState
+    return {
+      message: result.error.errors.map((e) => e.message).join("; "),
+    };
+  }
+
+  try {
+    // Convert date to yyyy-MM-dd string and value to string for DB
+    const dbDate = date ? format(date, "yyyy-MM-dd") : undefined;
+    const dbValue = value !== undefined ? value.toFixed(2) : undefined;
+    await createCashRegister({ date: dbDate!, value: dbValue! });
+    revalidatePath("/caixa");
+    return { message: "Caixa adicionado com sucesso!" };
+  } catch (error) {
+    // Use nullish coalescing for error message
+    return { message: (error as Error)?.message ?? "Erro ao adicionar caixa." };
+  }
 }
 
 // Server action to update a cash register entry
