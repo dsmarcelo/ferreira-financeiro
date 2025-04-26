@@ -81,17 +81,17 @@ export function DatePicker() {
   };
 
   return (
-    <div className="flex h-14 items-center justify-between gap-2 px-5">
-      <Button variant="ghost" size="icon" onClick={() => navigateMonth("prev")}>
+    <div className="flex h-12 items-center justify-between gap-2 px-5">
+      <Button variant="ghost" size="lg" onClick={() => navigateMonth("prev")}>
         <ChevronLeft className="h-6 w-6" />
       </Button>
-      <div className="min-w-[200px] text-center font-medium">
+      <div className="min-w-32 text-center font-medium">
         {format(currentDate, "MMMM yyyy", { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
           format(currentDate, "MMMM yyyy", { locale: ptBR }).slice(1)}
       </div>
-      <Button variant="ghost" size="icon" onClick={() => navigateMonth("next")}>
+      <Button variant="ghost" size="lg" onClick={() => navigateMonth("next")}>
         <ChevronRight className="h-6 w-6" />
       </Button>
     </div>

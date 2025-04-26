@@ -24,7 +24,7 @@ const cashRegisterInsertSchema = z.object({
 
 // Server action to create a cash register entry
 export async function actionCreateCashRegister(
-  prevState: { message?: string } | undefined,
+  _prevState: { message?: string } | undefined,
   formData: FormData,
 ): Promise<{ message: string }> {
   // Parse form data
@@ -60,12 +60,53 @@ export async function actionCreateCashRegister(
 
 // Server action to update a cash register entry
 export async function actionUpdateCashRegister(
-  id: string,
-  data: Partial<CashRegisterInsert>,
-) {
-  const result = await updateCashRegister(id, data);
-  revalidatePath("/caixa");
-  return result;
+  _prevState: { message?: string } | undefined,
+  formData: FormData,
+): Promise<{ message: string }> {
+  // Get the ID from the form data
+  const id = formData.get("id");
+  if (!id || typeof id !== "string") {
+    return { message: "ID inválido" };
+  }
+  console.log("id", id);
+  console.log("formData", formData);
+  // Parse form data (same as create)
+  const dateStr = formData.get("date");
+  const date = typeof dateStr === "string" ? new Date(dateStr) : undefined;
+
+  const valueStr = formData.get("amount"); // 'amount' is the form field, 'value' is the DB field
+  const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
+
+  // Validate using Zod (same schema as create)
+  const result = cashRegisterInsertSchema.safeParse({ date, value });
+  if (!result.success) {
+    return {
+      message: result.error.errors.map((e) => e.message).join("; "),
+    };
+  }
+
+  try {
+    // Convert date to yyyy-MM-dd string and value to string for DB
+    const dbDate = date ? format(date, "yyyy-MM-dd") : undefined;
+    const dbValue = value !== undefined ? value.toFixed(2) : undefined;
+
+    // Update the record
+    const updated = await updateCashRegister(id, {
+      date: dbDate!,
+      value: dbValue!,
+    });
+
+    if (!updated) {
+      return { message: "Registro não encontrado" };
+    }
+
+    revalidatePath("/caixa");
+    return { message: "Caixa atualizado com sucesso!" };
+  } catch (error) {
+    return {
+      message: (error as Error)?.message ?? "Erro ao atualizar caixa.",
+    };
+  }
 }
 
 // Server action to delete a cash register entry

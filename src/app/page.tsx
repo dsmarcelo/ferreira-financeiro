@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { sumCashRegisterByDateRange } from "@/server/queries/cash-register-queries";
 import { formatCurrency } from "@/lib/utils";
-import AddCashRegister from "./_components/add-cash-register";
+import AddCashRegister from "./_components/dialogs/add-cash-register";
 import Header from "./_components/header";
 import { DatePicker } from "./_components/date-picker";
 
