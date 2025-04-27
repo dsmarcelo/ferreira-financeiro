@@ -1,6 +1,9 @@
 import { db } from "../db";
-import { storeExpense } from "../db/store-expense";
-import type { StoreExpense, StoreExpenseInsert } from "../db/store-expense";
+import { storeExpense } from "@/server/db/schema/store-expense";
+import type {
+  StoreExpense,
+  StoreExpenseInsert,
+} from "@/server/db/schema/store-expense";
 import { eq, and, gte, lte, sum } from "drizzle-orm";
 
 // Create a new store expense entry

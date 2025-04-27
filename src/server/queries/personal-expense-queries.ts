@@ -1,9 +1,9 @@
-import { db } from "../db";
-import { personalExpense } from "../db/personal-expense";
+import { db } from "@/server/db";
+import { personalExpense } from "@/server/db/schema/personal-expense";
 import type {
   PersonalExpense,
   PersonalExpenseInsert,
-} from "../db/personal-expense";
+} from "@/server/db/schema/personal-expense";
 import { eq, and, gte, lte, sum } from "drizzle-orm";
 
 // Create a new personal expense entry

@@ -4,6 +4,9 @@ import { formatCurrency } from "@/lib/utils";
 import AddCashRegister from "./_components/dialogs/add-cash-register";
 import Header from "./_components/header";
 import { DatePicker } from "./_components/date-picker";
+import { sumPersonalExpenseByDateRange } from "@/server/queries/personal-expense-queries";
+import { sumStoreExpenseByDateRange } from "@/server/queries/store-expense-queries";
+import { sumProductPurchaseByDateRange } from "@/server/queries/product-purchase-queries";
 
 export default async function HomePage({
   searchParams,
@@ -18,8 +21,14 @@ export default async function HomePage({
   //   return <div>Link inválido, reinicie a página</div>;
   // }
   let cashRegister = 0;
+  let personalExpenses = 0;
+  let storeExpenses = 0;
+  let productPurchases = 0;
   if (from && to) {
     cashRegister = await sumCashRegisterByDateRange(from, to);
+    personalExpenses = await sumPersonalExpenseByDateRange(from, to);
+    storeExpenses = await sumStoreExpenseByDateRange(from, to);
+    productPurchases = await sumProductPurchaseByDateRange(from, to);
   }
 
   return (
@@ -45,26 +54,32 @@ export default async function HomePage({
           </Link>
           <div className="grid grid-cols-2 gap-4">
             <Link
-              href="/caixa"
+              href="/despesas-pessoais"
               className="bg-background-secondary flex flex-wrap items-center justify-between gap-2 rounded-lg p-4 py-3"
             >
               <p className="text-sm md:text-base">Despesas pessoais</p>
-              <p className="text-lg font-semibold">R$ 10.000,00</p>
+              <p className="text-lg font-semibold">
+                {formatCurrency(personalExpenses)}
+              </p>
             </Link>
             <Link
-              href="/despesas-da-loja"
+              href="/despesas-loja"
               className="bg-background-secondary flex flex-wrap items-center justify-between gap-2 rounded-lg p-4 py-3"
             >
               <p className="text-sm md:text-base">Despesas da Loja</p>
-              <p className="text-lg font-semibold">R$ 10.000,00</p>
+              <p className="text-lg font-semibold">
+                {formatCurrency(storeExpenses)}
+              </p>
             </Link>
           </div>
           <Link
-            href="/despesas-de-produtos"
+            href="/compras-produtos"
             className="bg-background-secondary flex flex-wrap items-center justify-between gap-2 rounded-lg p-4 py-3"
           >
             <p className="text-sm md:text-base">Despesas de Produtos</p>
-            <p className="text-lg font-semibold">R$ 10.000,00</p>
+            <p className="text-lg font-semibold">
+              {formatCurrency(productPurchases)}
+            </p>
           </Link>
         </div>
         <AddCashRegister />

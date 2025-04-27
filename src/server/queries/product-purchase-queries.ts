@@ -1,9 +1,9 @@
-import { db } from "../db";
-import { productPurchase } from "../db/product-purchase";
+import { db } from "@/server/db";
+import { productPurchase } from "@/server/db/schema/product-purchase";
 import type {
   ProductPurchase,
   ProductPurchaseInsert,
-} from "../db/product-purchase";
+} from "@/server/db/schema/product-purchase";
 import { eq, and, gte, lte, sum } from "drizzle-orm";
 
 // Create a new product purchase entry
