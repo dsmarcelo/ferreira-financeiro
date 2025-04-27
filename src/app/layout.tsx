@@ -2,7 +2,7 @@ import "@/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
-import { DatePicker } from "./_components/date-picker";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -22,6 +22,7 @@ export default function RootLayout({
     <html lang="pt-BR" className={`${geist.variable}`}>
       <body>
         <main className="mx-auto">{children}</main>
+        <Toaster richColors />
       </body>
     </html>
   );

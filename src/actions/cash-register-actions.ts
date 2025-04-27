@@ -11,99 +11,97 @@ import {
 import { revalidatePath } from "next/cache";
 import type { CashRegisterInsert } from "@/server/db/schema/cash-register";
 import { z } from "zod";
-import { format } from "date-fns";
 
 const cashRegisterInsertSchema = z.object({
-  date: z.date().min(new Date("2024-01-01"), {
-    message: "Data inválida",
-  }),
-  value: z.number().min(0, {
-    message: "Valor inválido",
-  }),
+  date: z
+    .string()
+    .refine(
+      (val) =>
+        /^\d{4}-\d{2}-\d{2}$/.test(val) &&
+        new Date(val + "T00:00:00") >= new Date("2024-01-01T00:00:00"),
+      { message: "Data inválida" },
+    ),
+  value: z.number().min(0, { message: "Valor inválido" }),
 });
+
+// Define a common ActionResponse interface for form actions
+
+export interface ActionResponse {
+  success: boolean;
+  message: string;
+  errors?: {
+    [K in keyof CashRegisterInsert]?: string[];
+  };
+}
 
 // Server action to create a cash register entry
 export async function actionCreateCashRegister(
-  _prevState: { message?: string } | undefined,
+  _prevState: ActionResponse | undefined,
   formData: FormData,
-): Promise<{ message: string }> {
+): Promise<ActionResponse> {
   // Parse form data
-  const dateStr = formData.get("date");
-  // Ensure dateStr is a string before converting
-  const date = typeof dateStr === "string" ? new Date(dateStr) : undefined;
-
-  const valueStr = formData.get("amount"); // 'amount' is the form field, 'value' is the DB field
-  // Ensure valueStr is a string before converting
+  const date = formData.get("date");
+  const valueStr = formData.get("amount");
   const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
 
-  // Validate using Zod
+  // Validate using Zod, passing raw values
   const result = cashRegisterInsertSchema.safeParse({ date, value });
   if (!result.success) {
-    // Return error messages for useActionState
+    // Return field-level errors and a general message
     return {
-      message: result.error.errors.map((e) => e.message).join("; "),
+      success: false,
+      message: "Por favor, corrija os erros no formulário.",
+      errors: result.error.flatten().fieldErrors,
     };
   }
 
   try {
-    // Convert date to yyyy-MM-dd string and value to string for DB
-    const dbDate = date ? format(date, "yyyy-MM-dd") : undefined;
+    // Format value for DB (always as string with 2 decimals)
     const dbValue = value !== undefined ? value.toFixed(2) : undefined;
-    await createCashRegister({ date: dbDate!, value: dbValue! });
+    await createCashRegister({ date: date as string, value: dbValue! });
     revalidatePath("/caixa");
-    return { message: "Caixa adicionado com sucesso!" };
+    return { success: true, message: "Caixa adicionado com sucesso!" };
   } catch (error) {
-    // Use nullish coalescing for error message
-    return { message: (error as Error)?.message ?? "Erro ao adicionar caixa." };
+    return {
+      success: false,
+      message: (error as Error)?.message ?? "Erro ao adicionar caixa.",
+    };
   }
 }
 
 // Server action to update a cash register entry
 export async function actionUpdateCashRegister(
-  _prevState: { message?: string } | undefined,
+  _prevState: ActionResponse | undefined,
   formData: FormData,
-): Promise<{ message: string }> {
-  // Get the ID from the form data
+): Promise<ActionResponse> {
   const id = formData.get("id");
   if (!id || typeof id !== "string") {
-    return { message: "ID inválido" };
+    return { success: false, message: "ID inválido" };
   }
-  console.log("id", id);
-  console.log("formData", formData);
-  // Parse form data (same as create)
-  const dateStr = formData.get("date");
-  const date = typeof dateStr === "string" ? new Date(dateStr) : undefined;
-
-  const valueStr = formData.get("amount"); // 'amount' is the form field, 'value' is the DB field
+  const date = formData.get("date");
+  const valueStr = formData.get("amount");
   const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
 
-  // Validate using Zod (same schema as create)
+  // Validate using Zod, passing raw values
   const result = cashRegisterInsertSchema.safeParse({ date, value });
   if (!result.success) {
     return {
-      message: result.error.errors.map((e) => e.message).join("; "),
+      success: false,
+      message: "Por favor, corrija os erros no formulário.",
+      errors: result.error.flatten().fieldErrors,
     };
   }
 
   try {
-    // Convert date to yyyy-MM-dd string and value to string for DB
-    const dbDate = date ? format(date, "yyyy-MM-dd") : undefined;
-    const dbValue = value !== undefined ? value.toFixed(2) : undefined;
-
-    // Update the record
-    const updated = await updateCashRegister(id, {
-      date: dbDate!,
-      value: dbValue!,
+    await updateCashRegister(id, {
+      date: date as string,
+      value: value!.toFixed(2),
     });
-
-    if (!updated) {
-      return { message: "Registro não encontrado" };
-    }
-
     revalidatePath("/caixa");
-    return { message: "Caixa atualizado com sucesso!" };
+    return { success: true, message: "Caixa atualizado com sucesso!" };
   } catch (error) {
     return {
+      success: false,
       message: (error as Error)?.message ?? "Erro ao atualizar caixa.",
     };
   }

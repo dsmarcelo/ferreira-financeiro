@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useEffect } from "react";
 import { actionCreateCashRegister } from "@/actions/cash-register-actions";
 import {
   Dialog,
@@ -13,35 +13,44 @@ import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const initialState = {
+  success: null as boolean | null,
   message: "",
-  amount: undefined,
-  date: new Date().toISOString().split("T")[0],
 };
 
 export default function AddCashRegister({ className }: { className?: string }) {
-  // useActionState returns [state, formAction, pending]
+  const [isOpen, setIsOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
     actionCreateCashRegister,
     initialState,
   );
 
-  // Get today's date in YYYY-MM-DD format
-  const today = new Date().toISOString().split("T")[0];
+  // Handle success/error toasts and dialog state
+  useEffect(() => {
+    if (state.success === true) {
+      toast.success(state.message);
+      setIsOpen(false);
+    } else if (state.success === false) {
+      toast.error(state.message);
+    }
+  }, [state]);
 
-  // Helper: Parse error messages for each field
-  const errorMessages = (state?.message || "").split("; ").filter(Boolean);
+  // Parse error messages
+  const errorMessages = (state?.message ?? "").split("; ").filter(Boolean);
   const dateError = errorMessages.find((msg) =>
     msg.toLowerCase().includes("data"),
   );
   const amountError = errorMessages.find((msg) =>
     msg.toLowerCase().includes("valor"),
   );
-  const isSuccess = state?.message === "Caixa adicionado com sucesso!";
+
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split("T")[0];
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button className={cn("rounded-full", className)}>
           Adicionar Caixa
@@ -51,7 +60,11 @@ export default function AddCashRegister({ className }: { className?: string }) {
         <DialogHeader>
           <DialogTitle>Adicionar Caixa</DialogTitle>
         </DialogHeader>
-        <form action={formAction} className="space-y-4">
+        <form
+          key={isOpen ? "open" : "closed"}
+          action={formAction}
+          className="space-y-4"
+        >
           <div>
             <label htmlFor="date">Data</label>
             <Input
@@ -62,7 +75,6 @@ export default function AddCashRegister({ className }: { className?: string }) {
               required
               defaultValue={today}
             />
-            {/* Show error below the date input if present */}
             {dateError && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
                 {dateError}
@@ -78,24 +90,12 @@ export default function AddCashRegister({ className }: { className?: string }) {
               min={0}
               required
             />
-            {/* Show error below the amount input if present */}
             {amountError && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
                 {amountError}
               </p>
             )}
           </div>
-          {/* Show success or general error message */}
-          {state?.message && isSuccess && (
-            <p className="font-medium text-green-600" aria-live="polite">
-              {state.message}
-            </p>
-          )}
-          {state?.message && !isSuccess && !dateError && !amountError && (
-            <p className="text-red-500" aria-live="polite">
-              {state.message}
-            </p>
-          )}
           <button
             type="submit"
             disabled={pending}

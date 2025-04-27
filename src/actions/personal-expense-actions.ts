@@ -9,7 +9,7 @@ import {
   sumPersonalExpenseByDateRange,
 } from "@/server/queries/personal-expense-queries";
 import { revalidatePath } from "next/cache";
-import type { PersonalExpenseInsert } from "@/server/db/personal-expense";
+import type { PersonalExpenseInsert } from "@/server/db/schema/personal-expense";
 
 // Server action to create a personal expense entry
 export async function actionCreatePersonalExpense(data: PersonalExpenseInsert) {

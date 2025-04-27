@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect } from "react";
 import {
   actionDeleteCashRegister,
   actionUpdateCashRegister,
@@ -17,16 +17,16 @@ import CurrencyInput from "@/components/inputs/currency-input";
 import type { CashRegister } from "@/server/db/schema/cash-register";
 import { Button } from "@/components/ui/button";
 import { DeleteDialog } from "./delete-dialog";
+import { toast } from "sonner";
 
-// Props: id (string), date (YYYY-MM-DD), amount (number), className (optional)
 interface EditCashRegisterProps {
   data: CashRegister;
   className?: string;
   children: React.ReactNode;
 }
 
-// Initial state for useActionState
 const initialState = {
+  success: null as boolean | null,
   message: "",
 };
 
@@ -40,7 +40,17 @@ export default function EditCashRegister({
     initialState,
   );
 
-  // Parse error messages for each field
+  // Handle success/error toasts and dialog state
+  useEffect(() => {
+    if (state.success === true) {
+      toast.success(state.message);
+      setIsOpen(false);
+    } else if (state.success === false) {
+      toast.error(state.message);
+    }
+  }, [state]);
+
+  // Parse error messages
   const errorMessages = (state?.message ?? "").split("; ").filter(Boolean);
   const dateError = errorMessages.find((msg) =>
     msg.toLowerCase().includes("data"),
@@ -48,12 +58,6 @@ export default function EditCashRegister({
   const amountError = errorMessages.find((msg) =>
     msg.toLowerCase().includes("valor"),
   );
-  const isSuccess = state?.message === "Caixa atualizado com sucesso!";
-
-  // Close dialog on success
-  if (isSuccess) {
-    setIsOpen(false);
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -62,8 +66,11 @@ export default function EditCashRegister({
         <DialogHeader>
           <DialogTitle>Editar Caixa</DialogTitle>
         </DialogHeader>
-        <form action={formAction} className="space-y-4">
-          {/* Hidden input for ID */}
+        <form
+          key={isOpen ? "open" : "closed"} // This resets the form state
+          action={formAction}
+          className="space-y-4"
+        >
           <input type="hidden" name="id" value={data.id} />
           <div>
             <label htmlFor="date">Data</label>
@@ -75,7 +82,6 @@ export default function EditCashRegister({
               required
               defaultValue={data.date}
             />
-            {/* Show error below the date input if present */}
             {dateError && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
                 {dateError}
@@ -92,24 +98,12 @@ export default function EditCashRegister({
               required
               initialValue={Number(data.value)}
             />
-            {/* Show error below the amount input if present */}
             {amountError && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
                 {amountError}
               </p>
             )}
           </div>
-          {/* Show success or general error message */}
-          {state?.message && isSuccess && (
-            <p className="font-medium text-green-600" aria-live="polite">
-              {state.message}
-            </p>
-          )}
-          {state?.message && !isSuccess && !dateError && !amountError && (
-            <p className="text-red-500" aria-live="polite">
-              {state.message}
-            </p>
-          )}
           <div className="flex justify-between gap-2">
             <DeleteDialog
               onConfirm={() => {
