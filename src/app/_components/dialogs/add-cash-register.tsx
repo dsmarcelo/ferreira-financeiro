@@ -24,8 +24,18 @@ const initialState: ActionResponse = {
   message: "",
 };
 
-export default function AddCashRegister({ className }: { className?: string }) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function AddCashRegister({
+  className,
+  defaultDate,
+  initialOpen = false,
+  onOpenChange,
+}: {
+  className?: string;
+  defaultDate?: string;
+  initialOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(initialOpen);
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionCreateCashRegister,
     initialState,
@@ -44,11 +54,26 @@ export default function AddCashRegister({ className }: { className?: string }) {
   // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
 
-  // Get today's date in YYYY-MM-DD format
-  const today = new Date().toISOString().split("T")[0];
+  // Get today's date or use provided default date
+  const today = defaultDate ?? new Date().toISOString().split("T")[0];
+
+  // Open dialog programmatically when initialOpen changes to true
+  useEffect(() => {
+    if (initialOpen) {
+      setIsOpen(true);
+    }
+  }, [initialOpen]);
+
+  // Modified setter to notify parent
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (onOpenChange) {
+      onOpenChange(open);
+    }
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className={cn("rounded-full", className)}>
           Adicionar Caixa

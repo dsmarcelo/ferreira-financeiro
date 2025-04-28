@@ -76,6 +76,10 @@ export function DateRangePicker() {
     } catch {}
     console.log(params.toString());
     router.replace(`?${params.toString()}`);
+    // Refresh server components so the calendar will re-render with new data
+    try {
+      router.refresh();
+    } catch {}
   };
 
   // Navigate to previous/next month

@@ -4,6 +4,13 @@ import EditCashRegister from "../dialogs/edit-cash-register";
 import { formatCurrency } from "@/lib/utils";
 import type { CashRegister } from "@/server/db/schema/cash-register";
 import { use } from "react";
+import CashRegisterCalendar from "../calendar/cash-register-calendar";
+
+interface CashRegisterListProps {
+  cashRegisters: Promise<CashRegister[]>;
+  year: number;
+  month: number;
+}
 
 /**
  * Renders a list of cash register entries.
@@ -11,26 +18,31 @@ import { use } from "react";
  */
 export default function CashRegisterList({
   cashRegisters,
-}: {
-  cashRegisters: Promise<CashRegister[]>;
-}) {
+  year,
+  month,
+}: CashRegisterListProps) {
   // Resolve the promise to get the data array
   const allCashRegisters = use(cashRegisters);
 
+  // return (
+  //   <div className="mx-auto w-full divide-y overflow-y-auto">
+  //     {allCashRegisters.map((cashRegister) => (
+  //       <EditCashRegister data={cashRegister} key={cashRegister.id}>
+  //         <div className="active:bg-accent flex cursor-pointer justify-between gap-4 py-2">
+  //           <p>
+  //             {format(parseISO(cashRegister.date), "dd MMM", {
+  //               locale: ptBR,
+  //             }).toUpperCase()}
+  //           </p>
+  //           <p>{formatCurrency(cashRegister.value)}</p>
+  //         </div>
+  //       </EditCashRegister>
+  //     ))}
+  //   </div>
+  // );
   return (
-    <div className="mx-auto w-full divide-y overflow-y-auto">
-      {allCashRegisters.map((cashRegister) => (
-        <EditCashRegister data={cashRegister} key={cashRegister.id}>
-          <div className="active:bg-accent flex cursor-pointer justify-between gap-4 py-2">
-            <p>
-              {format(parseISO(cashRegister.date), "dd MMM", {
-                locale: ptBR,
-              }).toUpperCase()}
-            </p>
-            <p>{formatCurrency(cashRegister.value)}</p>
-          </div>
-        </EditCashRegister>
-      ))}
+    <div className="">
+      <CashRegisterCalendar year={year} month={month} />
     </div>
   );
 }

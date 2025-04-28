@@ -34,8 +34,13 @@ const initialState: ActionResponse = {
 export default function EditCashRegister({
   data,
   children,
-}: EditCashRegisterProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  initialOpen = false,
+  onOpenChange,
+}: EditCashRegisterProps & {
+  initialOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(initialOpen);
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionUpdateCashRegister,
     initialState,
@@ -51,11 +56,26 @@ export default function EditCashRegister({
     }
   }, [state]);
 
+  // Add effect to open dialog when initialOpen changes to true
+  useEffect(() => {
+    if (initialOpen) {
+      setIsOpen(true);
+    }
+  }, [initialOpen]);
+
   // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
 
+  // Modified setter to notify parent
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (onOpenChange) {
+      onOpenChange(open);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>

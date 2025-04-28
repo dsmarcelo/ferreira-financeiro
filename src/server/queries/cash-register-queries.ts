@@ -4,7 +4,7 @@ import type {
   CashRegister,
   CashRegisterInsert,
 } from "../db/schema/cash-register";
-import { eq, and, gte, lte, sum } from "drizzle-orm";
+import { eq, and, gte, lte, sum, asc } from "drizzle-orm";
 
 // Create a new cash register entry
 export async function createCashRegister(
@@ -60,9 +60,10 @@ export async function listCashRegisters(
       .from(cashRegister)
       .where(
         and(gte(cashRegister.date, startDate), lte(cashRegister.date, endDate)),
-      );
+      )
+      .orderBy(asc(cashRegister.date));
   }
-  return db.select().from(cashRegister);
+  return db.select().from(cashRegister).orderBy(asc(cashRegister.date));
 }
 
 // Get the sum of values in a date range
