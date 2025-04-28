@@ -20,6 +20,7 @@ import type { PersonalExpense } from "@/server/db/schema/personal-expense";
 import { Button } from "@/components/ui/button";
 import { DeleteDialog } from "./delete-dialog";
 import { toast } from "sonner";
+import { DatePicker } from "@/components/inputs/date-picker";
 
 interface EditPersonalExpenseProps {
   data: PersonalExpense;
@@ -44,14 +45,13 @@ export default function EditPersonalExpense({
 
   // Handle success/error toasts and dialog state
   useEffect(() => {
-    if (!isOpen) return;
     if (state.success === true && state.message) {
       toast.success(state.message);
       setIsOpen(false);
     } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
-  }, [state, isOpen]);
+  }, [state]);
 
   // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
@@ -72,10 +72,8 @@ export default function EditPersonalExpense({
           <input type="hidden" name="id" value={data.id} />
           <div>
             <label htmlFor="date">Data</label>
-            <Input
-              type="date"
+            <DatePicker
               id="date"
-              lang="pt-BR"
               name="date"
               required
               defaultValue={data.date}

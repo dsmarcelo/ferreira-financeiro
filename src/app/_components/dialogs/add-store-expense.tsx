@@ -18,6 +18,7 @@ import CurrencyInput from "@/components/inputs/currency-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { DatePicker } from "@/components/inputs/date-picker";
 
 // Initial state for the form
 const initialState: ActionResponse = {
@@ -35,14 +36,13 @@ export default function AddStoreExpense({ className }: { className?: string }) {
 
   // Handle success/error toasts and dialog state
   useEffect(() => {
-    if (!isOpen) return;
     if (state.success === true && state.message) {
       toast.success(state.message);
       setIsOpen(false);
     } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
-  }, [state, isOpen]);
+  }, [state]);
 
   // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
@@ -69,14 +69,7 @@ export default function AddStoreExpense({ className }: { className?: string }) {
         >
           <div>
             <label htmlFor="date">Data</label>
-            <Input
-              type="date"
-              id="date"
-              lang="pt-BR"
-              name="date"
-              required
-              defaultValue={today}
-            />
+            <DatePicker id="date" name="date" required defaultValue={today} />
             {errors.date && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
                 {errors.date[0]}
@@ -109,7 +102,7 @@ export default function AddStoreExpense({ className }: { className?: string }) {
           </div>
           <div>
             <label htmlFor="dueDate">Vencimento (opcional)</label>
-            <Input type="date" id="dueDate" name="dueDate" />
+            <DatePicker id="dueDate" name="dueDate" />
             {errors.dueDate && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
                 {errors.dueDate[0]}

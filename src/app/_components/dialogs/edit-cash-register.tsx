@@ -43,14 +43,13 @@ export default function EditCashRegister({
 
   // Handle success/error toasts and dialog state
   useEffect(() => {
-    if (!isOpen) return;
     if (state.success === true && state.message) {
       toast.success(state.message);
       setIsOpen(false);
     } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
-  }, [state, isOpen]);
+  }, [state]);
 
   // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};

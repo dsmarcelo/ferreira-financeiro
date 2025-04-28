@@ -20,6 +20,7 @@ import type { ProductPurchase } from "@/server/db/schema/product-purchase";
 import { Button } from "@/components/ui/button";
 import { DeleteDialog } from "./delete-dialog";
 import { toast } from "sonner";
+import { DatePicker } from "@/components/inputs/date-picker";
 
 interface EditProductPurchaseProps {
   data: ProductPurchase;
@@ -43,14 +44,13 @@ export default function EditProductPurchase({
   );
 
   useEffect(() => {
-    if (!isOpen) return;
     if (state.success === true && state.message) {
       toast.success(state.message);
       setIsOpen(false);
     } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
-  }, [state, isOpen]);
+  }, [state]);
 
   const errors = state?.errors ?? {};
 
@@ -70,10 +70,8 @@ export default function EditProductPurchase({
           <input type="hidden" name="id" value={data.id} />
           <div>
             <label htmlFor="date">Data</label>
-            <Input
-              type="date"
+            <DatePicker
               id="date"
-              lang="pt-BR"
               name="date"
               required
               defaultValue={data.date}
