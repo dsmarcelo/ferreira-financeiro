@@ -3,7 +3,7 @@ import { listStoreExpenses } from "@/server/queries/store-expense-queries";
 import { format, parseISO } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
 import Header from "../_components/header";
-import { DatePicker } from "@/app/_components/date-picker";
+import { DateRangePicker } from "@/app/_components/date-picker";
 import { ptBR } from "date-fns/locale";
 import EditStoreExpense from "@/app/_components/dialogs/edit-store-expense";
 import type { StoreExpense } from "@/server/db/schema/store-expense";
@@ -24,7 +24,7 @@ export default async function DespesasLojaPage({
           </div>
           <div className="sm:hidden"></div>
         </Header>
-        <DatePicker />
+        <DateRangePicker />
       </div>
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5">
         <div className="mx-auto w-full divide-y">

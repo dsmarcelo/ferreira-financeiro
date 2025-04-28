@@ -12,6 +12,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
@@ -34,7 +35,6 @@ const initialState: ActionResponse = {
 export default function EditProductPurchase({
   data,
   children,
-  className,
 }: EditProductPurchaseProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
@@ -43,13 +43,14 @@ export default function EditProductPurchase({
   );
 
   useEffect(() => {
-    if (state.success === true) {
+    if (!isOpen) return;
+    if (state.success === true && state.message) {
       toast.success(state.message);
       setIsOpen(false);
-    } else if (state.success === false) {
+    } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
-  }, [state]);
+  }, [state, isOpen]);
 
   const errors = state?.errors ?? {};
 
@@ -59,6 +60,7 @@ export default function EditProductPurchase({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Editar Despesa de Produto</DialogTitle>
+          <DialogDescription aria-hidden="true"></DialogDescription>
         </DialogHeader>
         <form
           key={isOpen ? "open" : "closed"}

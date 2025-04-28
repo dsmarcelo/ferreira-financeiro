@@ -12,6 +12,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
@@ -43,13 +44,14 @@ export default function EditPersonalExpense({
 
   // Handle success/error toasts and dialog state
   useEffect(() => {
-    if (state.success === true) {
+    if (!isOpen) return;
+    if (state.success === true && state.message) {
       toast.success(state.message);
       setIsOpen(false);
-    } else if (state.success === false) {
+    } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
-  }, [state]);
+  }, [state, isOpen]);
 
   // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
@@ -60,6 +62,7 @@ export default function EditPersonalExpense({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Editar Despesa Pessoal</DialogTitle>
+          <DialogDescription aria-hidden="true"></DialogDescription>
         </DialogHeader>
         <form
           key={isOpen ? "open" : "closed"}

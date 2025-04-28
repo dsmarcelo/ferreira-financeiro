@@ -3,7 +3,7 @@ import { sumCashRegisterByDateRange } from "@/server/queries/cash-register-queri
 import { formatCurrency } from "@/lib/utils";
 import AddCashRegister from "./_components/dialogs/add-cash-register";
 import Header from "./_components/header";
-import { DatePicker } from "./_components/date-picker";
+import { DateRangePicker } from "./_components/date-picker";
 import { sumPersonalExpenseByDateRange } from "@/server/queries/personal-expense-queries";
 import { sumStoreExpenseByDateRange } from "@/server/queries/store-expense-queries";
 import { sumProductPurchaseByDateRange } from "@/server/queries/product-purchase-queries";
@@ -33,7 +33,7 @@ export default async function HomePage({
 
   return (
     <main className="">
-      <DatePicker />
+      <DateRangePicker />
       <Header />
       <div className="container mx-auto flex max-w-screen-lg flex-col gap-4 p-5 pb-16">
         <div className="flex flex-col gap-4">

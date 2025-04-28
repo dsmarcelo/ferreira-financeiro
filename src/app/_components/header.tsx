@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { DatePicker } from "./date-picker";
+import { DateRangePicker } from "./date-picker";
 import { cn } from "@/lib/utils";
 export default function Header({
   children,
@@ -18,19 +18,19 @@ export default function Header({
   return (
     <header
       className={cn(
-        "bg-background-secondary flex h-12 w-full items-center justify-center",
+        "bg-background flex h-14 w-full items-center justify-center border-b md:h-16",
         className,
       )}
     >
       <div className="mx-auto flex w-full max-w-screen-lg items-center justify-between gap-4">
         {showBackButton && (
-          <Button variant="ghost" onClick={() => router.back()}>
+          <Button size="lg" variant="ghost" onClick={() => router.back()}>
             <ArrowLeft />
             Voltar
           </Button>
         )}
         <div className="hidden sm:block">
-          <DatePicker />
+          <DateRangePicker />
         </div>
         {children}
       </div>

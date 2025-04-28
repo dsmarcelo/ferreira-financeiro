@@ -12,14 +12,14 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
 import type { CashRegister } from "@/server/db/schema/cash-register";
 import { Button } from "@/components/ui/button";
 import { DeleteDialog } from "./delete-dialog";
 import { toast } from "sonner";
-
+import { DatePicker } from "@/components/inputs/date-picker";
 interface EditCashRegisterProps {
   data: CashRegister;
   className?: string;
@@ -43,13 +43,14 @@ export default function EditCashRegister({
 
   // Handle success/error toasts and dialog state
   useEffect(() => {
-    if (state.success === true) {
+    if (!isOpen) return;
+    if (state.success === true && state.message) {
       toast.success(state.message);
       setIsOpen(false);
-    } else if (state.success === false) {
+    } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
-  }, [state]);
+  }, [state, isOpen]);
 
   // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
@@ -60,6 +61,7 @@ export default function EditCashRegister({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Editar Caixa</DialogTitle>
+          <DialogDescription aria-hidden="true"></DialogDescription>
         </DialogHeader>
         <form
           key={isOpen ? "open" : "closed"} // This resets the form state
@@ -69,10 +71,8 @@ export default function EditCashRegister({
           <input type="hidden" name="id" value={data.id} />
           <div>
             <label htmlFor="date">Data</label>
-            <Input
-              type="date"
+            <DatePicker
               id="date"
-              lang="pt-BR"
               name="date"
               required
               defaultValue={data.date}

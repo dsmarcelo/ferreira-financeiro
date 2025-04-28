@@ -3,7 +3,7 @@ import { listPersonalExpenses } from "@/server/queries/personal-expense-queries"
 import { format, parseISO } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
 import Header from "../_components/header";
-import { DatePicker } from "@/app/_components/date-picker";
+import { DateRangePicker } from "@/app/_components/date-picker";
 import { ptBR } from "date-fns/locale";
 import EditPersonalExpense from "@/app/_components/dialogs/edit-personal-expense";
 import type { PersonalExpense } from "@/server/db/schema/personal-expense";
@@ -24,7 +24,7 @@ export default async function DespesasPessoaisPage({
           </div>
           <div className="sm:hidden"></div>
         </Header>
-        <DatePicker />
+        <DateRangePicker />
       </div>
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5">
         <div className="mx-auto w-full divide-y">

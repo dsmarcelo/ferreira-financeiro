@@ -20,7 +20,7 @@ const parseYYYYMM = (dateStr: string | null): Date => {
 // Key for storing the selected month in localStorage
 const LOCAL_STORAGE_KEY = "selectedMonth";
 
-export function DatePicker() {
+export function DateRangePicker() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
