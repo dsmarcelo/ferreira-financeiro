@@ -1,16 +1,16 @@
 ---
-description: 
+description:
 globs: *.tsx
 alwaysApply: false
 ---
 ---
-description: 
+description:
 globs: *.tsx
 alwaysApply: false
 ---
 ---
 description: Nextjs
-globs: 
+globs:
 ---
 You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, Radix UI and Tailwind.
 
@@ -74,7 +74,7 @@ FORMS
 - Minimize client-side state
 
 ### Async Request APIs
-```typescript
+```tsx
 // Always use async versions of runtime APIs
 const cookieStore = await cookies()
 const headersList = await headers()
@@ -97,7 +97,7 @@ const searchParams = await props.searchParams
 - Use queries and server actions, remember to revalidade the path when necessary
 
 ### Route Handlers
-```typescript
+```tsx
 // Cached route handler example
 export const dynamic = 'force-static'
 
@@ -107,18 +107,18 @@ export async function GET(request: Request) {
 }
 ```
 - Ensure that calls to useSearchParams() are wrapped in a Suspense boundary.
-```
+```tsx
 'use client'
- 
+
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
- 
+
 function Search() {
   const searchParams = useSearchParams()
- 
+
   return <input placeholder="Search..." />
 }
- 
+
 export function Searchbar() {
   return (
     // You could have a loading skeleton as the `fallback` too
@@ -132,7 +132,7 @@ export function Searchbar() {
 ## Passing additional arguments to server actions
 You can pass additional arguments to a Server Action using the JavaScript bind method.
 app/client-component.tsx
-```typescript
+```tsx
 
 'use client'
 
@@ -149,7 +149,7 @@ export function UserProfile({ userId }: { userId: string }) {
   )
 }
 ```
-```typescript
+```
 The Server Action will receive the userId argument, in addition to the form data:
 app/actions.ts
 TypeScript

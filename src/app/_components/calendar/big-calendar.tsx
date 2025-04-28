@@ -1,8 +1,8 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 
 // Format date as YYYY-MM-DD
-function formatDate(date: Date): string {
+export function formatDate(date: Date): string {
   try {
     const isoDate = date.toISOString();
     return String(isoDate.split("T")[0]);
@@ -57,6 +57,7 @@ const WEEK_DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 export interface CalendarDayData {
   label?: string;
   onClick?: () => void;
+  data?: any; // Generic data for this day
 }
 
 export interface BigCalendarProps {
@@ -72,7 +73,7 @@ export interface BigCalendarProps {
  * Props:
  * - year: number (e.g., 2025)
  * - month: number (0 = January)
- * - dayData: Record<YYYY-MM-DD, { label?: string, onClick?: () => void }>
+ * - dayData: Record<YYYY-MM-DD, { label?: string, onClick?: () => void, data?: any }>
  * - className: string (optional)
  */
 export function BigCalendar({
@@ -86,7 +87,7 @@ export function BigCalendar({
   return (
     <div className={`mx-auto w-full max-w-3xl rounded-lg border ${className}`}>
       {/* Header */}
-      <div className="mb-2 grid grid-cols-7 text-center text-xs font-semibold text-gray-500">
+      <div className="grid grid-cols-7 text-center text-xs font-semibold text-gray-500 border-b">
         {WEEK_DAYS.map((day) => (
           <div key={day} className="py-2">
             {day}
@@ -101,7 +102,7 @@ export function BigCalendar({
           const data = dayData[dateStr] ?? {};
 
           const dayClasses = [
-            "flex aspect-square flex-col items-center justify-center p-1",
+            "flex aspect-square flex-col gap-2 p-2",
             "border-none outline-none transition",
             currentMonth
               ? "bg-white text-gray-900"
@@ -124,14 +125,14 @@ export function BigCalendar({
               }
               disabled={!data.onClick}
             >
-              <span className="text-sm font-medium">{date.getDate()}</span>
+              <p className="text-sm font-medium text-left">{date.getDate()}</p>
               {data.label && (
-                <span
-                  className="mt-1 w-full truncate text-xs text-blue-600"
+                <p
+                  className="w-full truncate rounded-sm py-0.5 bg-accent text-xs text-blue-600"
                   title={data.label}
                 >
                   {data.label}
-                </span>
+                </p>
               )}
             </button>
           );
@@ -139,6 +140,78 @@ export function BigCalendar({
       </div>
     </div>
   );
+}
+
+/**
+ * Generic helper function to build calendar day data for any data type
+ *
+ * @param year The calendar year
+ * @param month The calendar month (0-indexed)
+ * @param dataByDate Record of data indexed by YYYY-MM-DD date strings
+ * @param formatLabel Function to format the label for each day
+ * @param onDayClick Callback for day clicks
+ * @returns Record of CalendarDayData indexed by date
+ */
+export function buildCalendarDayData<T>(
+  year: number,
+  month: number,
+  dataByDate: Record<string, T>,
+  formatLabel: (dateStr: string, entry: T | null) => string,
+  onDayClick: (dateStr: string, entry: T | null) => void,
+): Record<string, CalendarDayData> {
+  const result: Record<string, CalendarDayData> = {};
+
+  for (let d = 1; d <= 31; d++) {
+    const date = new Date(year, month, d);
+    if (date.getMonth() !== month) break;
+
+    const dateStr = formatDate(date);
+    if (!dateStr) continue;
+
+    const entry = dataByDate[dateStr] ?? null;
+    result[dateStr] = {
+      label: formatLabel(dateStr, entry),
+      onClick: () => onDayClick(dateStr, entry),
+      data: entry
+    };
+  }
+
+  return result;
+}
+
+/**
+ * Hook for managing calendar interactions and dialogs
+ *
+ * @returns Object with state values and handlers for calendar interactions
+ */
+export function useCalendarInteraction() {
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Handle dialog close
+  const handleDialogClose = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      setSelectedDate(null);
+      setSelectedItem(null);
+    }
+  };
+
+  // Handle day click
+  const handleDayClick = (dateStr: string, item: any | null) => {
+    setSelectedDate(dateStr);
+    setSelectedItem(item);
+    setIsDialogOpen(true);
+  };
+
+  return {
+    selectedDate,
+    selectedItem,
+    isDialogOpen,
+    handleDialogClose,
+    handleDayClick,
+  };
 }
 
 // Usage example (remove before production):

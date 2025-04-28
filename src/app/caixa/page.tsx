@@ -6,7 +6,6 @@ import Header from "../_components/header";
 import { Suspense } from "react";
 import Loading from "@/app/_components/loading/loading";
 import CashRegisterList from "@/app/_components/lists/cash-register-list";
-import { DateRangePicker } from "@/app/_components/date-picker";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 
 export default async function CaixaPage({
@@ -46,9 +45,6 @@ export default async function CaixaPage({
         </div>
         <div className="sm:hidden"></div>
       </Header>
-      <div className="px-5">
-        <DateRangePicker />
-      </div>
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5">
         <Suspense fallback={<Loading />}>
           <CashRegisterList

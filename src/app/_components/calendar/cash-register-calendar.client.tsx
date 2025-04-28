@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { BigCalendar, type CalendarDayData } from "./big-calendar";
 import type { CashRegister } from "@/server/db/schema/cash-register";
 import AddCashRegister from "../dialogs/add-cash-register";
 import EditCashRegister from "../dialogs/edit-cash-register";
+import { GenericDataCalendar } from "./generic-data-calendar";
 
 interface CashRegisterCalendarClientProps {
   year: number;
@@ -24,41 +23,31 @@ export default function CashRegisterCalendarClient({
   cashRegisterByDate,
   className,
 }: CashRegisterCalendarClientProps) {
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [editId, setEditId] = useState<string | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  // Generate dayData for the calendar
-  const dayData = buildCalendarDayData(
-    year,
-    month,
-    cashRegisterByDate,
-    (date, entry) => {
-      setSelectedDate(date);
-      setEditId(entry?.id ?? null);
-      setIsDialogOpen(true);
-    },
-  );
-
-  // Handle dialog close
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open);
-    if (!open) {
-      setSelectedDate(null);
-      setEditId(null);
-    }
+  // Format the calendar day labels for cash register data
+  const formatCashLabel = (_dateStr: string, entry: CashRegister | null) => {
+    if (!entry) return null;
+    return `R$ ${Number(entry.value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
   };
 
-  // Render appropriate dialog based on state
-  const renderDialog = () => {
+  // Render the appropriate dialog based on state
+  const renderDialog = ({
+    selectedDate,
+    selectedItem,
+    isDialogOpen,
+    handleDialogClose,
+  }: {
+    selectedDate: string | null;
+    selectedItem: CashRegister | null;
+    isDialogOpen: boolean;
+    handleDialogClose: (open: boolean) => void;
+  }) => {
     if (!selectedDate) return null;
 
-    const entry = editId ? cashRegisterByDate[selectedDate] : null;
-
-    if (entry) {
+    // If we have an item, it's an edit operation
+    if (selectedItem) {
       return (
         <EditCashRegister
-          data={entry}
+          data={selectedItem}
           initialOpen={isDialogOpen}
           onOpenChange={handleDialogClose}
         >
@@ -67,6 +56,7 @@ export default function CashRegisterCalendarClient({
       );
     }
 
+    // Otherwise it's an add operation
     return (
       <AddCashRegister
         key={selectedDate}
@@ -78,37 +68,13 @@ export default function CashRegisterCalendarClient({
   };
 
   return (
-    <div className={className}>
-      <BigCalendar year={year} month={month} dayData={dayData} />
-      {renderDialog()}
-    </div>
+    <GenericDataCalendar
+      year={year}
+      month={month}
+      dataByDate={cashRegisterByDate}
+      formatLabel={formatCashLabel}
+      renderDialog={renderDialog}
+      className={className}
+    />
   );
-}
-
-// Helper function to build calendar day data
-function buildCalendarDayData(
-  year: number,
-  month: number,
-  cashRegisterByDate: Record<string, CashRegister>,
-  onDayClick: (dateStr: string, entry: CashRegister | null) => void,
-): Record<string, CalendarDayData> {
-  const result: Record<string, CalendarDayData> = {};
-
-  for (let d = 1; d <= 31; d++) {
-    const date = new Date(year, month, d);
-    if (date.getMonth() !== month) break;
-
-    const dateStr = date.toISOString().split("T")[0];
-    if (!dateStr) continue;
-
-    const entry = cashRegisterByDate[dateStr] ?? null;
-    result[dateStr] = {
-      label: entry
-        ? `R$ ${Number(entry.value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
-        : "+",
-      onClick: () => onDayClick(dateStr, entry),
-    };
-  }
-
-  return result;
 }
