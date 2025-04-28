@@ -42,7 +42,6 @@ export default function AddProductPurchase({
   useEffect(() => {
     if (state.success === true && state.message) {
       toast.success(state.message);
-      setIsOpen(false);
     } else if (state.success === false && state.message) {
       toast.error(state.message);
     }

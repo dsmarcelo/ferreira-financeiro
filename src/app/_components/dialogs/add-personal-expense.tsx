@@ -42,7 +42,6 @@ export default function AddPersonalExpense({
   useEffect(() => {
     if (state.success === true && state.message) {
       toast.success(state.message);
-      setIsOpen(false);
     } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
@@ -108,6 +107,9 @@ export default function AddPersonalExpense({
             <input type="checkbox" id="isPaid" name="isPaid" />
             <label htmlFor="isPaid">Pago</label>
           </div>
+          <p className="text-sm text-gray-500">
+            {state.success ? "Despesa adicionada com sucesso!" : ""}
+          </p>
           <button
             type="submit"
             disabled={pending}

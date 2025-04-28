@@ -38,7 +38,6 @@ export default function AddStoreExpense({ className }: { className?: string }) {
   useEffect(() => {
     if (state.success === true && state.message) {
       toast.success(state.message);
-      setIsOpen(false);
     } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
