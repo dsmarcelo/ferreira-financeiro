@@ -10,15 +10,11 @@ import { sumProductPurchaseByDateRange } from "@/server/queries/product-purchase
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  searchParams: Promise<{ from: string; to: string }>;
 }) {
   const params = await searchParams;
   const from = params.from;
   const to = params.to;
-
-  // if (!from || !to) {
-  //   return <div>Link inválido, reinicie a página</div>;
-  // }
 
   if (typeof from !== "string" || typeof to !== "string") {
     return <div>Link inválido, reinicie a página</div>;

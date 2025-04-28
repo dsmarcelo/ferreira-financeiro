@@ -144,7 +144,7 @@ export async function actionDeletePersonalExpense(id: string): Promise<void> {
 export async function actionGetPersonalExpenseById(
   id: string,
 ): Promise<PersonalExpense | undefined> {
-  return getPersonalExpenseById(id) as Promise<PersonalExpense | undefined>;
+  return getPersonalExpenseById(id);
 }
 
 // Server action to list personal expenses (optionally by date range)
@@ -152,7 +152,7 @@ export async function actionListPersonalExpenses(
   startDate?: string,
   endDate?: string,
 ): Promise<PersonalExpense[]> {
-  return listPersonalExpenses(startDate, endDate) as Promise<PersonalExpense[]>;
+  return listPersonalExpenses(startDate, endDate);
 }
 
 // Server action to get the sum of values in a date range

@@ -144,7 +144,7 @@ export async function actionDeleteProductPurchase(id: string): Promise<void> {
 export async function actionGetProductPurchaseById(
   id: string,
 ): Promise<ProductPurchase | undefined> {
-  return getProductPurchaseById(id) as Promise<ProductPurchase | undefined>;
+  return getProductPurchaseById(id);
 }
 
 // Server action to list product purchases (optionally by date range)
@@ -152,7 +152,7 @@ export async function actionListProductPurchases(
   startDate?: string,
   endDate?: string,
 ): Promise<ProductPurchase[]> {
-  return listProductPurchases(startDate, endDate) as Promise<ProductPurchase[]>;
+  return listProductPurchases(startDate, endDate);
 }
 
 // Server action to get the sum of values in a date range

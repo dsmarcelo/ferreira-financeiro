@@ -151,7 +151,7 @@ export async function actionDeleteStoreExpense(id: string): Promise<void> {
 export async function actionGetStoreExpenseById(
   id: string,
 ): Promise<StoreExpense | undefined> {
-  return getStoreExpenseById(id) as Promise<StoreExpense | undefined>;
+  return getStoreExpenseById(id);
 }
 
 // Server action to list store expenses (optionally by date range)
@@ -159,7 +159,7 @@ export async function actionListStoreExpenses(
   startDate?: string,
   endDate?: string,
 ): Promise<StoreExpense[]> {
-  return listStoreExpenses(startDate, endDate) as Promise<StoreExpense[]>;
+  return listStoreExpenses(startDate, endDate);
 }
 
 // Server action to get the sum of values in a date range
