@@ -11,8 +11,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -87,13 +87,11 @@ export default function AddCashRegister({ className }: { className?: string }) {
               </p>
             )}
           </div>
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
-          >
-            {pending ? "Adicionando..." : "Adicionar"}
-          </button>
+          <DialogFooter>
+            <Button type="submit" disabled={pending}>
+              {pending ? "Adicionando..." : "Adicionar"}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
