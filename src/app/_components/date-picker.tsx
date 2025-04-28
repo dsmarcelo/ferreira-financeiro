@@ -53,6 +53,15 @@ export function DateRangePicker() {
     setCurrentDate(getInitialMonth());
   }, [getInitialMonth]);
 
+  // Add new effect to default to current month only if no localStorage and no 'from' param
+  React.useEffect(() => {
+    const fromParam = searchParams.get("from");
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!fromParam || !stored) {
+      updateDate(currentDate);
+    }
+  }, []);
+
   // Function to update URL and localStorage with new date range (first and last day of month)
   const updateDate = (newDate: Date) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -65,6 +74,7 @@ export function DateRangePicker() {
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, from);
     } catch {}
+    console.log(params.toString());
     router.replace(`?${params.toString()}`);
   };
 
