@@ -4,6 +4,7 @@ import { useActionState, useState, useEffect } from "react";
 import {
   actionDeleteStoreExpense,
   actionUpdateStoreExpense,
+  type ActionResponse,
 } from "@/actions/store-expense-actions";
 import {
   Dialog,
@@ -25,7 +26,7 @@ interface EditStoreExpenseProps {
   children: React.ReactNode;
 }
 
-const initialState = {
+const initialState: ActionResponse = {
   success: false,
   message: "",
 };
@@ -35,7 +36,7 @@ export default function EditStoreExpense({
   children,
 }: EditStoreExpenseProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(
+  const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionUpdateStoreExpense,
     initialState,
   );
@@ -50,20 +51,8 @@ export default function EditStoreExpense({
     }
   }, [state]);
 
-  // Parse error messages
-  const errorMessages = (state?.message ?? "").split("; ").filter(Boolean);
-  const dateError = errorMessages.find((msg) =>
-    msg.toLowerCase().includes("data"),
-  );
-  const amountError = errorMessages.find((msg) =>
-    msg.toLowerCase().includes("valor"),
-  );
-  const descriptionError = errorMessages.find((msg) =>
-    msg.toLowerCase().includes("descri"),
-  );
-  const dueDateError = errorMessages.find((msg) =>
-    msg.toLowerCase().includes("venc"),
-  );
+  // Parse error messages from ActionResponse
+  const errors = state?.errors ?? {};
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -88,9 +77,9 @@ export default function EditStoreExpense({
               required
               defaultValue={data.date}
             />
-            {dateError && (
+            {errors.date && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {dateError}
+                {errors.date[0]}
               </p>
             )}
           </div>
@@ -104,9 +93,9 @@ export default function EditStoreExpense({
               required
               initialValue={Number(data.value)}
             />
-            {amountError && (
+            {errors.value && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {amountError}
+                {errors.value[0]}
               </p>
             )}
           </div>
@@ -119,9 +108,9 @@ export default function EditStoreExpense({
               required
               defaultValue={data.description}
             />
-            {descriptionError && (
+            {errors.description && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {descriptionError}
+                {errors.description[0]}
               </p>
             )}
           </div>
@@ -133,9 +122,9 @@ export default function EditStoreExpense({
               name="dueDate"
               defaultValue={data.dueDate ?? undefined}
             />
-            {dueDateError && (
+            {errors.dueDate && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {dueDateError}
+                {errors.dueDate[0]}
               </p>
             )}
           </div>

@@ -1,7 +1,10 @@
 "use client";
 
 import { useActionState, useState, useEffect } from "react";
-import { actionCreateCashRegister } from "@/actions/cash-register-actions";
+import {
+  actionCreateCashRegister,
+  type ActionResponse,
+} from "@/actions/cash-register-actions";
 import {
   Dialog,
   DialogTrigger,
@@ -15,14 +18,14 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-const initialState = {
-  success: null as boolean | null,
+const initialState: ActionResponse = {
+  success: false,
   message: "",
 };
 
 export default function AddCashRegister({ className }: { className?: string }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(
+  const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionCreateCashRegister,
     initialState,
   );
@@ -37,14 +40,8 @@ export default function AddCashRegister({ className }: { className?: string }) {
     }
   }, [state]);
 
-  // Parse error messages
-  const errorMessages = (state?.message ?? "").split("; ").filter(Boolean);
-  const dateError = errorMessages.find((msg) =>
-    msg.toLowerCase().includes("data"),
-  );
-  const amountError = errorMessages.find((msg) =>
-    msg.toLowerCase().includes("valor"),
-  );
+  // Parse error messages from ActionResponse
+  const errors = state?.errors ?? {};
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split("T")[0];
@@ -75,9 +72,9 @@ export default function AddCashRegister({ className }: { className?: string }) {
               required
               defaultValue={today}
             />
-            {dateError && (
+            {errors.date && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {dateError}
+                {errors.date[0]}
               </p>
             )}
           </div>
@@ -90,9 +87,9 @@ export default function AddCashRegister({ className }: { className?: string }) {
               min={0}
               required
             />
-            {amountError && (
+            {errors.value && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {amountError}
+                {errors.value[0]}
               </p>
             )}
           </div>

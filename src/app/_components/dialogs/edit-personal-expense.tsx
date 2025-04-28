@@ -4,6 +4,7 @@ import { useActionState, useState, useEffect } from "react";
 import {
   actionDeletePersonalExpense,
   actionUpdatePersonalExpense,
+  type ActionResponse,
 } from "@/actions/personal-expense-actions";
 import {
   Dialog,
@@ -25,7 +26,7 @@ interface EditPersonalExpenseProps {
   children: React.ReactNode;
 }
 
-const initialState = {
+const initialState: ActionResponse = {
   success: false,
   message: "",
 };
@@ -35,7 +36,7 @@ export default function EditPersonalExpense({
   children,
 }: EditPersonalExpenseProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(
+  const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionUpdatePersonalExpense,
     initialState,
   );
@@ -50,17 +51,8 @@ export default function EditPersonalExpense({
     }
   }, [state]);
 
-  // Parse error messages
-  const errorMessages = (state?.message ?? "").split("; ").filter(Boolean);
-  const dateError = errorMessages.find((msg) =>
-    msg.toLowerCase().includes("data"),
-  );
-  const amountError = errorMessages.find((msg) =>
-    msg.toLowerCase().includes("valor"),
-  );
-  const descriptionError = errorMessages.find((msg) =>
-    msg.toLowerCase().includes("descri"),
-  );
+  // Parse error messages from ActionResponse
+  const errors = state?.errors ?? {};
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -85,9 +77,9 @@ export default function EditPersonalExpense({
               required
               defaultValue={data.date}
             />
-            {dateError && (
+            {errors.date && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {dateError}
+                {errors.date[0]}
               </p>
             )}
           </div>
@@ -101,9 +93,9 @@ export default function EditPersonalExpense({
               required
               initialValue={Number(data.value)}
             />
-            {amountError && (
+            {errors.value && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {amountError}
+                {errors.value[0]}
               </p>
             )}
           </div>
@@ -116,9 +108,9 @@ export default function EditPersonalExpense({
               required
               defaultValue={data.description}
             />
-            {descriptionError && (
+            {errors.description && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {descriptionError}
+                {errors.description[0]}
               </p>
             )}
           </div>

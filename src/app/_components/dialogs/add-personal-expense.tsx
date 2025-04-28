@@ -1,7 +1,10 @@
 "use client";
 
 import { useActionState, useState, useEffect } from "react";
-import { actionCreatePersonalExpense } from "@/actions/personal-expense-actions";
+import {
+  actionCreatePersonalExpense,
+  type ActionResponse,
+} from "@/actions/personal-expense-actions";
 import {
   Dialog,
   DialogTrigger,
@@ -16,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 // Initial state for the form
-const initialState = {
+const initialState: ActionResponse = {
   success: false,
   message: "",
 };
@@ -28,7 +31,7 @@ export default function AddPersonalExpense({
   className?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(
+  const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionCreatePersonalExpense,
     initialState,
   );
@@ -43,17 +46,8 @@ export default function AddPersonalExpense({
     }
   }, [state]);
 
-  // Parse error messages
-  const errorMessages = (state?.message ?? "").split("; ").filter(Boolean);
-  const dateError = errorMessages.find((msg) =>
-    msg.toLowerCase().includes("data"),
-  );
-  const amountError = errorMessages.find((msg) =>
-    msg.toLowerCase().includes("valor"),
-  );
-  const descriptionError = errorMessages.find((msg) =>
-    msg.toLowerCase().includes("descri"),
-  );
+  // Parse error messages from ActionResponse
+  const errors = state?.errors ?? {};
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split("T")[0];
@@ -84,9 +78,9 @@ export default function AddPersonalExpense({
               required
               defaultValue={today}
             />
-            {dateError && (
+            {errors.date && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {dateError}
+                {errors.date[0]}
               </p>
             )}
           </div>
@@ -99,18 +93,18 @@ export default function AddPersonalExpense({
               min={0}
               required
             />
-            {amountError && (
+            {errors.value && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {amountError}
+                {errors.value[0]}
               </p>
             )}
           </div>
           <div>
             <label htmlFor="description">Descrição</label>
             <Input type="text" id="description" name="description" required />
-            {descriptionError && (
+            {errors.description && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {descriptionError}
+                {errors.description[0]}
               </p>
             )}
           </div>

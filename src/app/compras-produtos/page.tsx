@@ -5,6 +5,7 @@ import { formatCurrency } from "@/lib/utils";
 import Header from "../_components/header";
 import { DatePicker } from "@/app/_components/date-picker";
 import { ptBR } from "date-fns/locale";
+import EditProductPurchase from "@/app/_components/dialogs/edit-product-purchase";
 // import EditProductPurchase from "@/app/_components/dialogs/edit-product-purchase"; // Not implemented yet
 
 export default async function ComprasProdutosPage({
@@ -28,18 +29,16 @@ export default async function ComprasProdutosPage({
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5">
         <div className="mx-auto w-full divide-y">
           {productPurchases.map((purchase) => (
-            // TODO: Replace this div with <EditProductPurchase data={purchase} key={purchase.id}> when implemented
-            <div
-              key={purchase.id}
-              className="active:bg-accent flex cursor-pointer justify-between gap-4 py-2"
-            >
-              <p>
-                {format(parseISO(purchase.date), "dd MMM", {
-                  locale: ptBR,
-                }).toUpperCase()}
-              </p>
-              <p>{formatCurrency(purchase.value)}</p>
-            </div>
+            <EditProductPurchase data={purchase} key={purchase.id}>
+              <div className="active:bg-accent flex cursor-pointer justify-between gap-4 py-2">
+                <p>
+                  {format(parseISO(purchase.date), "dd MMM", {
+                    locale: ptBR,
+                  }).toUpperCase()}
+                </p>
+                <p>{formatCurrency(purchase.value)}</p>
+              </div>
+            </EditProductPurchase>
           ))}
         </div>
       </main>
