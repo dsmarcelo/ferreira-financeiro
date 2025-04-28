@@ -1,11 +1,9 @@
 import AddCashRegister from "@/app/_components/dialogs/add-cash-register";
 import { listCashRegisters } from "@/server/queries/cash-register-queries";
-import { format, parseISO } from "date-fns";
-import { formatCurrency } from "@/lib/utils";
 import Header from "../_components/header";
-import { DateRangePicker } from "@/app/_components/date-picker";
-import { ptBR } from "date-fns/locale";
-import EditCashRegister from "@/app/_components/dialogs/edit-cash-register";
+import { Suspense } from "react";
+import Loading from "@/app/_components/loading/loading";
+import CashRegisterList from "@/app/_components/lists/cash-register-list";
 
 export default async function CaixaPage({
   searchParams,
@@ -13,7 +11,7 @@ export default async function CaixaPage({
   searchParams: Promise<{ date: string }>;
 }) {
   const { date } = await searchParams;
-  const cashRegisters = await listCashRegisters(date);
+  const cashRegisters = listCashRegisters(date);
   return (
     <div className="flex min-h-screen flex-col pb-5">
       <Header className="flex-none">
@@ -23,20 +21,9 @@ export default async function CaixaPage({
         <div className="sm:hidden"></div>
       </Header>
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5">
-        <div className="mx-auto w-full divide-y overflow-y-auto">
-          {cashRegisters.map((cashRegister) => (
-            <EditCashRegister data={cashRegister} key={cashRegister.id}>
-              <div className="active:bg-accent flex cursor-pointer justify-between gap-4 py-2">
-                <p>
-                  {format(parseISO(cashRegister.date), "dd MMM", {
-                    locale: ptBR,
-                  }).toUpperCase()}
-                </p>
-                <p>{formatCurrency(cashRegister.value)}</p>
-              </div>
-            </EditCashRegister>
-          ))}
-        </div>
+        <Suspense fallback={<Loading />}>
+          <CashRegisterList cashRegisters={cashRegisters} />
+        </Suspense>
       </main>
       <div className="block w-full flex-none px-5 sm:hidden">
         <AddCashRegister className="w-full" />

@@ -1,7 +1,6 @@
 import AddPersonalExpense from "@/app/_components/dialogs/add-personal-expense";
 import { listPersonalExpenses } from "@/server/queries/personal-expense-queries";
 import Header from "../_components/header";
-import { DateRangePicker } from "@/app/_components/date-picker";
 import { Suspense } from "react";
 import Loading from "@/app/_components/loading/loading";
 import PersonalExpensesList from "../_components/lists/personal-expenses-list";
@@ -23,7 +22,6 @@ export default async function DespesasPessoaisPage({
           </div>
           <div className="sm:hidden"></div>
         </Header>
-        <DateRangePicker />
       </div>
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5">
         <Suspense fallback={<Loading />}>
