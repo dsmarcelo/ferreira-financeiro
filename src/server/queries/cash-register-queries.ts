@@ -78,6 +78,7 @@ export async function sumCashRegisterByDateRange(
     .where(
       and(gte(cashRegister.date, startDate), lte(cashRegister.date, endDate)),
     );
+  console.log("result", result);
   // Return the sum or 0 if no records
   return Number(result[0]?.sum ?? 0);
 }

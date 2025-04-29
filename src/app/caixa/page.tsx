@@ -11,15 +11,15 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 export default async function CaixaPage({
   searchParams,
 }: {
-  searchParams: { from?: string | string[]; to?: string | string[] };
+  searchParams: Promise<{ from?: string | string[]; to?: string | string[] }>;
 }) {
   // Compute default month start and end (YYYY-MM-DD)
   const today = new Date();
   const defaultStart = format(startOfMonth(today), "yyyy-MM-dd");
   const defaultEnd = format(endOfMonth(today), "yyyy-MM-dd");
   // Handle searchParams.from/to possibly string[]
-  const rawFrom = searchParams.from;
-  const rawTo = searchParams.to;
+  const rawFrom = (await searchParams).from;
+  const rawTo = (await searchParams).to;
   const fromParam = Array.isArray(rawFrom) ? rawFrom[0] : rawFrom;
   const toParam = Array.isArray(rawTo) ? rawTo[0] : rawTo;
   // Determine the month range

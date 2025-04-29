@@ -28,22 +28,22 @@ export default async function CashRegisterCalendar({
   // Fetch all cash register entries for the month
   const entries: CashRegister[] = await actionListCashRegisters(start, end);
 
-  // Map entries by date for quick lookup
-  const byDate: Record<string, CashRegister> = {};
+  // Group entries by date into arrays
+  const byDate: Record<string, CashRegister[]> = {};
   for (const entry of entries) {
-    // Extract date string, checking for valid date
-    if (entry.date) {
-      try {
-        // Handle date formatting consistently
-        const dateStr = String(entry.date).split("T")[0];
-        // Ensure we have a valid date string
-        if (dateStr && dateStr.length > 0) {
-          byDate[dateStr] = entry;
-        }
-      } catch (e) {
-        console.error("Failed to format date:", entry.date);
-      }
+    if (!entry.date) continue;
+    // Get YYYY-MM-DD string
+    let dateStr: string;
+    try {
+      dateStr = String(entry.date).split("T")[0];
+    } catch {
+      continue;
     }
+    if (!dateStr) continue;
+    if (!byDate[dateStr]) {
+      byDate[dateStr] = [];
+    }
+    byDate[dateStr].push(entry);
   }
 
   return (

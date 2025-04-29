@@ -1,4 +1,6 @@
 "use client";
+import { cn } from "@/lib/utils";
+import { isToday } from "date-fns";
 import React, { useState } from "react";
 
 // Format date as YYYY-MM-DD
@@ -125,7 +127,7 @@ export function BigCalendar({
               }
               disabled={!data.onClick}
             >
-              <p className="text-sm font-medium text-left">{date.getDate()}</p>
+              <p className={cn("w-fit aspect-square text-sm font-medium text-left", isToday(date) && "text-background bg-foreground rounded-full p-1")}>{date.getDate()}</p>
               {data.label && (
                 <p
                   className="w-full truncate rounded-sm py-0.5 bg-accent text-xs text-blue-600"
@@ -155,7 +157,7 @@ export function BigCalendar({
 export function buildCalendarDayData<T>(
   year: number,
   month: number,
-  dataByDate: Record<string, T>,
+  dataByDate: Record<string, T> = {},
   formatLabel: (dateStr: string, entry: T | null) => string,
   onDayClick: (dateStr: string, entry: T | null) => void,
 ): Record<string, CalendarDayData> {
