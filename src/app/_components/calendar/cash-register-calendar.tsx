@@ -9,7 +9,7 @@ interface CashRegisterCalendarProps {
   year: number;
   month: number; // 0-indexed
   className?: string;
-  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 /**

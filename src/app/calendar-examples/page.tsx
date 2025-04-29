@@ -4,7 +4,7 @@ import { DateRangePicker } from "../_components/date-picker";
 import { getYearAndMonthFromDateString } from "@/lib/date-utils";
 
 interface PageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Record<string, string | string[] | undefined>;
 }
 
 /**

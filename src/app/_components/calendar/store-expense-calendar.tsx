@@ -15,7 +15,7 @@ interface StoreExpenseCalendarProps {
   year: number;
   month: number; // 0-indexed
   className?: string;
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: Record<string, string | string[] | undefined>;
 }
 
 /**

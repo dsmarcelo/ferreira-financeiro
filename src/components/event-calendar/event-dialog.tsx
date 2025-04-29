@@ -87,7 +87,7 @@ export function EventDialog({
       setEndTime(formatTimeForInput(end))
       setAllDay(event.allDay || false)
       setLocation(event.location || "")
-      setColor((event.color as EventColor) || "sky")
+      setColor((event.color!) || "sky")
       setError(null) // Reset error when opening dialog
     } else {
       resetForm()
