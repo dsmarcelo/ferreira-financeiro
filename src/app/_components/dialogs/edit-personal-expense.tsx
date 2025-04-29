@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { DeleteDialog } from "./delete-dialog";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 interface EditPersonalExpenseProps {
   data: PersonalExpense;
@@ -84,6 +86,23 @@ export default function EditPersonalExpense({
               </p>
             )}
           </div>
+
+          <div>
+            <label htmlFor="description">Descrição</label>
+            <Input
+              type="text"
+              id="description"
+              name="description"
+              required
+              defaultValue={data.description}
+            />
+            {errors.description && (
+              <p className="mt-1 text-sm text-red-500" aria-live="polite">
+                {errors.description[0]}
+              </p>
+            )}
+          </div>
+
           <div>
             <label htmlFor="amount">Valor</label>
             <CurrencyInput
@@ -100,29 +119,16 @@ export default function EditPersonalExpense({
               </p>
             )}
           </div>
-          <div>
-            <label htmlFor="description">Descrição</label>
-            <Input
-              type="text"
-              id="description"
-              name="description"
-              required
-              defaultValue={data.description}
-            />
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {errors.description[0]}
-              </p>
-            )}
-          </div>
+
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isPaid"
-              name="isPaid"
-              defaultChecked={data.isPaid}
-            />
-            <label htmlFor="isPaid">Pago</label>
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="isPaid">Pago</Label>
+              <Switch
+                id="isPaid"
+                name="isPaid"
+                defaultChecked={data.isPaid}
+              />
+            </div>
           </div>
           <div className="flex justify-between gap-2">
             <DeleteDialog

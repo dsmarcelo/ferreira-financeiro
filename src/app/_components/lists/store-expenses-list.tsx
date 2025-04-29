@@ -5,6 +5,16 @@ import { formatCurrency } from "@/lib/utils";
 import type { StoreExpense } from "@/server/db/schema/store-expense";
 import { use } from "react";
 
+// Helper to group expenses by date string (YYYY-MM-DD)
+function groupByDate(expenses: StoreExpense[]) {
+  return expenses.reduce<Record<string, StoreExpense[]>>((acc, expense) => {
+    const date = expense.date;
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(expense);
+    return acc;
+  }, {});
+}
+
 /**
  * Renders a list of store expenses.
  * Uses Suspense for loading states. Receives a promise of StoreExpense[].
@@ -14,22 +24,34 @@ export default function StoreExpensesList({
 }: {
   storeExpenses: Promise<StoreExpense[]>;
 }) {
-  // Resolve the promise to get the data array
   const allStoreExpenses = use(storeExpenses);
+  const grouped = groupByDate(allStoreExpenses);
+  const sortedDates = Object.keys(grouped).sort();
 
   return (
     <div className="mx-auto w-full divide-y">
-      {allStoreExpenses.map((expense) => (
-        <EditStoreExpense data={expense} key={expense.id}>
-          <div className="active:bg-accent flex cursor-pointer justify-between gap-4 py-2">
-            <p>
-              {format(parseISO(expense.date), "dd MMM", {
-                locale: ptBR,
-              }).toUpperCase()}
-            </p>
-            <p>{formatCurrency(expense.value)}</p>
+      {/* Iterate over each date group */}
+      {sortedDates.map((date) => (
+        <div key={date} className="py-1">
+          {/* Date label, styled as in the image */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+            <span className="w-12">{format(parseISO(date), "dd MMM", { locale: ptBR }).toUpperCase()}</span>
+            {/* Only show the first description inline, others below */}
+            <span className="flex-1 font-normal text-black/80">
+              {grouped[date]?.[0]?.description ?? ""}
+            </span>
+            <span className="font-medium text-right min-w-[80px]">{formatCurrency(grouped[date]?.[0]?.value ?? 0)}</span>
           </div>
-        </EditStoreExpense>
+          {/* Render additional descriptions for this date, if any */}
+          {(grouped[date]?.slice(1) ?? []).map((expense) => (
+            <EditStoreExpense data={expense} key={expense.id}>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium pl-12">
+                <span className="flex-1 font-normal text-black/80">{expense.description}</span>
+                <span className="font-medium text-right min-w-[80px]">{formatCurrency(expense.value)}</span>
+              </div>
+            </EditStoreExpense>
+          ))}
+        </div>
       ))}
     </div>
   );
