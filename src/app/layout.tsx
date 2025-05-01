@@ -3,6 +3,7 @@ import "@/styles/globals.css";
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import BottomNav from "@/app/_components/bottom-nav";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -21,8 +22,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${geist.variable}`}>
       <body>
-        <main className="mx-auto">{children}</main>
+        <main className="mx-auto pb-24">{children}</main>
         <Toaster richColors />
+        <BottomNav />
       </body>
     </html>
   );
