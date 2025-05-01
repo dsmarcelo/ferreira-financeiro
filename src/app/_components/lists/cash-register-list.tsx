@@ -10,7 +10,7 @@ function groupByDate(cashRegisters: CashRegister[]) {
   return cashRegisters.reduce<Record<string, CashRegister[]>>(
     (acc, cashRegister) => {
       const date = cashRegister.date;
-      if (!acc[date]) acc[date] = [];
+      acc[date] ??= [];
       acc[date].push(cashRegister);
       return acc;
     },

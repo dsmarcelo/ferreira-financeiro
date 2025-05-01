@@ -4,13 +4,12 @@ import EditPersonalExpense from "../dialogs/edit/edit-personal-expense";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { PersonalExpense } from "@/server/db/schema/personal-expense";
 import { use } from "react";
-import { Switch } from "@/components/ui/switch";
 
 // Helper to group expenses by date string (YYYY-MM-DD)
 function groupByDate(expenses: PersonalExpense[]) {
   return expenses.reduce<Record<string, PersonalExpense[]>>((acc, expense) => {
     const date = expense.date;
-    if (!acc[date]) acc[date] = [];
+    acc[date] ??= [];
     acc[date].push(expense);
     return acc;
   }, {});

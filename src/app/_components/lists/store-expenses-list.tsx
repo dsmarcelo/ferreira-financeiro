@@ -9,7 +9,7 @@ import { use } from "react";
 function groupByDate(expenses: StoreExpense[]) {
   return expenses.reduce<Record<string, StoreExpense[]>>((acc, expense) => {
     const date = expense.date;
-    if (!acc[date]) acc[date] = [];
+    acc[date] ??= [];
     acc[date].push(expense);
     return acc;
   }, {});

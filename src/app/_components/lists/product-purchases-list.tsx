@@ -10,7 +10,7 @@ function groupByDate(purchases: ProductPurchase[]) {
   return purchases.reduce<Record<string, ProductPurchase[]>>(
     (acc, purchase) => {
       const date = purchase.date;
-      if (!acc[date]) acc[date] = [];
+      acc[date] ??= [];
       acc[date].push(purchase);
       return acc;
     },
