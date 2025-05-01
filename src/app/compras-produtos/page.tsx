@@ -1,4 +1,4 @@
-import AddProductPurchase from "@/app/_components/dialogs/add-product-purchase";
+import AddProductPurchase from "@/app/_components/dialogs/add/add-product-purchase";
 import { listProductPurchases } from "@/server/queries/product-purchase-queries";
 import Header from "../_components/header";
 import { Suspense } from "react";

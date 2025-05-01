@@ -1,4 +1,5 @@
-import AddPersonalExpense from "@/app/_components/dialogs/add-personal-expense";
+import AddPersonalExpense from "@/app/_components/dialogs/add/add-personal-expense";
+import { Button } from "@/components/ui/button";
 import { listPersonalExpenses } from "@/server/queries/personal-expense-queries";
 import Header from "../_components/header";
 import { Suspense } from "react";
@@ -18,7 +19,11 @@ export default async function DespesasPessoaisPage({
       <div>
         <Header className="flex-none">
           <div className="hidden sm:block">
-            <AddPersonalExpense />
+            <AddPersonalExpense>
+              <Button className="rounded-full">
+                Adicionar Despesa Pessoal
+              </Button>
+            </AddPersonalExpense>
           </div>
           <div className="sm:hidden"></div>
         </Header>
@@ -29,7 +34,11 @@ export default async function DespesasPessoaisPage({
         </Suspense>
       </main>
       <div className="block w-full px-5 sm:hidden">
-        <AddPersonalExpense className="w-full" />
+        <AddPersonalExpense>
+          <Button className="h-12 w-full rounded-full">
+            Adicionar Despesa Pessoal
+          </Button>
+        </AddPersonalExpense>
       </div>
     </div>
   );

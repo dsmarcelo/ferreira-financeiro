@@ -1,6 +1,6 @@
 import { ptBR } from "date-fns/locale";
 import { format, parseISO } from "date-fns";
-import EditPersonalExpense from "../dialogs/edit-personal-expense";
+import EditPersonalExpense from "../dialogs/edit/edit-personal-expense";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { PersonalExpense } from "@/server/db/schema/personal-expense";
 import { use } from "react";
@@ -32,17 +32,26 @@ export default function PersonalExpensesList({
         <div key={date} className="py-1">
           {/* Date label, styled as in the image */}
           <div className="flex gap-1">
-            <p className="w-fit whitespace-nowrap text-sm font-light py-1">
+            <p className="w-fit py-1 text-sm font-light whitespace-nowrap">
               {format(parseISO(date), "dd MMM", { locale: ptBR }).toUpperCase()}
             </p>
-            <div className="flex flex-col justify-between w-full gap-1">
+            <div className="flex w-full flex-col justify-between gap-1">
               {grouped[date]?.map((expense) => (
                 <EditPersonalExpense data={expense} key={expense.id}>
-                  <div className="flex items-center gap-2 cursor-pointer hover:bg-background-secondary active:bg-accent rounded-md px-2 py-0.5">
-                    <p className="flex-1 text-black/80 break-words">{expense.description}</p>
+                  <div className="hover:bg-background-secondary active:bg-accent flex cursor-pointer items-center gap-2 rounded-md px-2 py-0.5">
+                    <p className="flex-1 break-words text-black/80">
+                      {expense.description}
+                    </p>
                     <div className="flex items-center gap-1">
-                      <div className={cn("w-2 h-2 rounded-full", expense.isPaid && "bg-green-500")} />
-                      <p className="w-fit text-right whitespace-nowrap">{formatCurrency(expense.value)}</p>
+                      <div
+                        className={cn(
+                          "h-2 w-2 rounded-full",
+                          expense.isPaid && "bg-green-500",
+                        )}
+                      />
+                      <p className="w-fit text-right whitespace-nowrap">
+                        {formatCurrency(expense.value)}
+                      </p>
                     </div>
                   </div>
                 </EditPersonalExpense>

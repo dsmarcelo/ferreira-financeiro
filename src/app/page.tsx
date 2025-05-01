@@ -1,6 +1,10 @@
-import AddCashRegister from "./_components/dialogs/add-cash-register";
+import AddCashRegister from "./_components/dialogs/add/add-cash-register";
+import AddPersonalExpense from "./_components/dialogs/add/add-personal-expense";
+import AddStoreExpense from "./_components/dialogs/add/add-store-expense";
+import AddProductPurchase from "./_components/dialogs/add/add-product-purchase";
 import Header from "./_components/header";
 import SummaryCards from "@/app/_components/summary-cards";
+import { Button } from "@/components/ui/button";
 
 export default async function HomePage({
   searchParams,
@@ -32,7 +36,26 @@ export default async function HomePage({
             Selecione um período para ver os dados.
           </div>
         )}
-        <AddCashRegister />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <AddCashRegister>
+            <Button className="h-14 rounded-xl">Adicionar Caixa</Button>
+          </AddCashRegister>
+          <AddPersonalExpense>
+            <Button className="h-14 rounded-xl">
+              Adicionar Despesa Pessoal
+            </Button>
+          </AddPersonalExpense>
+          <AddStoreExpense>
+            <Button className="h-14 rounded-xl">
+              Adicionar Despesa de Loja
+            </Button>
+          </AddStoreExpense>
+          <AddProductPurchase>
+            <Button className="h-14 rounded-xl">
+              Adicionar Despesa de Produto
+            </Button>
+          </AddProductPurchase>
+        </div>
       </div>
     </main>
   );

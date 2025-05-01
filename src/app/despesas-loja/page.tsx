@@ -1,4 +1,4 @@
-import AddStoreExpense from "@/app/_components/dialogs/add-store-expense";
+import AddStoreExpense from "@/app/_components/dialogs/add/add-store-expense";
 import { listStoreExpenses } from "@/server/queries/store-expense-queries";
 import Header from "../_components/header";
 import { Suspense } from "react";

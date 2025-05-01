@@ -1,4 +1,4 @@
-import AddCashRegister from "@/app/_components/dialogs/add-cash-register";
+import AddCashRegister from "@/app/_components/dialogs/add/add-cash-register";
 import { listCashRegisters } from "@/server/queries/cash-register-queries";
 import Header from "../_components/header";
 import { Suspense } from "react";
