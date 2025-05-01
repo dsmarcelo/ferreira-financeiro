@@ -3,11 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { DateRangePicker } from "./date-picker";
+import DateRangePicker from "./date-picker";
 import { cn } from "@/lib/utils";
 export default function Header({
   children,
-  showBackButton = true,
+  showBackButton = false,
   className,
 }: {
   children?: React.ReactNode;
@@ -18,18 +18,18 @@ export default function Header({
   return (
     <header
       className={cn(
-        "bg-background flex h-14 w-full items-center justify-center border-b md:h-16",
+        "bg-background/90 w-full border-b border-b-gray-100 filter backdrop-blur",
         className,
       )}
     >
-      <div className="mx-auto flex w-full max-w-screen-lg items-center justify-between gap-4">
+      <div className="mx-auto my-auto flex h-12 w-full max-w-screen-lg items-center justify-between gap-4 md:h-16">
         {showBackButton && (
           <Button size="lg" variant="ghost" onClick={() => router.back()}>
             <ArrowLeft />
             Voltar
           </Button>
         )}
-        <div className="hidden sm:block">
+        <div className="w-full sm:w-fit">
           <DateRangePicker />
         </div>
         {children}

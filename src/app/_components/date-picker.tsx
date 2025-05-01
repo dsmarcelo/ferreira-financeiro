@@ -102,12 +102,12 @@ export default function DateRangePicker({ className }: { className?: string }) {
       >
         <ChevronLeft className="h-6 w-6" />
       </Button>
-      <div className="min-w-32 text-center font-medium">
+      <p className="min-w-32 text-center font-medium">
         {format(currentDate, "MMMM yyyy", { locale: ptBR })
           .charAt(0)
           .toUpperCase() +
           format(currentDate, "MMMM yyyy", { locale: ptBR }).slice(1)}
-      </div>
+      </p>
       <Button
         variant="ghost"
         size="lg"
