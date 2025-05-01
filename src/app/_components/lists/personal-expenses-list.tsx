@@ -2,13 +2,13 @@
 import { ptBR } from "date-fns/locale";
 import { format, parseISO } from "date-fns";
 import EditPersonalExpense from "../dialogs/edit/edit-personal-expense";
-import { cn, formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import type { PersonalExpense } from "@/server/db/schema/personal-expense";
 import { use } from "react";
 import DownloadButton from "../buttons/download-button";
 import ShareButton from "../buttons/share-button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { actionTogglePersonalExpenseIsPaid } from "@/actions/personal-expense-actions";
+import { ExpenseListItem } from "./expense-list-item";
 
 // Helper to group expenses by date string (YYYY-MM-DD)
 function groupByDate(expenses: PersonalExpense[]) {
@@ -106,38 +106,13 @@ export default function PersonalExpensesList({
               <div className="flex w-full flex-col justify-between divide-y divide-gray-100">
                 {grouped[date]?.map((expense) => (
                   <EditPersonalExpense data={expense} key={expense.id}>
-                    <div
-                      className={cn(
-                        "hover:bg-background-secondary active:bg-accent flex cursor-pointer items-center gap-2 py-2",
-                        expense.isPaid && "",
-                      )}
-                    >
-                      <div className="flex w-full items-center gap-2">
-                        <Checkbox
-                          className="h-6 w-6 active:bg-slate-500"
-                          checked={expense.isPaid}
-                          onClick={(e) => e.stopPropagation()}
-                          onCheckedChange={(checked) => {
-                            void actionTogglePersonalExpenseIsPaid(
-                              expense.id,
-                              checked as boolean,
-                            );
-                          }}
-                        />
-                        <p className="flex-1 break-words">
-                          {expense.description}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <p
-                          className={cn(
-                            "w-fit text-right whitespace-nowrap",
-                            expense.isPaid && "line-through-gray",
-                          )}
-                        >
-                          {formatCurrency(expense.value)}
-                        </p>
-                      </div>
+                    <div>
+                      <ExpenseListItem
+                        expense={expense}
+                        onTogglePaid={(id: string, checked: boolean) => {
+                          void actionTogglePersonalExpenseIsPaid(id, checked);
+                        }}
+                      />
                     </div>
                   </EditPersonalExpense>
                 ))}
