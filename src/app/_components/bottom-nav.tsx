@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, User, Store, PackagePlus } from "lucide-react";
+import {
+  House,
+  User,
+  Store,
+  PackagePlus,
+  BanknoteArrowDown,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -11,6 +17,12 @@ const navItems = [
     href: "/",
     icon: House,
     testId: "nav-home",
+  },
+  {
+    label: "Caixa",
+    href: "/caixa",
+    icon: BanknoteArrowDown,
+    testId: "nav-caixa",
   },
   {
     label: "Despesas Pessoais",
@@ -37,7 +49,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 gap-4 rounded-full bg-white px-2 py-2 shadow-[0_0_20px_0_rgba(0,0,0,0.25)] sm:hidden"
+      className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 gap-4 rounded-full bg-white/90 px-2 py-2 shadow-[0_0_20px_0_rgba(0,0,0,0.25)] filter backdrop-blur sm:hidden"
       aria-label="Navegação inferior"
     >
       {navItems.map(({ href, icon: Icon, testId }) => {
