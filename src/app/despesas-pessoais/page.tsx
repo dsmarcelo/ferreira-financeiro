@@ -9,31 +9,26 @@ import PersonalExpensesList from "../_components/lists/personal-expenses-list";
 export default async function DespesasPessoaisPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date: string }>;
+  searchParams: Promise<{ from: string; to: string }>;
 }) {
-  const { date } = await searchParams;
-  const personalExpenses = listPersonalExpenses(date);
+  const { from, to } = await searchParams;
+  const personalExpenses = listPersonalExpenses(from, to);
 
   return (
-    <div className="flex min-h-screen flex-col pb-5">
-      <div>
-        <Header className="flex-none">
-          <div className="hidden sm:block">
-            <AddPersonalExpense>
-              <Button className="rounded-full">
-                Adicionar Despesa Pessoal
-              </Button>
-            </AddPersonalExpense>
-          </div>
-          <div className="sm:hidden"></div>
-        </Header>
-      </div>
+    <div className="flex min-h-screen flex-col pb-24">
+      <Header className="sticky top-0 z-50 flex-none">
+        <div className="hidden sm:block">
+          <AddPersonalExpense>
+            <Button className="rounded-full">Adicionar Despesa Pessoal</Button>
+          </AddPersonalExpense>
+        </div>
+      </Header>
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5">
         <Suspense fallback={<Loading />}>
           <PersonalExpensesList personalExpenses={personalExpenses} />
         </Suspense>
       </main>
-      <div className="block w-full px-5 sm:hidden">
+      <div className="fixed bottom-24 block w-full px-5 sm:hidden">
         <AddPersonalExpense>
           <Button className="h-12 w-full rounded-full">
             Adicionar Despesa Pessoal

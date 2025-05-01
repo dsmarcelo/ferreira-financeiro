@@ -134,6 +134,16 @@ export async function actionUpdatePersonalExpense(
   }
 }
 
+export async function actionTogglePersonalExpenseIsPaid(
+  id: string,
+  isPaid: boolean,
+): Promise<void> {
+  await updatePersonalExpense(id, {
+    isPaid,
+  });
+  revalidatePath("/despesas-pessoais");
+}
+
 // Server action to delete a personal expense entry
 export async function actionDeletePersonalExpense(id: string): Promise<void> {
   await deletePersonalExpense(id);
