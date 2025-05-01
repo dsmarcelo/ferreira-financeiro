@@ -60,6 +60,7 @@ export default function AddCashRegister({
       }
       isOpen={isOpen}
       onOpenChange={setIsOpen}
+      title="Adicionar Caixa"
     >
       <form
         key={isOpen ? "open" : "closed"}

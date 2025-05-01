@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
+import { Label } from "@/components/ui/label";
 
 // Initial state for the form
 const initialState: ActionResponse = {
@@ -53,29 +54,31 @@ export default function AddProductPurchase({
       triggerButton={
         children ?? (
           <Button className={cn("rounded-full", className)}>
-            Adicionar Despesa de Produto
+            Adicionar Compra de Produtos
           </Button>
         )
       }
       isOpen={isOpen}
       onOpenChange={setIsOpen}
+      title="Adicionar Compra de Produtos"
     >
       <form
         key={isOpen ? "open" : "closed"}
         action={formAction}
         className="space-y-4"
       >
-        <div>
-          <label htmlFor="date">Data</label>
-          <DatePicker id="date" name="date" required defaultValue={today} />
-          {errors.date && (
+        <div className="space-y-2">
+          <Label htmlFor="description">Descrição</Label>
+          <Input type="text" id="description" name="description" required />
+          {errors.description && (
             <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.date[0]}
+              {errors.description[0]}
             </p>
           )}
         </div>
-        <div>
-          <label htmlFor="amount">Valor</label>
+
+        <div className="space-y-2">
+          <Label htmlFor="amount">Valor</Label>
           <CurrencyInput
             id="amount"
             name="amount"
@@ -89,18 +92,18 @@ export default function AddProductPurchase({
             </p>
           )}
         </div>
-        <div>
-          <label htmlFor="description">Descrição</label>
-          <Input type="text" id="description" name="description" required />
-          {errors.description && (
+        <div className="space-y-2">
+          <Label htmlFor="date">Data</Label>
+          <DatePicker id="date" name="date" required defaultValue={today} />
+          {errors.date && (
             <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.description[0]}
+              {errors.date[0]}
             </p>
           )}
         </div>
         <div className="flex items-center gap-2">
           <input type="checkbox" id="isPaid" name="isPaid" />
-          <label htmlFor="isPaid">Pago</label>
+          <Label htmlFor="isPaid">Pago</Label>
         </div>
         <Button type="submit" className="w-full" disabled={pending}>
           {pending ? "Adicionando..." : "Adicionar"}

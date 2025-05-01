@@ -50,11 +50,20 @@ export default function AddPersonalExpense({
 
   return (
     <ResponsiveDialog
-      triggerButton={children ?? <Button className="rounded-full">Adicionar Despesa Pessoal</Button>}
+      triggerButton={
+        children ?? (
+          <Button className="rounded-full">Adicionar Despesa Pessoal</Button>
+        )
+      }
       isOpen={isOpen}
       onOpenChange={setIsOpen}
+      title="Adicionar Despesa Pessoal"
     >
-      <form key={isOpen ? "open" : "closed"} action={formAction} className="space-y-4">
+      <form
+        key={isOpen ? "open" : "closed"}
+        action={formAction}
+        className="space-y-4"
+      >
         <div>
           <label htmlFor="description">Descrição</label>
           <Input
@@ -104,7 +113,7 @@ export default function AddPersonalExpense({
         <p className="text-sm text-gray-500">
           {state.success ? "Despesa adicionada com sucesso!" : ""}
         </p>
-        <Button type="submit" className="flex-1" disabled={pending}>
+        <Button type="submit" className="w-full" disabled={pending}>
           {pending ? "Adicionando..." : "Adicionar"}
         </Button>
       </form>
