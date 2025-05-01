@@ -20,7 +20,7 @@ const parseYYYYMM = (dateStr: string | null): Date => {
 // Key for storing the selected month in localStorage
 const LOCAL_STORAGE_KEY = "selectedMonth";
 
-export function DateRangePicker() {
+export default function DateRangePicker({ className }: { className?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -91,8 +91,15 @@ export function DateRangePicker() {
   };
 
   return (
-    <div className="flex h-12 items-center justify-between gap-2 px-5">
-      <Button variant="ghost" size="lg" onClick={() => navigateMonth("prev")}>
+    <div
+      className={`flex h-12 items-center justify-between gap-2 ${className}`}
+    >
+      <Button
+        variant="ghost"
+        size="lg"
+        className="active:bg-accent w-full flex-1 hover:bg-transparent"
+        onClick={() => navigateMonth("prev")}
+      >
         <ChevronLeft className="h-6 w-6" />
       </Button>
       <div className="min-w-32 text-center font-medium">
@@ -101,7 +108,12 @@ export function DateRangePicker() {
           .toUpperCase() +
           format(currentDate, "MMMM yyyy", { locale: ptBR }).slice(1)}
       </div>
-      <Button variant="ghost" size="lg" onClick={() => navigateMonth("next")}>
+      <Button
+        variant="ghost"
+        size="lg"
+        className="active:bg-accent w-full flex-1 hover:bg-transparent"
+        onClick={() => navigateMonth("next")}
+      >
         <ChevronRight className="h-6 w-6" />
       </Button>
     </div>
