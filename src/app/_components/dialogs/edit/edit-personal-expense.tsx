@@ -6,14 +6,7 @@ import {
   actionUpdatePersonalExpense,
   type ActionResponse,
 } from "@/actions/personal-expense-actions";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import ResponsiveDialog from "@/app/_components/responsive-dialog";
 import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
 import type { PersonalExpense } from "@/server/db/schema/personal-expense";
@@ -58,90 +51,91 @@ export default function EditPersonalExpense({
   // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
 
+  const dialogProps = children
+    ? { triggerButton: children }
+    : {
+        triggerButton: (
+          <Button
+            className="rounded-full"
+            onClick={isOpen !== undefined ? () => setIsOpen(true) : undefined}
+          >
+            Editar Despesa Pessoal
+          </Button>
+        ),
+      };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {children ?? (
-          <Button className="rounded-full">Editar Despesa Pessoal</Button>
-        )}
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Editar Despesa Pessoal</DialogTitle>
-          <DialogDescription aria-hidden="true"></DialogDescription>
-        </DialogHeader>
-        <form
-          key={isOpen ? "open" : "closed"}
-          action={formAction}
-          className="space-y-4"
-        >
-          <input type="hidden" name="id" value={data.id} />
-          <div>
-            <label htmlFor="date">Data</label>
-            <DatePicker
-              id="date"
-              name="date"
-              required
-              defaultValue={data.date}
-            />
-            {errors.date && (
-              <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {errors.date[0]}
-              </p>
-            )}
-          </div>
+    <ResponsiveDialog
+      {...dialogProps}
+      {...(isOpen !== undefined ? { isOpen, onOpenChange: setIsOpen } : {})}
+    >
+      <form action={formAction} className="space-y-4">
+        {/* Descrição */}
+        <div className="space-y-2">
+          <Label htmlFor="description">Descrição</Label>
+          <Input
+            type="text"
+            id="description"
+            name="description"
+            required
+            defaultValue={data.description}
+          />
+          {errors.description && (
+            <p className="mt-1 text-sm text-red-500" aria-live="polite">
+              {errors.description[0]}
+            </p>
+          )}
+        </div>
 
-          <div>
-            <label htmlFor="description">Descrição</label>
-            <Input
-              type="text"
-              id="description"
-              name="description"
-              required
-              defaultValue={data.description}
-            />
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {errors.description[0]}
-              </p>
-            )}
-          </div>
+        {/* Valor */}
+        <div className="space-y-2">
+          <Label htmlFor="amount">Valor</Label>
+          <CurrencyInput
+            id="amount"
+            name="amount"
+            step="0.01"
+            min={0}
+            required
+            initialValue={Number(data.value)}
+          />
+          {errors.value && (
+            <p className="mt-1 text-sm text-red-500" aria-live="polite">
+              {errors.value[0]}
+            </p>
+          )}
+        </div>
 
-          <div>
-            <label htmlFor="amount">Valor</label>
-            <CurrencyInput
-              id="amount"
-              name="amount"
-              step="0.01"
-              min={0}
-              required
-              initialValue={Number(data.value)}
-            />
-            {errors.value && (
-              <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {errors.value[0]}
-              </p>
-            )}
-          </div>
+        <input type="hidden" name="id" value={data.id} />
+        {/* Data */}
+        <div className="space-y-2">
+          <Label htmlFor="date">Data</Label>
+          <DatePicker id="date" name="date" required defaultValue={data.date} />
+          {errors.date && (
+            <p className="mt-1 text-sm text-red-500" aria-live="polite">
+              {errors.date[0]}
+            </p>
+          )}
+        </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="isPaid">Pago</Label>
-              <Switch id="isPaid" name="isPaid" defaultChecked={data.isPaid} />
-            </div>
+        {/* Pago */}
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="isPaid">Pago</Label>
+            <Switch id="isPaid" name="isPaid" defaultChecked={data.isPaid} />
           </div>
-          <div className="flex justify-between gap-2">
-            <DeleteDialog
-              onConfirm={() => {
-                void actionDeletePersonalExpense(data.id);
-              }}
-            />
-            <Button className="rounded-full" type="submit" disabled={pending}>
-              {pending ? "Salvando..." : "Salvar"}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </div>
+
+        <div className="mt-8 flex gap-2">
+          <DeleteDialog
+            onConfirm={() => {
+              void actionDeletePersonalExpense(data.id);
+            }}
+          />
+          <Button type="submit" className="flex-1" disabled={pending}>
+            {pending ? "Salvando..." : "Salvar"}
+          </Button>
+        </div>
+      </form>
+    </ResponsiveDialog>
   );
 }

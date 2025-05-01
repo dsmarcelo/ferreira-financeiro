@@ -1,3 +1,4 @@
+"use client";
 import * as React from "react";
 
 import {
@@ -18,6 +19,8 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
+import { useMediaQuery } from "usehooks-ts";
 
 export default function ResponsiveDialog({
   triggerButton,
@@ -35,7 +38,18 @@ export default function ResponsiveDialog({
   onOpenChange?: (open: boolean) => void;
 }) {
   const [open, setOpen] = React.useState(false);
-  const isDesktop = true;
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDesktop = useMediaQuery("(min-width: 640px)");
+
+  if (!mounted) {
+    // Prevent hydration mismatch: render nothing until mounted
+    return null;
+  }
 
   if (isDesktop) {
     return (
@@ -53,17 +67,17 @@ export default function ResponsiveDialog({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={isOpen ?? open} onOpenChange={onOpenChange ?? setOpen}>
       <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="text-left">
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        {children}
-        <DrawerFooter className="pt-2">
+        <div className="px-4">{children}</div>
+        <DrawerFooter className="pt-4">
           <DrawerClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">Cancelar</Button>
           </DrawerClose>
         </DrawerFooter>
       </DrawerContent>

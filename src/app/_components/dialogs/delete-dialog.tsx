@@ -34,7 +34,7 @@ export function DeleteDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="text-red-500">
+        <Button variant="outline" size="icon" className="text-red-500">
           {triggerText ?? <Trash2 className="h-4 w-4" />}
         </Button>
       </DialogTrigger>

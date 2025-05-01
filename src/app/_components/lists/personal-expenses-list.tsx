@@ -12,12 +12,18 @@ import { actionTogglePersonalExpenseIsPaid } from "@/actions/personal-expense-ac
 
 // Helper to group expenses by date string (YYYY-MM-DD)
 function groupByDate(expenses: PersonalExpense[]) {
-  return expenses.reduce<Record<string, PersonalExpense[]>>((acc, expense) => {
-    const date = expense.date;
-    acc[date] ??= [];
-    acc[date].push(expense);
-    return acc;
-  }, {});
+  return expenses
+    .sort((a, b) =>
+      a.date === b.date
+        ? a.id.localeCompare(b.id)
+        : a.date.localeCompare(b.date),
+    )
+    .reduce<Record<string, PersonalExpense[]>>((acc, expense) => {
+      const date = expense.date;
+      acc[date] ??= [];
+      acc[date].push(expense);
+      return acc;
+    }, {});
 }
 // TODO: Update all the other lists to match this component
 export default function PersonalExpensesList({
@@ -80,11 +86,23 @@ export default function PersonalExpensesList({
           <div key={date} className="py-2">
             {/* Date label, styled as in the image */}
             <div className="flex flex-col">
-              <p className="text-muted-foreground font-base w-fit text-xs whitespace-nowrap">
-                {format(parseISO(date), "dd MMM", {
-                  locale: ptBR,
-                }).toUpperCase()}
-              </p>
+              <div className="text-muted-foreground font-base flex w-fit items-center justify-between gap-2 text-xs whitespace-nowrap">
+                <p>
+                  {format(parseISO(date), "dd MMM", {
+                    locale: ptBR,
+                  }).toUpperCase()}
+                </p>
+                <p>
+                  (
+                  {formatCurrency(
+                    grouped[date]?.reduce(
+                      (acc, expense) => acc + Number(expense.value),
+                      0,
+                    ) ?? 0,
+                  )}
+                  )
+                </p>
+              </div>
               <div className="flex w-full flex-col justify-between divide-y divide-gray-100">
                 {grouped[date]?.map((expense) => (
                   <EditPersonalExpense data={expense} key={expense.id}>
@@ -96,7 +114,7 @@ export default function PersonalExpensesList({
                     >
                       <div className="flex w-full items-center gap-2">
                         <Checkbox
-                          className="h-6 w-6"
+                          className="h-6 w-6 active:bg-slate-500"
                           checked={expense.isPaid}
                           onClick={(e) => e.stopPropagation()}
                           onCheckedChange={(checked) => {

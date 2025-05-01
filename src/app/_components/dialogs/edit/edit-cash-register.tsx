@@ -57,9 +57,7 @@ export default function EditCashRegister({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        {children ?? (
-          <Button className="rounded-full">Editar Caixa</Button>
-        )}
+        {children ?? <Button className="rounded-full">Editar Caixa</Button>}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -72,6 +70,8 @@ export default function EditCashRegister({
           className="space-y-4"
         >
           <input type="hidden" name="id" value={data.id} />
+
+          {/* Data */}
           <div>
             <label htmlFor="date">Data</label>
             <DatePicker
@@ -86,6 +86,8 @@ export default function EditCashRegister({
               </p>
             )}
           </div>
+
+          {/* Valor */}
           <div>
             <label htmlFor="amount">Valor</label>
             <CurrencyInput
@@ -102,6 +104,7 @@ export default function EditCashRegister({
               </p>
             )}
           </div>
+
           <div className="flex justify-between gap-2">
             <DeleteDialog
               onConfirm={() => {
