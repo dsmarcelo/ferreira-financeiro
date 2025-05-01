@@ -18,7 +18,7 @@ export default function Header({
   return (
     <header
       className={cn(
-        "bg-background/90 w-full border-b border-b-gray-100 filter backdrop-blur",
+        "bg-background/90 sticky top-0 z-50 w-full border-b border-b-gray-100 filter backdrop-blur",
         className,
       )}
     >

@@ -17,9 +17,7 @@ export default async function HomePage({
 
   return (
     <main className="">
-      <Header showBackButton={false}>
-        <h3 className="text-xl font-semibold">Prime Embalagens</h3>
-      </Header>
+      <Header showBackButton={false} />
       <div className="container mx-auto flex max-w-screen-lg flex-col gap-4 p-5 pb-16">
         <div className="flex flex-col gap-4">
           <h5 className="text-xl font-bold">Lucro</h5>
