@@ -2,10 +2,10 @@
 
 import { useActionState, useState, useEffect } from "react";
 import {
-  actionDeleteCashRegister,
-  actionUpdateCashRegister,
+  actionUpdateProductPurchase,
+  actionDeleteProductPurchase,
   type ActionResponse,
-} from "@/actions/cash-register-actions";
+} from "@/actions/product-purchase-actions";
 import {
   Dialog,
   DialogTrigger,
@@ -14,16 +14,18 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
-import type { CashRegister } from "@/server/db/schema/cash-register";
+import type { ProductPurchase } from "@/server/db/schema/product-purchase";
 import { Button } from "@/components/ui/button";
-import { DeleteDialog } from "./delete-dialog";
+import { DeleteDialog } from "../delete-dialog";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
-interface EditCashRegisterProps {
-  data: CashRegister;
+
+interface EditProductPurchaseProps {
+  data: ProductPurchase;
   className?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const initialState: ActionResponse = {
@@ -31,17 +33,16 @@ const initialState: ActionResponse = {
   message: "",
 };
 
-export default function EditCashRegister({
+export default function EditProductPurchase({
   data,
   children,
-}: EditCashRegisterProps) {
+}: EditProductPurchaseProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
-    actionUpdateCashRegister,
+    actionUpdateProductPurchase,
     initialState,
   );
 
-  // Handle success/error toasts and dialog state
   useEffect(() => {
     if (state.success === true && state.message) {
       toast.success(state.message);
@@ -51,19 +52,22 @@ export default function EditCashRegister({
     }
   }, [state]);
 
-  // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger asChild>
+        {children ?? (
+          <Button className="rounded-full">Editar Despesa de Produto</Button>
+        )}
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Editar Caixa</DialogTitle>
+          <DialogTitle>Editar Despesa de Produto</DialogTitle>
           <DialogDescription aria-hidden="true"></DialogDescription>
         </DialogHeader>
         <form
-          key={isOpen ? "open" : "closed"} // This resets the form state
+          key={isOpen ? "open" : "closed"}
           action={formAction}
           className="space-y-4"
         >
@@ -98,10 +102,34 @@ export default function EditCashRegister({
               </p>
             )}
           </div>
+          <div>
+            <label htmlFor="description">Descrição</label>
+            <Input
+              type="text"
+              id="description"
+              name="description"
+              required
+              defaultValue={data.description}
+            />
+            {errors.description && (
+              <p className="mt-1 text-sm text-red-500" aria-live="polite">
+                {errors.description[0]}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isPaid"
+              name="isPaid"
+              defaultChecked={data.isPaid}
+            />
+            <label htmlFor="isPaid">Pago</label>
+          </div>
           <div className="flex justify-between gap-2">
             <DeleteDialog
               onConfirm={() => {
-                void actionDeleteCashRegister(data.id);
+                void actionDeleteProductPurchase(data.id);
               }}
             />
             <Button className="rounded-full" type="submit" disabled={pending}>

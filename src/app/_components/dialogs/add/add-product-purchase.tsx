@@ -29,8 +29,10 @@ const initialState: ActionResponse = {
 // Dialog component for adding a product purchase
 export default function AddProductPurchase({
   className,
+  children,
 }: {
   className?: string;
+  children?: React.ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
@@ -56,9 +58,11 @@ export default function AddProductPurchase({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className={cn("rounded-full", className)}>
-          Adicionar Despesa de Produto
-        </Button>
+        {children ?? (
+          <Button className={cn("rounded-full", className)}>
+            Adicionar Despesa de Produto
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

@@ -2,9 +2,10 @@
 
 import { useActionState, useState, useEffect } from "react";
 import {
-  actionCreateStoreExpense,
+  actionDeleteCashRegister,
+  actionUpdateCashRegister,
   type ActionResponse,
-} from "@/actions/store-expense-actions";
+} from "@/actions/cash-register-actions";
 import {
   Dialog,
   DialogTrigger,
@@ -13,24 +14,30 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
+import type { CashRegister } from "@/server/db/schema/cash-register";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { DeleteDialog } from "../delete-dialog";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
+interface EditCashRegisterProps {
+  data: CashRegister;
+  className?: string;
+  children?: React.ReactNode;
+}
 
-// Initial state for the form
 const initialState: ActionResponse = {
   success: false,
   message: "",
 };
 
-// Dialog component for adding a store expense
-export default function AddStoreExpense({ className }: { className?: string }) {
+export default function EditCashRegister({
+  data,
+  children,
+}: EditCashRegisterProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
-    actionCreateStoreExpense,
+    actionUpdateCashRegister,
     initialState,
   );
 
@@ -38,6 +45,7 @@ export default function AddStoreExpense({ className }: { className?: string }) {
   useEffect(() => {
     if (state.success === true && state.message) {
       toast.success(state.message);
+      setIsOpen(false);
     } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
@@ -46,29 +54,32 @@ export default function AddStoreExpense({ className }: { className?: string }) {
   // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
 
-  // Get today's date in YYYY-MM-DD format
-  const today = new Date().toISOString().split("T")[0];
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className={cn("rounded-full", className)}>
-          Adicionar Despesa da Loja
-        </Button>
+        {children ?? (
+          <Button className="rounded-full">Editar Caixa</Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Adicionar Despesa da Loja</DialogTitle>
+          <DialogTitle>Editar Caixa</DialogTitle>
           <DialogDescription aria-hidden="true"></DialogDescription>
         </DialogHeader>
         <form
-          key={isOpen ? "open" : "closed"}
+          key={isOpen ? "open" : "closed"} // This resets the form state
           action={formAction}
           className="space-y-4"
         >
+          <input type="hidden" name="id" value={data.id} />
           <div>
             <label htmlFor="date">Data</label>
-            <DatePicker id="date" name="date" required defaultValue={today} />
+            <DatePicker
+              id="date"
+              name="date"
+              required
+              defaultValue={data.date}
+            />
             {errors.date && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
                 {errors.date[0]}
@@ -83,6 +94,7 @@ export default function AddStoreExpense({ className }: { className?: string }) {
               step="0.01"
               min={0}
               required
+              initialValue={Number(data.value)}
             />
             {errors.value && (
               <p className="mt-1 text-sm text-red-500" aria-live="polite">
@@ -90,35 +102,16 @@ export default function AddStoreExpense({ className }: { className?: string }) {
               </p>
             )}
           </div>
-          <div>
-            <label htmlFor="description">Descrição</label>
-            <Input type="text" id="description" name="description" required />
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {errors.description[0]}
-              </p>
-            )}
+          <div className="flex justify-between gap-2">
+            <DeleteDialog
+              onConfirm={() => {
+                void actionDeleteCashRegister(data.id);
+              }}
+            />
+            <Button className="rounded-full" type="submit" disabled={pending}>
+              {pending ? "Salvando..." : "Salvar"}
+            </Button>
           </div>
-          <div>
-            <label htmlFor="dueDate">Vencimento (opcional)</label>
-            <DatePicker id="dueDate" name="dueDate" />
-            {errors.dueDate && (
-              <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {errors.dueDate[0]}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="isPaid" name="isPaid" />
-            <label htmlFor="isPaid">Pago</label>
-          </div>
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
-          >
-            {pending ? "Adicionando..." : "Adicionar"}
-          </button>
         </form>
       </DialogContent>
     </Dialog>

@@ -2,32 +2,40 @@
 
 import { useActionState, useState, useEffect } from "react";
 import {
-  actionCreateCashRegister,
+  actionCreateStoreExpense,
   type ActionResponse,
-} from "@/actions/cash-register-actions";
+} from "@/actions/store-expense-actions";
 import {
   Dialog,
   DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
 
+// Initial state for the form
 const initialState: ActionResponse = {
   success: false,
   message: "",
 };
 
-export default function AddCashRegister({ className }: { className?: string }) {
+// Dialog component for adding a store expense
+interface AddStoreExpenseProps {
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export default function AddStoreExpense({ className, children }: AddStoreExpenseProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
-    actionCreateCashRegister,
+    actionCreateStoreExpense,
     initialState,
   );
 
@@ -35,7 +43,6 @@ export default function AddCashRegister({ className }: { className?: string }) {
   useEffect(() => {
     if (state.success === true && state.message) {
       toast.success(state.message);
-      setIsOpen(false);
     } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
@@ -50,13 +57,16 @@ export default function AddCashRegister({ className }: { className?: string }) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className={cn("rounded-full", className)}>
-          Adicionar Caixa
-        </Button>
+        {children ?? (
+          <Button className={cn("rounded-full", className)}>
+            Adicionar Despesa da Loja
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Adicionar Caixa</DialogTitle>
+          <DialogTitle>Adicionar Despesa da Loja</DialogTitle>
+          <DialogDescription aria-hidden="true"></DialogDescription>
         </DialogHeader>
         <form
           key={isOpen ? "open" : "closed"}
@@ -87,11 +97,35 @@ export default function AddCashRegister({ className }: { className?: string }) {
               </p>
             )}
           </div>
-          <DialogFooter>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Adicionando..." : "Adicionar"}
-            </Button>
-          </DialogFooter>
+          <div>
+            <label htmlFor="description">Descrição</label>
+            <Input type="text" id="description" name="description" required />
+            {errors.description && (
+              <p className="mt-1 text-sm text-red-500" aria-live="polite">
+                {errors.description[0]}
+              </p>
+            )}
+          </div>
+          <div>
+            <label htmlFor="dueDate">Vencimento (opcional)</label>
+            <DatePicker id="dueDate" name="dueDate" />
+            {errors.dueDate && (
+              <p className="mt-1 text-sm text-red-500" aria-live="polite">
+                {errors.dueDate[0]}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id="isPaid" name="isPaid" />
+            <label htmlFor="isPaid">Pago</label>
+          </div>
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
+          >
+            {pending ? "Adicionando..." : "Adicionar"}
+          </button>
         </form>
       </DialogContent>
     </Dialog>

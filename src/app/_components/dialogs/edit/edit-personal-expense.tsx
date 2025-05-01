@@ -2,10 +2,10 @@
 
 import { useActionState, useState, useEffect } from "react";
 import {
-  actionDeleteStoreExpense,
-  actionUpdateStoreExpense,
+  actionDeletePersonalExpense,
+  actionUpdatePersonalExpense,
   type ActionResponse,
-} from "@/actions/store-expense-actions";
+} from "@/actions/personal-expense-actions";
 import {
   Dialog,
   DialogTrigger,
@@ -16,16 +16,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
-import type { StoreExpense } from "@/server/db/schema/store-expense";
+import type { PersonalExpense } from "@/server/db/schema/personal-expense";
 import { Button } from "@/components/ui/button";
-import { DeleteDialog } from "./delete-dialog";
+import { DeleteDialog } from "../delete-dialog";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
-interface EditStoreExpenseProps {
-  data: StoreExpense;
+interface EditPersonalExpenseProps {
+  data: PersonalExpense;
   className?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const initialState: ActionResponse = {
@@ -33,13 +35,13 @@ const initialState: ActionResponse = {
   message: "",
 };
 
-export default function EditStoreExpense({
+export default function EditPersonalExpense({
   data,
   children,
-}: EditStoreExpenseProps) {
+}: EditPersonalExpenseProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
-    actionUpdateStoreExpense,
+    actionUpdatePersonalExpense,
     initialState,
   );
 
@@ -58,10 +60,14 @@ export default function EditStoreExpense({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger asChild>
+        {children ?? (
+          <Button className="rounded-full">Editar Despesa Pessoal</Button>
+        )}
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Editar Despesa da Loja</DialogTitle>
+          <DialogTitle>Editar Despesa Pessoal</DialogTitle>
           <DialogDescription aria-hidden="true"></DialogDescription>
         </DialogHeader>
         <form
@@ -84,6 +90,23 @@ export default function EditStoreExpense({
               </p>
             )}
           </div>
+
+          <div>
+            <label htmlFor="description">Descrição</label>
+            <Input
+              type="text"
+              id="description"
+              name="description"
+              required
+              defaultValue={data.description}
+            />
+            {errors.description && (
+              <p className="mt-1 text-sm text-red-500" aria-live="polite">
+                {errors.description[0]}
+              </p>
+            )}
+          </div>
+
           <div>
             <label htmlFor="amount">Valor</label>
             <CurrencyInput
@@ -100,47 +123,17 @@ export default function EditStoreExpense({
               </p>
             )}
           </div>
-          <div>
-            <label htmlFor="description">Descrição</label>
-            <Input
-              type="text"
-              id="description"
-              name="description"
-              required
-              defaultValue={data.description}
-            />
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {errors.description[0]}
-              </p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="dueDate">Vencimento (opcional)</label>
-            <DatePicker
-              id="dueDate"
-              name="dueDate"
-              defaultValue={data.dueDate ?? undefined}
-            />
-            {errors.dueDate && (
-              <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {errors.dueDate[0]}
-              </p>
-            )}
-          </div>
+
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isPaid"
-              name="isPaid"
-              defaultChecked={data.isPaid}
-            />
-            <label htmlFor="isPaid">Pago</label>
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="isPaid">Pago</Label>
+              <Switch id="isPaid" name="isPaid" defaultChecked={data.isPaid} />
+            </div>
           </div>
           <div className="flex justify-between gap-2">
             <DeleteDialog
               onConfirm={() => {
-                void actionDeleteStoreExpense(data.id);
+                void actionDeletePersonalExpense(data.id);
               }}
             />
             <Button className="rounded-full" type="submit" disabled={pending}>

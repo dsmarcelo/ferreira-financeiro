@@ -2,39 +2,40 @@
 
 import { useActionState, useState, useEffect } from "react";
 import {
-  actionCreatePersonalExpense,
+  actionCreateCashRegister,
   type ActionResponse,
-} from "@/actions/personal-expense-actions";
+} from "@/actions/cash-register-actions";
 import {
   Dialog,
   DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
 
-// Initial state for the form
 const initialState: ActionResponse = {
   success: false,
   message: "",
 };
 
-// Dialog component for adding a personal expense
-export default function AddPersonalExpense({
-  className,
-}: {
+interface AddCashRegisterProps {
   className?: string;
-}) {
+  children?: React.ReactNode;
+}
+
+export default function AddCashRegister({
+  className,
+  children,
+}: AddCashRegisterProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
-    actionCreatePersonalExpense,
+    actionCreateCashRegister,
     initialState,
   );
 
@@ -42,6 +43,7 @@ export default function AddPersonalExpense({
   useEffect(() => {
     if (state.success === true && state.message) {
       toast.success(state.message);
+      setIsOpen(false);
     } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
@@ -56,14 +58,15 @@ export default function AddPersonalExpense({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className={cn("rounded-full", className)}>
-          Adicionar Despesa Pessoal
-        </Button>
+        {children ?? (
+          <Button className={cn("rounded-full", className)}>
+            Adicionar Caixa
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Adicionar Despesa Pessoal</DialogTitle>
-          <DialogDescription aria-hidden="true"></DialogDescription>
+          <DialogTitle>Adicionar Caixa</DialogTitle>
         </DialogHeader>
         <form
           key={isOpen ? "open" : "closed"}
@@ -94,29 +97,11 @@ export default function AddPersonalExpense({
               </p>
             )}
           </div>
-          <div>
-            <label htmlFor="description">Descrição</label>
-            <Input type="text" id="description" name="description" required />
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {errors.description[0]}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="isPaid" name="isPaid" />
-            <label htmlFor="isPaid">Pago</label>
-          </div>
-          <p className="text-sm text-gray-500">
-            {state.success ? "Despesa adicionada com sucesso!" : ""}
-          </p>
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
-          >
-            {pending ? "Adicionando..." : "Adicionar"}
-          </button>
+          <DialogFooter>
+            <Button type="submit" disabled={pending}>
+              {pending ? "Adicionando..." : "Adicionar"}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
