@@ -135,6 +135,12 @@ export default function EditPersonalExpense({
             {pending ? "Salvando..." : "Salvar"}
           </Button>
         </div>
+        {/* General message area for non-field errors/messages */}
+        {state.message && (
+          <p className="mt-2 text-sm text-red-600" aria-live="polite">
+            {state.message}
+          </p>
+        )}
       </form>
     </ResponsiveDialog>
   );

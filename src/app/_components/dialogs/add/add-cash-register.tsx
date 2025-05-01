@@ -5,14 +5,8 @@ import {
   actionCreateCashRegister,
   type ActionResponse,
 } from "@/actions/cash-register-actions";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import ResponsiveDialog from "@/app/_components/responsive-dialog";
+import { Label } from "@/components/ui/label";
 import CurrencyInput from "@/components/inputs/currency-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -56,54 +50,50 @@ export default function AddCashRegister({
   const today = new Date().toISOString().split("T")[0];
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {children ?? (
+    <ResponsiveDialog
+      triggerButton={
+        children ?? (
           <Button className={cn("rounded-full", className)}>
             Adicionar Caixa
           </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Adicionar Caixa</DialogTitle>
-        </DialogHeader>
-        <form
-          key={isOpen ? "open" : "closed"}
-          action={formAction}
-          className="space-y-4"
-        >
-          <div>
-            <label htmlFor="date">Data</label>
-            <DatePicker id="date" name="date" required defaultValue={today} />
-            {errors.date && (
-              <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {errors.date[0]}
-              </p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="amount">Valor</label>
-            <CurrencyInput
-              id="amount"
-              name="amount"
-              step="0.01"
-              min={0}
-              required
-            />
-            {errors.value && (
-              <p className="mt-1 text-sm text-red-500" aria-live="polite">
-                {errors.value[0]}
-              </p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Adicionando..." : "Adicionar"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        )
+      }
+      isOpen={isOpen}
+      onOpenChange={setIsOpen}
+    >
+      <form
+        key={isOpen ? "open" : "closed"}
+        action={formAction}
+        className="space-y-4"
+      >
+        <div className="space-y-2">
+          <Label htmlFor="date">Data</Label>
+          <DatePicker id="date" name="date" required defaultValue={today} />
+          {errors.date && (
+            <p className="mt-1 text-sm text-red-500" aria-live="polite">
+              {errors.date[0]}
+            </p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="amount">Valor</Label>
+          <CurrencyInput
+            id="amount"
+            name="amount"
+            step="0.01"
+            min={0}
+            required
+          />
+          {errors.value && (
+            <p className="mt-1 text-sm text-red-500" aria-live="polite">
+              {errors.value[0]}
+            </p>
+          )}
+        </div>
+        <Button type="submit" className="w-full" disabled={pending}>
+          {pending ? "Adicionando..." : "Adicionar"}
+        </Button>
+      </form>
+    </ResponsiveDialog>
   );
 }
