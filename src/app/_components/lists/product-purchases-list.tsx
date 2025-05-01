@@ -1,21 +1,25 @@
+"use client";
 import { ptBR } from "date-fns/locale";
 import { format, parseISO } from "date-fns";
 import EditProductPurchase from "../dialogs/edit/edit-product-purchase";
-import { formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import type { ProductPurchase } from "@/server/db/schema/product-purchase";
 import { use } from "react";
+import DownloadButton from "../buttons/download-button";
+import ShareButton from "../buttons/share-button";
 
 // Helper to group purchases by date string (YYYY-MM-DD)
 function groupByDate(purchases: ProductPurchase[]) {
-  return purchases.reduce<Record<string, ProductPurchase[]>>(
-    (acc, purchase) => {
+  return purchases
+    .sort((a, b) =>
+      a.date === b.date ? a.id.localeCompare(b.id) : a.date.localeCompare(b.date)
+    )
+    .reduce<Record<string, ProductPurchase[]>>((acc, purchase) => {
       const date = purchase.date;
       acc[date] ??= [];
       acc[date].push(purchase);
       return acc;
-    },
-    {},
-  );
+    }, {});
 }
 
 /**
@@ -31,39 +35,76 @@ export default function ProductPurchasesList({
   const grouped = groupByDate(allProductPurchases);
   const sortedDates = Object.keys(grouped).sort();
 
+  const total = allProductPurchases.reduce(
+    (acc, item) => acc + Number(item.value),
+    0
+  );
+
+  if (allProductPurchases.length === 0) {
+    return <p>Nenhum resultado encontrado para o mês selecionado</p>;
+  }
+
   return (
-    <div className="mx-auto w-full divide-y">
-      {/* Iterate over each date group */}
-      {sortedDates.map((date) => (
-        <div key={date} className="py-1">
-          {/* Date label, styled as in the image */}
-          <div className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
-            <span className="w-12">
-              {format(parseISO(date), "dd MMM", { locale: ptBR }).toUpperCase()}
-            </span>
-            {/* Only show the first description inline, others below */}
-            <span className="flex-1 font-normal text-black/80">
-              {grouped[date]?.[0]?.description ?? ""}
-            </span>
-            <span className="min-w-[80px] text-right font-medium">
-              {formatCurrency(grouped[date]?.[0]?.value ?? 0)}
-            </span>
+    <>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div className="sm:border-r sm:pr-2">
+            <p>Total do mês</p>
+            <p className="text-2xl font-bold">{formatCurrency(total)}</p>
           </div>
-          {/* Render additional descriptions for this date, if any */}
-          {(grouped[date]?.slice(1) ?? []).map((purchase) => (
-            <EditProductPurchase data={purchase} key={purchase.id}>
-              <div className="text-muted-foreground flex items-center gap-2 pl-12 text-xs font-medium">
-                <span className="flex-1 font-normal text-black/80">
-                  {purchase.description}
-                </span>
-                <span className="min-w-[80px] text-right font-medium">
-                  {formatCurrency(purchase.value)}
-                </span>
-              </div>
-            </EditProductPurchase>
-          ))}
         </div>
-      ))}
-    </div>
+        <div className="flex gap-2">
+          <DownloadButton />
+          <ShareButton />
+        </div>
+      </div>
+      <div className="mx-auto w-full divide-y">
+        {sortedDates.map((date) => (
+          <div key={date} className="py-2">
+            <div className="flex flex-col">
+              <div className="text-muted-foreground font-base flex w-fit items-center justify-between gap-2 text-xs whitespace-nowrap">
+                <p>
+                  {format(parseISO(date), "dd MMM", {
+                    locale: ptBR,
+                  }).toUpperCase()}
+                </p>
+                <p>
+                  (
+                  {formatCurrency(
+                    grouped[date]?.reduce(
+                      (acc, item) => acc + Number(item.value),
+                      0
+                    ) ?? 0
+                  )}
+                  )
+                </p>
+              </div>
+              <div className="flex w-full flex-col justify-between divide-y divide-gray-100">
+                {grouped[date]?.map((item) => (
+                  <EditProductPurchase data={item} key={item.id}>
+                    <div
+                      className={cn(
+                        "hover:bg-background-secondary active:bg-accent flex cursor-pointer items-center gap-2 py-2"
+                      )}
+                    >
+                      <div className="flex w-full items-center gap-2">
+                        <span className="flex-1 break-words">
+                          {item.description}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="w-fit text-right whitespace-nowrap">
+                          {formatCurrency(item.value)}
+                        </span>
+                      </div>
+                    </div>
+                  </EditProductPurchase>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
