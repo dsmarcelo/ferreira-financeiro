@@ -6,7 +6,9 @@ import {
   type TableData,
 } from "./pdf-tools";
 import type { CashRegister } from "@/server/db/schema/cash-register";
-import { format } from "date-fns-tz";
+import { formatInTimeZone } from "date-fns-tz";
+import autoTable from "jspdf-autotable";
+import jsPDF from "jspdf";
 
 /**
  * Converts a list of CashRegister entries to TableData for PDF generation.
@@ -20,7 +22,7 @@ export function cashRegistersToTableData(
       { header: "Valor", accessorKey: "value" },
     ],
     rows: cashRegisters.map((item) => ({
-      date: format(item.date, "dd/MM/yyyy"),
+      date: formatInTimeZone(item.date, "America/Sao_Paulo", "dd/MM/yyyy"),
       value: formatCurrency(item.value),
     })),
   };
@@ -34,7 +36,46 @@ export function generateCashRegisterPDF(
   title: string,
 ) {
   const tableData = cashRegistersToTableData(cashRegisters);
-  return generatePDF(tableData, title);
+  const doc = new jsPDF();
+
+  // Add title
+  doc.setFontSize(20);
+  doc.text(title, 14, 20);
+
+  // Generate table
+  autoTable(doc, {
+    startY: 30,
+    head: [tableData.columns.map((col) => col.header)],
+    body: tableData.rows.map((row) =>
+      tableData.columns.map((col) => {
+        // Convert unknown values to string for PDF table cells
+        const value = row[col.accessorKey];
+        return typeof value === "string" || typeof value === "number"
+          ? value
+          : "";
+      }),
+    ),
+    theme: "striped",
+    headStyles: {
+      fillColor: [0, 0, 0],
+      textColor: 255,
+      fontStyle: "bold",
+      cellPadding: 2,
+      valign: "middle",
+    },
+    styles: {
+      fontSize: 10,
+      cellPadding: 1,
+      valign: "middle",
+    },
+    columnStyles: {
+      1: {
+        halign: "right",
+      },
+    },
+  });
+
+  return doc;
 }
 
 /**
@@ -44,8 +85,8 @@ export function downloadCashRegisterPDF(
   cashRegisters: CashRegister[],
   title: string,
 ) {
-  const tableData = cashRegistersToTableData(cashRegisters);
-  return downloadPDF(tableData, title);
+  const doc = generateCashRegisterPDF(cashRegisters, title);
+  return downloadPDF(doc, title);
 }
 
 /**
@@ -55,7 +96,6 @@ export async function shareCashRegisterPDF(
   cashRegisters: CashRegister[],
   title: string,
 ) {
-  const tableData = cashRegistersToTableData(cashRegisters);
-  const doc = generatePDF(tableData, title);
+  const doc = generateCashRegisterPDF(cashRegisters, title);
   await sharePDF(doc, title);
 }

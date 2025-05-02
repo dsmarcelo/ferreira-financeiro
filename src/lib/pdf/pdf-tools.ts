@@ -31,19 +31,28 @@ export function generatePDF(data: TableData, title: string): jsPDF {
       data.columns.map((col) => {
         // Convert unknown values to string for PDF table cells
         const value = row[col.accessorKey];
-        return typeof value === "number" ? value : String(value ?? "");
+        return typeof value === "string" || typeof value === "number"
+          ? value
+          : "";
       }),
     ),
-    theme: "grid",
+    theme: "striped",
     headStyles: {
       fillColor: [0, 0, 0],
       textColor: 255,
       fontStyle: "bold",
       cellPadding: 2,
+      valign: "middle",
     },
     styles: {
       fontSize: 10,
       cellPadding: 1,
+      valign: "middle",
+    },
+    columnStyles: {
+      [data.columns.length - 1]: {
+        halign: "right",
+      },
     },
   });
 
@@ -128,13 +137,11 @@ export async function shareToWhatsApp(data: TableData, title: string) {
  * @param data - Object containing rows and columns for the table
  * @param title - Title of the PDF document
  */
-export async function generateAndSharePDF(data: TableData, title: string) {
-  const doc = generatePDF(data, title);
+export async function generateAndSharePDF(doc: jsPDF, title: string) {
   await sharePDF(doc, title);
 }
 
-export function downloadPDF(data: TableData, title: string) {
-  const doc = generatePDF(data, title);
+export function downloadPDF(doc: jsPDF, title: string) {
   // Create blob URL for PDF and trigger download via anchor
   const blob = doc.output("blob");
   const url = URL.createObjectURL(blob);
