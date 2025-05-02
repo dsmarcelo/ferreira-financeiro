@@ -4,7 +4,7 @@ import { format, parseISO } from "date-fns";
 import EditPersonalExpense from "../dialogs/edit/edit-personal-expense";
 import { formatCurrency } from "@/lib/utils";
 import type { PersonalExpense } from "@/server/db/schema/personal-expense";
-import { use } from "react";
+import { startTransition, Suspense, use } from "react";
 import DownloadButton from "../buttons/download-button";
 import ShareButton from "../buttons/share-button";
 import { actionTogglePersonalExpenseIsPaid } from "@/actions/personal-expense-actions";
@@ -26,13 +26,27 @@ function groupByDate(expenses: PersonalExpense[]) {
     }, {});
 }
 // TODO: Update all the other lists to match this component
+import { useOptimistic } from "react";
+
 export default function PersonalExpensesList({
   personalExpenses,
 }: {
   personalExpenses: Promise<PersonalExpense[]>;
 }) {
   const allPersonalExpenses = use(personalExpenses);
-  const grouped = groupByDate(allPersonalExpenses);
+
+  // useOptimistic for optimistic expense updates
+  const [optimisticExpenses, setOptimisticExpenses] = useOptimistic(
+    allPersonalExpenses,
+    (state: PersonalExpense[], update: { id: string; checked: boolean }) =>
+      state.map((expense) =>
+        expense.id === update.id
+          ? { ...expense, isPaid: update.checked }
+          : expense,
+      ),
+  );
+
+  const grouped = groupByDate(optimisticExpenses);
   const sortedDates = Object.keys(grouped).sort();
 
   const total = allPersonalExpenses.reduce(
@@ -51,7 +65,7 @@ export default function PersonalExpensesList({
   }
 
   return (
-    <>
+    <Suspense fallback={<p>Carregando...</p>}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <div className="sm:border-r sm:pr-2">
@@ -110,6 +124,9 @@ export default function PersonalExpensesList({
                       <ExpenseListItem
                         expense={expense}
                         onTogglePaid={(id: string, checked: boolean) => {
+                          startTransition(() => {
+                            setOptimisticExpenses({ id, checked });
+                          });
                           void actionTogglePersonalExpenseIsPaid(id, checked);
                         }}
                       />
@@ -121,6 +138,6 @@ export default function PersonalExpensesList({
           </div>
         ))}
       </div>
-    </>
+    </Suspense>
   );
 }

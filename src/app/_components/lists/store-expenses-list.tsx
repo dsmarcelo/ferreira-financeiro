@@ -6,7 +6,7 @@ import { formatCurrency } from "@/lib/utils";
 import { ExpenseListItem } from "./expense-list-item";
 import { actionToggleStoreExpenseIsPaid } from "@/actions/store-expense-actions";
 import type { StoreExpense } from "@/server/db/schema/store-expense";
-import { use } from "react";
+import { startTransition, useOptimistic, use } from "react";
 import DownloadButton from "../buttons/download-button";
 import ShareButton from "../buttons/share-button";
 
@@ -36,14 +36,26 @@ export default function StoreExpensesList({
   storeExpenses: Promise<StoreExpense[]>;
 }) {
   const allStoreExpenses = use(storeExpenses);
-  const grouped = groupByDate(allStoreExpenses);
+
+  // useOptimistic for optimistic paid state
+  const [optimisticExpenses, setOptimisticExpenses] = useOptimistic(
+    allStoreExpenses,
+    (state: StoreExpense[], update: { id: string; checked: boolean }) =>
+      state.map((item) =>
+        item.id === update.id ? { ...item, isPaid: update.checked } : item
+      )
+  );
+
+  const grouped = groupByDate(optimisticExpenses);
   const sortedDates = Object.keys(grouped).sort();
 
   const total = allStoreExpenses.reduce(
     (acc, item) => acc + Number(item.value),
     0,
   );
-  const totalPaid = allStoreExpenses.filter((item) => item.isPaid).reduce((acc, item) => acc + Number(item.value), 0);
+  const totalPaid = allStoreExpenses
+    .filter((item) => item.isPaid)
+    .reduce((acc, item) => acc + Number(item.value), 0);
   const totalUnpaid = total - totalPaid;
 
   if (allStoreExpenses.length === 0) {
@@ -108,6 +120,9 @@ export default function StoreExpensesList({
                       <ExpenseListItem
                         expense={item}
                         onTogglePaid={(id: string, checked: boolean) => {
+                          startTransition(() => {
+                            setOptimisticExpenses({ id, checked });
+                          });
                           void actionToggleStoreExpenseIsPaid(id, checked);
                         }}
                       />

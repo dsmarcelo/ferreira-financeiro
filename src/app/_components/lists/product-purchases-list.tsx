@@ -6,7 +6,7 @@ import { formatCurrency } from "@/lib/utils";
 import { ExpenseListItem } from "./expense-list-item";
 import { actionToggleProductPurchaseIsPaid } from "@/actions/product-purchase-actions";
 import type { ProductPurchase } from "@/server/db/schema/product-purchase";
-import { use } from "react";
+import { startTransition, useOptimistic, use } from "react";
 import DownloadButton from "../buttons/download-button";
 import ShareButton from "../buttons/share-button";
 
@@ -36,14 +36,26 @@ export default function ProductPurchasesList({
   productPurchases: Promise<ProductPurchase[]>;
 }) {
   const allProductPurchases = use(productPurchases);
-  const grouped = groupByDate(allProductPurchases);
+
+  // useOptimistic for optimistic paid state
+  const [optimisticPurchases, setOptimisticPurchases] = useOptimistic(
+    allProductPurchases,
+    (state: ProductPurchase[], update: { id: string; checked: boolean }) =>
+      state.map((item) =>
+        item.id === update.id ? { ...item, isPaid: update.checked } : item
+      )
+  );
+
+  const grouped = groupByDate(optimisticPurchases);
   const sortedDates = Object.keys(grouped).sort();
 
   const total = allProductPurchases.reduce(
     (acc, item) => acc + Number(item.value),
     0,
   );
-  const totalPaid = allProductPurchases.filter((item) => item.isPaid).reduce((acc, item) => acc + Number(item.value), 0);
+  const totalPaid = allProductPurchases
+    .filter((item) => item.isPaid)
+    .reduce((acc, item) => acc + Number(item.value), 0);
   const totalUnpaid = total - totalPaid;
 
   if (allProductPurchases.length === 0) {
@@ -108,6 +120,9 @@ export default function ProductPurchasesList({
                       <ExpenseListItem
                         expense={item}
                         onTogglePaid={(id: string, checked: boolean) => {
+                          startTransition(() => {
+                            setOptimisticPurchases({ id, checked });
+                          });
                           void actionToggleProductPurchaseIsPaid(id, checked);
                         }}
                       />
