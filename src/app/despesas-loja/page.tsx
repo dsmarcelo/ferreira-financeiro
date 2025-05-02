@@ -9,10 +9,10 @@ import StoreExpensesList from "@/app/_components/lists/store-expenses-list";
 export default async function DespesasLojaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date: string }>;
+  searchParams: Promise<{ from: string; to: string }>;
 }) {
-  const { date } = await searchParams;
-  const storeExpenses = listStoreExpenses(date);
+  const { from, to } = await searchParams;
+  const storeExpenses = listStoreExpenses(from, to);
 
   return (
     <div className="flex min-h-screen flex-col pb-24">
@@ -30,7 +30,9 @@ export default async function DespesasLojaPage({
       </main>
       <div className="fixed bottom-24 block w-full px-5 sm:hidden">
         <AddStoreExpense>
-          <Button className="h-12 w-full rounded-full">Adicionar Despesa da Loja</Button>
+          <Button className="h-12 w-full rounded-full">
+            Adicionar Despesa da Loja
+          </Button>
         </AddStoreExpense>
       </div>
     </div>

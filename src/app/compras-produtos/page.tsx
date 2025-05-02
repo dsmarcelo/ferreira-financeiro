@@ -9,17 +9,19 @@ import ProductPurchasesList from "@/app/_components/lists/product-purchases-list
 export default async function ComprasProdutosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date: string }>;
+  searchParams: Promise<{ from: string; to: string }>;
 }) {
-  const { date } = await searchParams;
-  const productPurchases = listProductPurchases(date);
+  const { from, to } = await searchParams;
+  const productPurchases = listProductPurchases(from, to);
 
   return (
     <div className="flex min-h-screen flex-col pb-24">
       <Header className="sticky top-0 z-50 flex-none">
         <div className="hidden sm:block">
           <AddProductPurchase>
-            <Button className="rounded-full">Adicionar Compra de Produto</Button>
+            <Button className="rounded-full">
+              Adicionar Compra de Produto
+            </Button>
           </AddProductPurchase>
         </div>
       </Header>
@@ -30,7 +32,9 @@ export default async function ComprasProdutosPage({
       </main>
       <div className="fixed bottom-24 block w-full px-5 sm:hidden">
         <AddProductPurchase>
-          <Button className="h-12 w-full rounded-full">Adicionar Compra de Produto</Button>
+          <Button className="h-12 w-full rounded-full">
+            Adicionar Compra de Produto
+          </Button>
         </AddProductPurchase>
       </div>
     </div>

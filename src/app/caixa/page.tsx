@@ -9,10 +9,10 @@ import CashRegisterList from "@/app/_components/lists/cash-register-list";
 export default async function CaixaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date: string }>;
+  searchParams: Promise<{ from: string; to: string }>;
 }) {
-  const { date } = await searchParams;
-  const cashRegisters = listCashRegisters(date);
+  const { from, to } = await searchParams;
+  const cashRegisters = listCashRegisters(from, to);
 
   return (
     <div className="flex min-h-screen flex-col pb-24">
