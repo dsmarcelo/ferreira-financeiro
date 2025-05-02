@@ -26,6 +26,11 @@ export default function DateRangePicker({ className }: { className?: string }) {
 
   // Get the initial month: prefer searchParams, fallback to localStorage, then today
   const getInitialMonth = React.useCallback((): Date => {
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (stored) return parseYYYYMM(stored);
+    } catch {}
+
     const fromParam = searchParams.get("from");
     if (fromParam) {
       // Save to localStorage for persistence
@@ -34,11 +39,6 @@ export default function DateRangePicker({ className }: { className?: string }) {
       } catch {}
       return parseYYYYMM(fromParam);
     }
-    // Fallback to localStorage if no search param
-    try {
-      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (stored) return parseYYYYMM(stored);
-    } catch {}
     // Default to today
     return new Date();
   }, [searchParams]);
