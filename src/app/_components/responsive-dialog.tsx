@@ -20,7 +20,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { useMediaQuery } from "usehooks-ts";
+// import { useMediaQuery } from "usehooks-ts";
 
 export default function ResponsiveDialog({
   triggerButton,
@@ -44,7 +44,8 @@ export default function ResponsiveDialog({
     setMounted(true);
   }, []);
 
-  const isDesktop = useMediaQuery("(min-width: 640px)");
+  // const isDesktop = useMediaQuery("(min-width: 640px)");
+  const isDesktop = true;
 
   if (!mounted) {
     // Prevent hydration mismatch: render nothing until mounted

@@ -1,4 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
+import { parseISO } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -14,10 +16,33 @@ export function formatCurrency(value: number | string) {
 }
 
 export function formatDate(date: Date | string) {
-  const dateObject = typeof date === "string" ? new Date(date) : date;
+  const dateObject = typeof date === "string" ? stringToDate(date) : date;
   return new Intl.DateTimeFormat("pt-BR", {
     year: "numeric",
     month: "long",
     day: "numeric",
   }).format(dateObject);
+}
+
+export function getSelectedMonth() {
+  const month = localStorage.getItem("month");
+  if (month) return month;
+  return "";
+}
+
+export function formatMonth(date: Date | string) {
+  console.log("date", date);
+  const dateObject = typeof date === "string" ? stringToDate(date) : date;
+  console.log("dateObject", dateObject);
+  const formatted = new Intl.DateTimeFormat("pt-BR", {
+    month: "long",
+    year: "numeric",
+  }).format(dateObject);
+  console.log("formatted", formatted);
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
+export function stringToDate(date: string): Date {
+  const parsed = parseISO(date);
+  return toZonedTime(parsed, "UTC");
 }

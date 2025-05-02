@@ -1,7 +1,9 @@
 "use client";
 
-import { cn, formatCurrency, formatDate } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import type { CashRegister } from "@/server/db/schema/cash-register";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import * as React from "react";
 
 export interface CashRegisterListItemProps {
@@ -20,7 +22,11 @@ export function CashRegisterListItem({
       )}
     >
       <div className="flex w-full items-center gap-2">
-        <p>{formatDate(cashRegister.date)}</p>
+        <p>
+          {format(parseISO(cashRegister.date), "dd/MM", {
+            locale: ptBR,
+          }).toUpperCase()}
+        </p>
       </div>
       <div className="flex items-center gap-1">
         <p className={cn("w-fit text-right whitespace-nowrap")}>

@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { formatMonth } from "@/lib/utils";
 
 // Helper function to parse YYYY-MM to Date
 const parseYYYYMM = (dateStr: string | null): Date => {
@@ -36,6 +37,7 @@ export default function DateRangePicker({ className }: { className?: string }) {
       // Save to localStorage for persistence
       try {
         localStorage.setItem(LOCAL_STORAGE_KEY, fromParam);
+        localStorage.setItem("month", formatMonth(fromParam));
       } catch {}
       return parseYYYYMM(fromParam);
     }
@@ -73,8 +75,8 @@ export default function DateRangePicker({ className }: { className?: string }) {
     // Update localStorage for persistence
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, from);
+      localStorage.setItem("month", formatMonth(from));
     } catch {}
-    console.log(params.toString());
     router.replace(`?${params.toString()}`);
   };
 

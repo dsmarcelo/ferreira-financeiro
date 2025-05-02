@@ -1,11 +1,16 @@
 "use client";
-import EditCashRegister from "../dialogs/edit/edit-cash-register";
-import { formatCurrency } from "@/lib/utils";
+import EditCashRegister from "@/app/_components/dialogs/edit/edit-cash-register";
+import { formatCurrency, getSelectedMonth } from "@/lib/utils";
 import type { CashRegister } from "@/server/db/schema/cash-register";
 import { use } from "react";
-import DownloadButton from "../buttons/download-button";
-import ShareButton from "../buttons/share-button";
-import { CashRegisterListItem } from "./cash-entry-list-item";
+import { useCallback, useTransition } from "react";
+import {
+  downloadCashRegisterPDF,
+  shareCashRegisterPDF,
+} from "@/lib/pdf/cash-register-pdf";
+import { CashRegisterListItem } from "@/app/_components/lists/cash-entry-list-item";
+import DownloadButton from "@/app/_components/buttons/download-button";
+import ShareButton from "@/app/_components/buttons/share-button";
 
 export default function CashRegisterList({
   cashRegisters,
@@ -13,6 +18,21 @@ export default function CashRegisterList({
   cashRegisters: Promise<CashRegister[]>;
 }) {
   const allCashRegisters = use(cashRegisters);
+  console.log(allCashRegisters[0]);
+  const selectedMonth = getSelectedMonth();
+
+  // PDF actions (hooks must be above any return)
+  const [isPending, startTransition] = useTransition();
+  const handleDownload = useCallback(() => {
+    startTransition(() => {
+      downloadCashRegisterPDF(allCashRegisters, `Caixa - ${selectedMonth}`);
+    });
+  }, [allCashRegisters, selectedMonth]);
+  const handleShare = useCallback(() => {
+    startTransition(() => {
+      void shareCashRegisterPDF(allCashRegisters, `Caixa - ${selectedMonth}`);
+    });
+  }, [allCashRegisters, selectedMonth]);
 
   const total = allCashRegisters.reduce(
     (acc, item) => acc + Number(item.value),
@@ -33,8 +53,16 @@ export default function CashRegisterList({
           </div>
         </div>
         <div className="flex gap-2">
-          <DownloadButton />
-          <ShareButton />
+          <DownloadButton
+            aria-label="Baixar PDF do caixa"
+            onClick={handleDownload}
+            disabled={isPending}
+          />
+          <ShareButton
+            aria-label="Compartilhar PDF do caixa"
+            onClick={handleShare}
+            disabled={isPending}
+          />
         </div>
       </div>
       <div className="mx-auto w-full divide-y">
