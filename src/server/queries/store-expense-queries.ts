@@ -46,9 +46,10 @@ export async function deleteStoreExpense(id: string): Promise<void> {
 
 // List all store expenses (optionally by date range)
 export async function listStoreExpenses(
-  startDate?: string,
-  endDate?: string,
-): Promise<StoreExpense[]> {
+  startDate: string,
+  endDate: string,
+): Promise<StoreExpense[] | []> {
+  console.log("fetching store expenses", startDate, endDate);
   if (startDate && endDate) {
     return db
       .select()
@@ -57,7 +58,7 @@ export async function listStoreExpenses(
         and(gte(storeExpense.date, startDate), lte(storeExpense.date, endDate)),
       );
   }
-  return db.select().from(storeExpense);
+  return [];
 }
 
 // Get the sum of values in a date range

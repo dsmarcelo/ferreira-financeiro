@@ -44,11 +44,12 @@ export async function deletePersonalExpense(id: string): Promise<void> {
   await db.delete(personalExpense).where(eq(personalExpense.id, id));
 }
 
-// List all personal expenses (optionally by date range)
+// List all personal expenses (by date range)
 export async function listPersonalExpenses(
-  startDate?: string,
-  endDate?: string,
-): Promise<PersonalExpense[]> {
+  startDate: string,
+  endDate: string,
+): Promise<PersonalExpense[] | []> {
+  console.log("fetching personal expenses", startDate, endDate);
   if (startDate && endDate) {
     return db
       .select()
@@ -60,7 +61,7 @@ export async function listPersonalExpenses(
         ),
       );
   }
-  return db.select().from(personalExpense);
+  return [];
 }
 
 // Get the sum of values in a date range

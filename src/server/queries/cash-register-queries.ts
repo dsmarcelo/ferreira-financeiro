@@ -48,12 +48,12 @@ export async function deleteCashRegister(id: string): Promise<void> {
   await db.delete(cashRegister).where(eq(cashRegister.id, id));
 }
 
-// List all cash register entries (optionally by date range)
+// List all cash register entries (by date range)
 export async function listCashRegisters(
-  startDate?: string,
-  endDate?: string,
-): Promise<CashRegister[]> {
-  // If date range is provided, filter by date
+  startDate: string,
+  endDate: string,
+): Promise<CashRegister[] | []> {
+  console.log("fetching cash registers", startDate, endDate);
   if (startDate && endDate) {
     return db
       .select()
@@ -62,7 +62,7 @@ export async function listCashRegisters(
         and(gte(cashRegister.date, startDate), lte(cashRegister.date, endDate)),
       );
   }
-  return db.select().from(cashRegister);
+  return [];
 }
 
 // Get the sum of values in a date range

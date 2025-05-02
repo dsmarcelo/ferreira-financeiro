@@ -45,11 +45,12 @@ export async function deleteProductPurchase(id: string): Promise<void> {
   await db.delete(productPurchase).where(eq(productPurchase.id, id));
 }
 
-// List all product purchases (optionally by date range)
+// List all product purchases (by date range)
 export async function listProductPurchases(
-  startDate?: string,
-  endDate?: string,
-): Promise<ProductPurchase[]> {
+  startDate: string,
+  endDate: string,
+): Promise<ProductPurchase[] | []> {
+  console.log("fetching product purchases", startDate, endDate);
   if (startDate && endDate) {
     return db
       .select()
@@ -61,7 +62,7 @@ export async function listProductPurchases(
         ),
       );
   }
-  return db.select().from(productPurchase);
+  return [];
 }
 
 // Get the sum of values in a date range
