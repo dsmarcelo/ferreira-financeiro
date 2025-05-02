@@ -84,6 +84,15 @@ export async function actionCreateProductPurchase(
   }
 }
 
+// Toggle isPaid for a product purchase
+export async function actionToggleProductPurchaseIsPaid(
+  id: string,
+  isPaid: boolean,
+): Promise<void> {
+  await updateProductPurchase(id, { isPaid });
+  revalidatePath("/despesas-de-produtos");
+}
+
 // Server action to update a product purchase entry
 export async function actionUpdateProductPurchase(
   _prevState: ActionResponse | undefined,

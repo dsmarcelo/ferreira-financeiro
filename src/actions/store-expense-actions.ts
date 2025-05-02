@@ -88,6 +88,15 @@ export async function actionCreateStoreExpense(
   }
 }
 
+// Toggle isPaid for a store expense
+export async function actionToggleStoreExpenseIsPaid(
+  id: string,
+  isPaid: boolean,
+): Promise<void> {
+  await updateStoreExpense(id, { isPaid });
+  revalidatePath("/despesas-da-loja");
+}
+
 // Server action to update a store expense entry
 export async function actionUpdateStoreExpense(
   _prevState: ActionResponse | undefined,

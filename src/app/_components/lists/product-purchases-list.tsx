@@ -4,6 +4,7 @@ import { format, parseISO } from "date-fns";
 import EditProductPurchase from "../dialogs/edit/edit-product-purchase";
 import { formatCurrency } from "@/lib/utils";
 import { ExpenseListItem } from "./expense-list-item";
+import { actionToggleProductPurchaseIsPaid } from "@/actions/product-purchase-actions";
 import type { ProductPurchase } from "@/server/db/schema/product-purchase";
 import { use } from "react";
 import DownloadButton from "../buttons/download-button";
@@ -42,6 +43,8 @@ export default function ProductPurchasesList({
     (acc, item) => acc + Number(item.value),
     0,
   );
+  const totalPaid = allProductPurchases.filter((item) => item.isPaid).reduce((acc, item) => acc + Number(item.value), 0);
+  const totalUnpaid = total - totalPaid;
 
   if (allProductPurchases.length === 0) {
     return <p>Nenhum resultado encontrado para o mês selecionado</p>;
@@ -54,6 +57,22 @@ export default function ProductPurchasesList({
           <div className="sm:border-r sm:pr-2">
             <p>Total do mês</p>
             <p className="text-2xl font-bold">{formatCurrency(total)}</p>
+          </div>
+          <div className="flex divide-x">
+            <div className="pr-2">
+              <div className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full bg-green-400" />
+                <p className="text-sm">Total pago</p>
+              </div>
+              <p className="text-lg font-bold">{formatCurrency(totalPaid)}</p>
+            </div>
+            <div className="pl-2">
+              <div className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full bg-red-400" />
+                <p className="text-sm">Total pendente</p>
+              </div>
+              <p className="text-lg font-bold">{formatCurrency(totalUnpaid)}</p>
+            </div>
           </div>
         </div>
         <div className="flex gap-2">
@@ -86,7 +105,12 @@ export default function ProductPurchasesList({
                 {grouped[date]?.map((item) => (
                   <EditProductPurchase data={item} key={item.id}>
                     <div>
-                      <ExpenseListItem expense={item} onTogglePaid={() => {}} />
+                      <ExpenseListItem
+                        expense={item}
+                        onTogglePaid={(id: string, checked: boolean) => {
+                          void actionToggleProductPurchaseIsPaid(id, checked);
+                        }}
+                      />
                     </div>
                   </EditProductPurchase>
                 ))}
