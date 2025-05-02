@@ -2,7 +2,8 @@
 import { ptBR } from "date-fns/locale";
 import { format, parseISO } from "date-fns";
 import EditProductPurchase from "../dialogs/edit/edit-product-purchase";
-import { cn, formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
+import { ExpenseListItem } from "./expense-list-item";
 import type { ProductPurchase } from "@/server/db/schema/product-purchase";
 import { use } from "react";
 import DownloadButton from "../buttons/download-button";
@@ -12,7 +13,9 @@ import ShareButton from "../buttons/share-button";
 function groupByDate(purchases: ProductPurchase[]) {
   return purchases
     .sort((a, b) =>
-      a.date === b.date ? a.id.localeCompare(b.id) : a.date.localeCompare(b.date)
+      a.date === b.date
+        ? a.id.localeCompare(b.id)
+        : a.date.localeCompare(b.date),
     )
     .reduce<Record<string, ProductPurchase[]>>((acc, purchase) => {
       const date = purchase.date;
@@ -37,7 +40,7 @@ export default function ProductPurchasesList({
 
   const total = allProductPurchases.reduce(
     (acc, item) => acc + Number(item.value),
-    0
+    0,
   );
 
   if (allProductPurchases.length === 0) {
@@ -73,8 +76,8 @@ export default function ProductPurchasesList({
                   {formatCurrency(
                     grouped[date]?.reduce(
                       (acc, item) => acc + Number(item.value),
-                      0
-                    ) ?? 0
+                      0,
+                    ) ?? 0,
                   )}
                   )
                 </p>
@@ -82,21 +85,8 @@ export default function ProductPurchasesList({
               <div className="flex w-full flex-col justify-between divide-y divide-gray-100">
                 {grouped[date]?.map((item) => (
                   <EditProductPurchase data={item} key={item.id}>
-                    <div
-                      className={cn(
-                        "hover:bg-background-secondary active:bg-accent flex cursor-pointer items-center gap-2 py-2"
-                      )}
-                    >
-                      <div className="flex w-full items-center gap-2">
-                        <span className="flex-1 break-words">
-                          {item.description}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="w-fit text-right whitespace-nowrap">
-                          {formatCurrency(item.value)}
-                        </span>
-                      </div>
+                    <div>
+                      <ExpenseListItem expense={item} onTogglePaid={() => {}} />
                     </div>
                   </EditProductPurchase>
                 ))}
