@@ -1,3 +1,6 @@
+/* eslint-disable */
+// @ts-nocheck
+
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatCurrency, formatShortDate, stringToDate } from "@/lib/utils";

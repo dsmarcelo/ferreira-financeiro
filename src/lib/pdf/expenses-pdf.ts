@@ -49,7 +49,6 @@ export function personalExpensesToTableData(
       dueDate: row.dueDate,
       isPaid: row.isPaid,
       value: row.value,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       _isTotal: row._isTotal,
     })),
   };
@@ -92,7 +91,6 @@ export function storeExpensesToTableData(
       dueDate: row.dueDate,
       isPaid: row.isPaid,
       value: row.value,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       _isTotal: row._isTotal,
     })),
   };
@@ -150,7 +148,6 @@ export function sharePersonalExpensesPDF(
   title: string,
 ) {
   const doc = generatePersonalExpensesPDF(personalExpenses, title);
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
   sharePDF(doc, title);
 }
 
@@ -162,6 +159,5 @@ export function shareStoreExpensesPDF(
   title: string,
 ) {
   const doc = generateStoreExpensesPDF(storeExpenses, title);
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
   sharePDF(doc, title);
 }
