@@ -1,5 +1,5 @@
 import { type ClassValue, clsx } from "clsx";
-import { parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { twMerge } from "tailwind-merge";
 
@@ -22,6 +22,11 @@ export function formatDate(date: Date | string) {
     month: "long",
     day: "numeric",
   }).format(dateObject);
+}
+
+export function formatShortDate(date: Date | string) {
+  const dateObject = typeof date === "string" ? stringToDate(date) : date;
+  return format(dateObject, "dd/MM/yyyy");
 }
 
 export function getSelectedMonth() {

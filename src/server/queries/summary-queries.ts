@@ -1,5 +1,8 @@
+"use server";
+
 import { db } from "@/server/db";
 import { personalExpense } from "@/server/db/schema/personal-expense";
+import { storeExpense } from "@/server/db/schema/store-expense";
 import { productPurchase } from "@/server/db/schema/product-purchase";
 import { and, gte, lte } from "drizzle-orm";
 
@@ -16,7 +19,7 @@ export interface ExpenseSummary {
  */
 export async function listExpensesAndPurchasesByDateRange(
   startDate: string,
-  endDate: string
+  endDate: string,
 ): Promise<ExpenseSummary[]> {
   const personal = await db
     .select({
@@ -29,8 +32,20 @@ export async function listExpensesAndPurchasesByDateRange(
     .where(
       and(
         gte(personalExpense.date, startDate),
-        lte(personalExpense.date, endDate)
-      )
+        lte(personalExpense.date, endDate),
+      ),
+    );
+
+  const store = await db
+    .select({
+      dueDate: storeExpense.date,
+      description: storeExpense.description,
+      value: storeExpense.value,
+      isPaid: storeExpense.isPaid,
+    })
+    .from(storeExpense)
+    .where(
+      and(gte(storeExpense.date, startDate), lte(storeExpense.date, endDate)),
     );
 
   const purchases = await db
@@ -44,12 +59,12 @@ export async function listExpensesAndPurchasesByDateRange(
     .where(
       and(
         gte(productPurchase.date, startDate),
-        lte(productPurchase.date, endDate)
-      )
+        lte(productPurchase.date, endDate),
+      ),
     );
 
-  return [...personal, ...purchases]
-    .map(item => ({
+  return [...personal, ...store, ...purchases]
+    .map((item) => ({
       ...item,
       value: Number(item.value),
     }))

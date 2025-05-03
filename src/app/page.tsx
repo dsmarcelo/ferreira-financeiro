@@ -5,20 +5,25 @@ import AddProductPurchase from "./_components/dialogs/add/add-product-purchase";
 import Header from "./_components/header";
 import SummaryCards from "@/app/_components/summary-cards";
 import { Button } from "@/components/ui/button";
+import { SummaryPDFButton } from "@/app/_components/summary-pdf-button";
 
+// Home page for the financial dashboard
 export default async function HomePage({
   searchParams,
 }: {
   searchParams: Promise<{ from: string; to: string }>;
 }) {
+  // Get date range parameters from the URL (server-side)
   const params = await searchParams;
   const from = params.from;
   const to = params.to;
 
   return (
     <main className="">
+      {/* Page header with optional back button */}
       <Header showBackButton={false} />
       <div className="container mx-auto flex max-w-screen-lg flex-col gap-4 p-5 pb-16">
+        {/* Profit summary section */}
         <div className="flex flex-col gap-4">
           <h5 className="text-xl font-bold">Lucro</h5>
           {/* Optionally, you can show a placeholder or skeleton here if params are missing */}
@@ -26,14 +31,23 @@ export default async function HomePage({
             <span className="text-muted-foreground">R$</span> 32.540,50
           </h1>
         </div>
-        {/* Conditionally render the summary cards only if both 'from' and 'to' are present */}
+        {/* Show summary cards and PDF button only if a period is selected */}
         {from && to ? (
-          <SummaryCards from={from} to={to} />
+          <>
+            {/* Summary cards for caixa, despesas pessoais, loja, produtos */}
+            <SummaryCards from={from} to={to} />
+            {/* Button to generate and download the summary PDF for the selected period */}
+            <div className="mt-4">
+              <SummaryPDFButton from={from} to={to} />
+            </div>
+          </>
         ) : (
+          // Prompt to select a period if missing
           <div className="text-muted-foreground text-sm">
             Selecione um período para ver os dados.
           </div>
         )}
+        {/* Buttons to add new entries for each type of financial record */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <AddCashRegister>
             <Button className="h-14 rounded-xl">Adicionar Caixa</Button>
@@ -58,3 +72,4 @@ export default async function HomePage({
     </main>
   );
 }
+
