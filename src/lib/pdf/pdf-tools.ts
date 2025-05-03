@@ -16,12 +16,18 @@ export interface TableData {
  * @param title - Title of the PDF document
  * @returns The generated PDF document
  */
-export function generatePDF(data: TableData, title: string): jsPDF {
+export function generatePDF(
+  data: TableData,
+  title: string,
+  highlightLastRow?: boolean,
+): jsPDF {
   const doc = new jsPDF();
 
-  // Add title
+  // Add title (centered)
   doc.setFontSize(20);
-  doc.text(title, 14, 20);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const textWidth = doc.getTextWidth(title);
+  doc.text(title, (pageWidth - textWidth) / 2, 20);
 
   // Generate table
   autoTable(doc, {
@@ -36,23 +42,40 @@ export function generatePDF(data: TableData, title: string): jsPDF {
           : "";
       }),
     ),
-    theme: "striped",
+    theme: "grid",
     headStyles: {
       fillColor: [0, 0, 0],
       textColor: 255,
       fontStyle: "bold",
       cellPadding: 2,
       valign: "middle",
+      halign: "center",
     },
     styles: {
       fontSize: 10,
       cellPadding: 1,
       valign: "middle",
     },
-    columnStyles: {
-      [data.columns.length - 1]: {
-        halign: "right",
-      },
+    columnStyles: Object.fromEntries(
+      data.columns
+        .map((col, idx) => {
+          if (col.accessorKey === "value") return [idx, { halign: "right" }];
+          if (col.accessorKey === "dueDate" || col.accessorKey === "isPaid")
+            return [idx, { halign: "center" }];
+          return null;
+        })
+        .filter(Boolean) as [number, { halign: string }][],
+    ),
+    didParseCell: (dataCell) => {
+      if (
+        highlightLastRow &&
+        dataCell.section === "body" &&
+        dataCell.row.index === data.rows.length - 1
+      ) {
+        dataCell.cell.styles.fillColor = [0, 0, 0];
+        dataCell.cell.styles.textColor = 255;
+        dataCell.cell.styles.fontStyle = "bold";
+      }
     },
   });
 

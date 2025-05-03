@@ -4,9 +4,14 @@ import { format, parseISO } from "date-fns";
 import EditPersonalExpense from "../dialogs/edit/edit-personal-expense";
 import { formatCurrency } from "@/lib/utils";
 import type { PersonalExpense } from "@/server/db/schema/personal-expense";
-import { startTransition, Suspense, use } from "react";
+import { useCallback, Suspense, use, useTransition } from "react";
 import DownloadButton from "../buttons/download-button";
 import ShareButton from "../buttons/share-button";
+import {
+  downloadPersonalExpensesPDF,
+  sharePersonalExpensesPDF,
+} from "@/lib/pdf/expenses-pdf";
+import { getSelectedMonth } from "@/lib/utils";
 import { actionTogglePersonalExpenseIsPaid } from "@/actions/personal-expense-actions";
 import { ExpenseListItem } from "./expense-list-item";
 
@@ -34,6 +39,26 @@ export default function PersonalExpensesList({
   personalExpenses: Promise<PersonalExpense[]>;
 }) {
   const allPersonalExpenses = use(personalExpenses);
+  const selectedMonth = getSelectedMonth();
+
+  // PDF actions
+  const [isPending, startTransition] = useTransition();
+  const handleDownload = useCallback(() => {
+    startTransition(() => {
+      downloadPersonalExpensesPDF(
+        allPersonalExpenses,
+        `Despesas Pessoais - ${selectedMonth}`,
+      );
+    });
+  }, [allPersonalExpenses, selectedMonth]);
+  const handleShare = useCallback(() => {
+    startTransition(() => {
+      void sharePersonalExpensesPDF(
+        allPersonalExpenses,
+        `Despesas Pessoais - ${selectedMonth}`,
+      );
+    });
+  }, [allPersonalExpenses, selectedMonth]);
 
   // useOptimistic for optimistic expense updates
   const [optimisticExpenses, setOptimisticExpenses] = useOptimistic(
@@ -90,8 +115,16 @@ export default function PersonalExpensesList({
           </div>
         </div>
         <div className="flex gap-2">
-          <DownloadButton />
-          <ShareButton />
+          <DownloadButton
+            aria-label="Baixar PDF das despesas pessoais"
+            onClick={handleDownload}
+            disabled={isPending}
+          />
+          <ShareButton
+            aria-label="Compartilhar PDF das despesas pessoais"
+            onClick={handleShare}
+            disabled={isPending}
+          />
         </div>
       </div>
       <div className="mx-auto w-full divide-y">

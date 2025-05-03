@@ -6,9 +6,14 @@ import { formatCurrency } from "@/lib/utils";
 import { ExpenseListItem } from "./expense-list-item";
 import { actionToggleStoreExpenseIsPaid } from "@/actions/store-expense-actions";
 import type { StoreExpense } from "@/server/db/schema/store-expense";
-import { startTransition, useOptimistic, use } from "react";
+import { useOptimistic, use, useTransition, useCallback } from "react";
 import DownloadButton from "../buttons/download-button";
 import ShareButton from "../buttons/share-button";
+import {
+  downloadStoreExpensesPDF,
+  shareStoreExpensesPDF,
+} from "@/lib/pdf/expenses-pdf";
+import { getSelectedMonth } from "@/lib/utils";
 
 // Helper to group expenses by date string (YYYY-MM-DD)
 function groupByDate(expenses: StoreExpense[]) {
@@ -36,14 +41,34 @@ export default function StoreExpensesList({
   storeExpenses: Promise<StoreExpense[]>;
 }) {
   const allStoreExpenses = use(storeExpenses);
+  const selectedMonth = getSelectedMonth();
+
+  // PDF actions
+  const [isPending, startTransition] = useTransition();
+  const handleDownload = useCallback(() => {
+    startTransition(() => {
+      downloadStoreExpensesPDF(
+        allStoreExpenses,
+        `Despesas da Loja - ${selectedMonth}`,
+      );
+    });
+  }, [allStoreExpenses, selectedMonth]);
+  const handleShare = useCallback(() => {
+    startTransition(() => {
+      void shareStoreExpensesPDF(
+        allStoreExpenses,
+        `Despesas da Loja - ${selectedMonth}`,
+      );
+    });
+  }, [allStoreExpenses, selectedMonth]);
 
   // useOptimistic for optimistic paid state
   const [optimisticExpenses, setOptimisticExpenses] = useOptimistic(
     allStoreExpenses,
     (state: StoreExpense[], update: { id: string; checked: boolean }) =>
       state.map((item) =>
-        item.id === update.id ? { ...item, isPaid: update.checked } : item
-      )
+        item.id === update.id ? { ...item, isPaid: update.checked } : item,
+      ),
   );
 
   const grouped = groupByDate(optimisticExpenses);
@@ -88,8 +113,16 @@ export default function StoreExpensesList({
           </div>
         </div>
         <div className="flex gap-2">
-          <DownloadButton />
-          <ShareButton />
+          <DownloadButton
+            aria-label="Baixar PDF das despesas da loja"
+            onClick={handleDownload}
+            disabled={isPending}
+          />
+          <ShareButton
+            aria-label="Compartilhar PDF das despesas da loja"
+            onClick={handleShare}
+            disabled={isPending}
+          />
         </div>
       </div>
       <div className="mx-auto w-full divide-y">
