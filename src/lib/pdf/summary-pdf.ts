@@ -52,9 +52,9 @@ export function generateSummaryPDF(
   // Render the global header row once for all tables
   autoTable(doc, {
     startY: y, // Start table at current y
-    head: [["DESCRIÇÃO", "PAGO", "VALOR"]], // Table header columns
+    head: [["DESCRIÇÃO", "STATUS", "VALOR"]], // Table header columns
     body: [], // No body rows for the header-only table
-    theme: "grid", // Use grid theme for table borders
+    theme: "plain", // Use grid theme for table borders
     headStyles: {
       fillColor: [0, 0, 0], // Black background for header
       textColor: 255, // White text
@@ -102,13 +102,17 @@ export function generateSummaryPDF(
       e.isPaid ? "Pago" : "", // Checkbox for paid status
       formatCurrency(e.value), // Format value as currency
     ]);
+
     // Add subtotal row for the group
     rows.push([
       { content: "TOTAL", styles: { fontStyle: "bold", fontSize: 12 } }, // Label for total row
       "", // Empty cell
       {
         content: formatCurrency(getTotal(group.entries)), // Total value for group
-        styles: { fontStyle: "bold", fontSize: 12 },
+        styles: {
+          fontStyle: "bold",
+          fontSize: 12,
+        },
       },
     ]);
 
@@ -119,6 +123,32 @@ export function generateSummaryPDF(
       head: [], // No header row (already rendered globally)
       body: rows, // All entry rows plus subtotal
       theme: "striped", // Use grid theme
+      didParseCell: (data: any) => {
+        const isTotalRow = data.row.index === data.table.body.length - 1;
+        const isLeftCell = data.column.index === 0;
+        if (isTotalRow && isLeftCell) {
+          let lw = data.cell.styles.lineWidth;
+          if (typeof lw !== "object") {
+            lw = { top: lw, right: lw, bottom: lw, left: lw };
+          }
+          lw.bottom = 0;
+          data.cell.styles.lineWidth = lw;
+        }
+      },
+      didDrawCell: (data: any) => {
+        // Draw a line above the TOTAL row (subtotal)
+        const isTotalRow = data.row.index === data.table.body.length - 1;
+        if (isTotalRow) {
+          doc.setDrawColor(180, 180, 180);
+          doc.setLineWidth(0.2);
+          doc.line(
+            data.table.settings.margin.left,
+            data.cell.y,
+            pageWidth - data.table.settings.margin.right,
+            data.cell.y,
+          );
+        }
+      },
       headStyles: {
         fillColor: [0, 0, 0], // Black header (unused here)
         textColor: 255, // White text
@@ -136,29 +166,6 @@ export function generateSummaryPDF(
         0: { halign: "left" }, // Left-align description
         1: { halign: "center", cellWidth: 20 }, // Center-align paid, fixed width
         2: { halign: "right", cellWidth: 30 }, // Right-align value, fixed width
-      },
-      didDrawRow: (data) => {
-        // Draw a gray line between the last item and the total row
-        if (
-          data.row.index ===
-          rows.length - 2 // Last item row (before total)
-        ) {
-          const { table } = data;
-          const firstCol = table.columns[0];
-          const lastCol = table.columns[table.columns.length - 1];
-          const startX = firstCol.x;
-          const endX = lastCol.x + lastCol.width;
-          const yPos = data.row.y + data.row.height;
-          if (
-            [startX, endX, yPos].every(
-              (v) => typeof v === "number" && !isNaN(v),
-            )
-          ) {
-            doc.setDrawColor(180, 180, 180); // Light gray
-            doc.setLineWidth(0.5);
-            doc.line(startX, yPos, endX, yPos);
-          }
-        }
       },
       didDrawPage: (data) => {
         y = data.cursor.y + 10; // Update y position after table
