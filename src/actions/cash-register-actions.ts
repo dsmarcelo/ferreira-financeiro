@@ -120,8 +120,8 @@ export async function actionGetCashRegisterById(id: string) {
 
 // Server action to list cash register entries (optionally by date range)
 export async function actionListCashRegisters(
-  startDate?: string,
-  endDate?: string,
+  startDate: string,
+  endDate: string,
 ) {
   return listCashRegisters(startDate, endDate);
 }

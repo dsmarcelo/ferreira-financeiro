@@ -158,8 +158,8 @@ export async function actionGetProductPurchaseById(
 
 // Server action to list product purchases (optionally by date range)
 export async function actionListProductPurchases(
-  startDate?: string,
-  endDate?: string,
+  startDate: string,
+  endDate: string,
 ): Promise<ProductPurchase[]> {
   return listProductPurchases(startDate, endDate);
 }

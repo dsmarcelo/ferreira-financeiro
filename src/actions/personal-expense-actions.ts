@@ -159,8 +159,8 @@ export async function actionGetPersonalExpenseById(
 
 // Server action to list personal expenses (optionally by date range)
 export async function actionListPersonalExpenses(
-  startDate?: string,
-  endDate?: string,
+  startDate: string,
+  endDate: string,
 ): Promise<PersonalExpense[]> {
   return listPersonalExpenses(startDate, endDate);
 }

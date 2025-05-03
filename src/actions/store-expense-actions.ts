@@ -165,8 +165,8 @@ export async function actionGetStoreExpenseById(
 
 // Server action to list store expenses (optionally by date range)
 export async function actionListStoreExpenses(
-  startDate?: string,
-  endDate?: string,
+  startDate: string,
+  endDate: string,
 ): Promise<StoreExpense[]> {
   return listStoreExpenses(startDate, endDate);
 }
