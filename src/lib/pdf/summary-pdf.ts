@@ -52,14 +52,16 @@ export function generateSummaryPDF(
   // Render the global header row once for all tables
   autoTable(doc, {
     startY: y, // Start table at current y
-    head: [["DESCRIÇÃO", "STATUS", "VALOR"]], // Table header columns
-    body: [], // No body rows for the header-only table
-    theme: "plain", // Use grid theme for table borders
+    head: [["VENCIMENTO", "DESCRIÇÃO", "STATUS", "VALOR"]], // Table header columns
+    body: [["", "", "", ""]], // Dummy row to enforce column widths
+    theme: "plain",
+    margin: { left: 10, right: 10 }, // Match the data tables
+    tableWidth: pageWidth - 20, // Match the data tables
     headStyles: {
-      fillColor: [0, 0, 0], // Black background for header
-      textColor: 255, // White text
+      fillColor: [180, 180, 180], // Black background for header
+      textColor: 0, // White text
       fontStyle: "bold", // Bold font
-      fontSize: 12, // Header font size
+      fontSize: 10, // Header font size
       valign: "middle", // Vertically center text
       halign: "center", // Horizontally center text
     },
@@ -67,11 +69,15 @@ export function generateSummaryPDF(
       fontSize: 10, // Default font size for cells
       cellPadding: 1, // Padding inside cells
       valign: "middle", // Vertically center text
+      textColor: [255, 255, 255], // Hide dummy row text
+      lineColor: [255, 255, 255], // Hide dummy row border
+      fillColor: [255, 255, 255], // Hide dummy row background
     },
     columnStyles: {
-      0: { halign: "left" }, // Left-align first column
-      1: { halign: "center", cellWidth: 20 }, // Center-align second column, fixed width
-      2: { halign: "right", cellWidth: 30 }, // Right-align third column, fixed width
+      0: { halign: "left", cellWidth: 30 }, // Left-align first column
+      1: { halign: "center" }, // Center-align second column, fixed width
+      2: { halign: "center", cellWidth: 20 }, // Center-align third column, fixed width
+      3: { halign: "right", cellWidth: 30 }, // Right-align third column, fixed width
     },
     didDrawPage: (data) => {
       y = data.cursor.y + 2; // Update y position after header table
