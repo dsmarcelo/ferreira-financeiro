@@ -9,6 +9,11 @@ import type { ProductPurchase } from "@/server/db/schema/product-purchase";
 import { startTransition, useOptimistic, use } from "react";
 import DownloadButton from "../buttons/download-button";
 import ShareButton from "../buttons/share-button";
+import {
+  downloadProductPurchasesPDF,
+  shareProductPurchasesPDF,
+} from "@/lib/pdf/product-purchases-pdf";
+import { getSelectedMonth } from "@/lib/utils";
 
 // Helper to group purchases by date string (YYYY-MM-DD)
 function groupByDate(purchases: ProductPurchase[]) {
@@ -42,12 +47,14 @@ export default function ProductPurchasesList({
     allProductPurchases,
     (state: ProductPurchase[], update: { id: string; checked: boolean }) =>
       state.map((item) =>
-        item.id === update.id ? { ...item, isPaid: update.checked } : item
-      )
+        item.id === update.id ? { ...item, isPaid: update.checked } : item,
+      ),
   );
 
   const grouped = groupByDate(optimisticPurchases);
   const sortedDates = Object.keys(grouped).sort();
+
+  const selectedMonth = getSelectedMonth();
 
   const total = allProductPurchases.reduce(
     (acc, item) => acc + Number(item.value),
@@ -88,8 +95,22 @@ export default function ProductPurchasesList({
           </div>
         </div>
         <div className="flex gap-2">
-          <DownloadButton />
-          <ShareButton />
+          <DownloadButton
+            onClick={() =>
+              downloadProductPurchasesPDF(
+                allProductPurchases,
+                `Compras de Produtos - ${selectedMonth}`,
+              )
+            }
+          />
+          <ShareButton
+            onClick={() =>
+              shareProductPurchasesPDF(
+                allProductPurchases,
+                `Compras de Produtos - ${selectedMonth}`,
+              )
+            }
+          />
         </div>
       </div>
       <div className="mx-auto w-full divide-y">
