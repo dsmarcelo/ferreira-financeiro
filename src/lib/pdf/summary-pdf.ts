@@ -1,11 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import {
-  formatCurrency,
-  formatDate,
-  formatShortDate,
-  stringToDate,
-} from "@/lib/utils";
+import { formatCurrency, formatShortDate, stringToDate } from "@/lib/utils";
 import type { ExpenseSummary } from "@/server/queries/summary-queries";
 
 // Helper type for grouping entries by due date
@@ -34,11 +29,6 @@ function getTotal(entries: ExpenseSummary[]) {
   return entries.reduce((acc, e) => acc + e.value, 0);
 }
 
-// Sums the value of unpaid entries only
-function getPendingAmount(entries: ExpenseSummary[]) {
-  return entries.filter((e) => !e.isPaid).reduce((acc, e) => acc + e.value, 0);
-}
-
 /**
  * Generates a summary PDF with grouped expense tables.
  * The table header is rendered only once at the top.
@@ -47,7 +37,7 @@ function getPendingAmount(entries: ExpenseSummary[]) {
 // Generates a summary PDF with grouped expense tables
 export function generateSummaryPDF(
   expenses: ExpenseSummary[], // Array of grouped expense data
-  title = "Resumo de Despesas", // Title for the PDF document
+  title = "Despesas", // Title for the PDF document
 ): jsPDF {
   const doc = new jsPDF(); // Create a new jsPDF instance
   const grouped = groupExpensesByDueDate(expenses); // Group expenses by due date
@@ -97,6 +87,10 @@ export function generateSummaryPDF(
     // Draw light gray section header bar exactly aligned with the table
     doc.setFillColor(255, 255, 255); // Set fill color for section header
     doc.rect(10, y, pageWidth - 20, 6, "F"); // Draw filled rectangle for header bar (6px high)
+    // Draw black border at the bottom of the section header bar
+    doc.setDrawColor(0, 0, 0); // Set draw color to black
+    doc.setLineWidth(0.5); // 0.5pt line (1px)
+    doc.line(10, y + 6, pageWidth - 10, y + 6); // Draw line from left to right under the bar
     doc.setFontSize(10); // Set font size for section header
     doc.setFont(undefined, "normal"); // Set font to bold
     doc.text(headerText, 12, y + 4.5); // Draw section header text, vertically centered in 6px bar
@@ -105,7 +99,7 @@ export function generateSummaryPDF(
     // Prepare all entry rows for this group
     const rows = group.entries.map((e) => [
       e.description, // Expense description
-      e.isPaid ? "☑" : "☐", // Checkbox for paid status
+      e.isPaid ? "Pago" : "", // Checkbox for paid status
       formatCurrency(e.value), // Format value as currency
     ]);
     // Add subtotal row for the group
@@ -142,6 +136,29 @@ export function generateSummaryPDF(
         0: { halign: "left" }, // Left-align description
         1: { halign: "center", cellWidth: 20 }, // Center-align paid, fixed width
         2: { halign: "right", cellWidth: 30 }, // Right-align value, fixed width
+      },
+      didDrawRow: (data) => {
+        // Draw a gray line between the last item and the total row
+        if (
+          data.row.index ===
+          rows.length - 2 // Last item row (before total)
+        ) {
+          const { table } = data;
+          const firstCol = table.columns[0];
+          const lastCol = table.columns[table.columns.length - 1];
+          const startX = firstCol.x;
+          const endX = lastCol.x + lastCol.width;
+          const yPos = data.row.y + data.row.height;
+          if (
+            [startX, endX, yPos].every(
+              (v) => typeof v === "number" && !isNaN(v),
+            )
+          ) {
+            doc.setDrawColor(180, 180, 180); // Light gray
+            doc.setLineWidth(0.5);
+            doc.line(startX, yPos, endX, yPos);
+          }
+        }
       },
       didDrawPage: (data) => {
         y = data.cursor.y + 10; // Update y position after table
