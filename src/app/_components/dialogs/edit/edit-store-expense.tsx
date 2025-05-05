@@ -62,16 +62,22 @@ export default function EditStoreExpense({
         action={formAction}
         className="space-y-4"
       >
-        <input type="hidden" name="id" value={data.id} />
         <div className="space-y-2">
-          <Label htmlFor="dueDate">Vencimento</Label>
-          <DatePicker id="dueDate" name="dueDate" required defaultValue={data.dueDate} />
-          {errors.dueDate && (
+          <Label htmlFor="description">Descrição</Label>
+          <Input
+            type="text"
+            id="description"
+            name="description"
+            required
+            defaultValue={data.description}
+          />
+          {errors.description && (
             <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.dueDate[0]}
+              {errors.description[0]}
             </p>
           )}
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="amount">Valor</Label>
           <CurrencyInput
@@ -88,23 +94,9 @@ export default function EditStoreExpense({
             </p>
           )}
         </div>
+
         <div className="space-y-2">
-          <Label htmlFor="description">Descrição</Label>
-          <Input
-            type="text"
-            id="description"
-            name="description"
-            required
-            defaultValue={data.description}
-          />
-          {errors.description && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.description[0]}
-            </p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="dueDate">Vencimento (opcional)</Label>
+          <Label htmlFor="dueDate">Vencimento</Label>
           <DatePicker
             id="dueDate"
             name="dueDate"

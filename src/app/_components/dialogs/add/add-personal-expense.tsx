@@ -97,7 +97,7 @@ export default function AddPersonalExpense({
         </div>
 
         <div>
-          <label htmlFor="dueDate">Data</label>
+          <label htmlFor="dueDate">Data/Vencimento</label>
           <DatePicker
             id="dueDate"
             name="dueDate"
@@ -112,10 +112,10 @@ export default function AddPersonalExpense({
         </div>
 
         <div className="flex items-center gap-2">
-          <input type="checkbox" id="isPaid" name="isPaid" />
+          <input type="checkbox" id="isPaid" name="isPaid" defaultChecked />
           <label htmlFor="isPaid">Pago</label>
         </div>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm font-medium text-green-600">
           {state.success ? "Despesa adicionada com sucesso!" : ""}
         </p>
         <Button type="submit" className="w-full" disabled={pending}>

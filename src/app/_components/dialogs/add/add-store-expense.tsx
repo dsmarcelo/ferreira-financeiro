@@ -96,16 +96,12 @@ export default function AddStoreExpense({
         </div>
         <div className="space-y-2">
           <Label htmlFor="dueDate">Vencimento</Label>
-          <DatePicker id="dueDate" name="dueDate" required defaultValue={today} />
-          {errors.dueDate && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.dueDate[0]}
-            </p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="dueDate">Vencimento (opcional)</Label>
-          <DatePicker id="dueDate" name="dueDate" />
+          <DatePicker
+            id="dueDate"
+            name="dueDate"
+            required
+            defaultValue={today}
+          />
           {errors.dueDate && (
             <p className="mt-1 text-sm text-red-500" aria-live="polite">
               {errors.dueDate[0]}
@@ -113,8 +109,15 @@ export default function AddStoreExpense({
           )}
         </div>
         <div className="flex items-center gap-2">
-          <input type="checkbox" id="isPaid" name="isPaid" />
-          <Label htmlFor="isPaid">Pago</Label>
+          <input
+            type="checkbox"
+            id="isPaid"
+            name="isPaid"
+            className="h-6 w-6"
+          />
+          <label htmlFor="isPaid" className="text-lg font-medium">
+            Pago
+          </label>
         </div>
         <Button type="submit" className="w-full" disabled={pending}>
           {pending ? "Adicionando..." : "Adicionar"}
