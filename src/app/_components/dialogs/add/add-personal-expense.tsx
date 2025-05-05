@@ -112,7 +112,7 @@ export default function AddPersonalExpense({
           )}
         </div>
 
-        <IsPaidCheckbox />
+        <IsPaidCheckbox isPaid />
         <p className="text-sm font-medium text-green-600">
           {state.success ? "Despesa adicionada com sucesso!" : ""}
         </p>
