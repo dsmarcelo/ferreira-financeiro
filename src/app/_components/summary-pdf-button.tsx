@@ -33,7 +33,7 @@ export function SummaryPDFButton({ from, to }: SummaryPDFButtonProps) {
       disabled={isLoading}
       aria-busy={isLoading}
     >
-      {isLoading ? "Gerando PDF..." : "Baixar PDF do Resumo"}
+      {isLoading ? "Gerando PDF..." : "Baixar Relatório Mensal"}
     </Button>
   );
 }

@@ -6,6 +6,8 @@ import Header from "./_components/header";
 import SummaryCards from "@/app/_components/summary-cards";
 import { Button } from "@/components/ui/button";
 import { SummaryPDFButton } from "@/app/_components/summary-pdf-button";
+import ProfitText from "./_components/profit-text";
+import { Suspense } from "react";
 
 // Home page for the financial dashboard
 export default async function HomePage({
@@ -24,16 +26,16 @@ export default async function HomePage({
       <Header showBackButton={false} />
       <div className="container mx-auto flex max-w-screen-lg flex-col gap-4 p-5 pb-16">
         {/* Profit summary section */}
-        <div className="flex flex-col gap-4">
-          <h5 className="text-xl font-bold">Lucro</h5>
-          {/* Optionally, you can show a placeholder or skeleton here if params are missing */}
-          <h1 className="text-4xl font-bold">
-            <span className="text-muted-foreground">R$</span> 32.540,50
-          </h1>
-        </div>
-        {/* Show summary cards and PDF button only if a period is selected */}
         {from && to ? (
           <>
+            <Suspense
+              fallback={
+                <div className="bg-muted h-12 w-full animate-pulse rounded-lg" />
+              }
+            >
+              <ProfitText from={from} to={to} />
+            </Suspense>
+            {/* Show summary cards and PDF button only if a period is selected */}
             {/* Summary cards for caixa, despesas pessoais, loja, produtos */}
             <SummaryCards from={from} to={to} />
             {/* Button to generate and download the summary PDF for the selected period */}
@@ -72,4 +74,3 @@ export default async function HomePage({
     </main>
   );
 }
-

@@ -4,7 +4,56 @@ import { db } from "@/server/db";
 import { personalExpense } from "@/server/db/schema/personal-expense";
 import { storeExpense } from "@/server/db/schema/store-expense";
 import { productPurchase } from "@/server/db/schema/product-purchase";
-import { and, gte, lte } from "drizzle-orm";
+import { cashRegister } from "@/server/db/schema/cash-register";
+import { and, gte, lte, sum } from "drizzle-orm";
+
+// Calculate profit with margin
+export async function getProfit(startDate: string, endDate: string) {
+  const cashRegisterSum = Number(
+    (
+      await db
+        .select({ sum: sum(cashRegister.value) })
+        .from(cashRegister)
+        .where(
+          and(
+            gte(cashRegister.date, startDate),
+            lte(cashRegister.date, endDate),
+          ),
+        )
+    )[0]?.sum ?? 0,
+  );
+  const personalExpensesSum = Number(
+    (
+      await db
+        .select({ sum: sum(personalExpense.value) })
+        .from(personalExpense)
+        .where(
+          and(
+            gte(personalExpense.dueDate, startDate),
+            lte(personalExpense.dueDate, endDate),
+          ),
+        )
+    )[0]?.sum ?? 0,
+  );
+
+  const storeExpensesSum = Number(
+    (
+      await db
+        .select({ sum: sum(storeExpense.value) })
+        .from(storeExpense)
+        .where(
+          and(
+            gte(storeExpense.dueDate, startDate),
+            lte(storeExpense.dueDate, endDate),
+          ),
+        )
+    )[0]?.sum ?? 0,
+  );
+
+  const profit =
+    (cashRegisterSum * 28) % -(personalExpensesSum + storeExpensesSum);
+  return profit;
+}
 
 export interface ExpenseSummary {
   dueDate: string;
