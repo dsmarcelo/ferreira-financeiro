@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { format, isValid, startOfMonth, endOfMonth } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -46,26 +45,15 @@ export default function DateRangePicker({ className }: { className?: string }) {
   }, [searchParams]);
 
   // State for the current date (month)
-  const [currentDate, setCurrentDate] = React.useState<Date>(() =>
-    getInitialMonth(),
-  );
+  const [currentDate, setCurrentDate] = React.useState<Date | null>(null);
 
-  // Sync state with searchParams/localStorage on mount or when searchParams change
+  // Set currentDate only on client
   React.useEffect(() => {
     setCurrentDate(getInitialMonth());
   }, [getInitialMonth]);
 
-  // Add new effect to default to current month only if no localStorage and no 'from' param
-  React.useEffect(() => {
-    const fromParam = searchParams.get("from");
-    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!fromParam || !stored) {
-      updateDate(currentDate);
-    }
-  }, []);
-
   // Function to update URL and localStorage with new date range (first and last day of month)
-  const updateDate = (newDate: Date) => {
+  const updateDate = React.useCallback((newDate: Date) => {
     const params = new URLSearchParams(searchParams.toString());
     // Get first and last day of the selected month
     const from = format(startOfMonth(newDate), "yyyy-MM-dd");
@@ -78,7 +66,20 @@ export default function DateRangePicker({ className }: { className?: string }) {
       localStorage.setItem("month", formatMonth(from));
     } catch {}
     router.replace(`?${params.toString()}`);
-  };
+  }, [router, searchParams]);
+
+  // Add new effect to default to current month only if no localStorage and no 'from' param
+  React.useEffect(() => {
+    const fromParam = searchParams.get("from");
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if ((!fromParam || !stored) && currentDate) {
+      updateDate(currentDate);
+    }
+  }, [currentDate, searchParams, updateDate]);
+
+  // Don't render until currentDate is set (prevents hydration mismatch)
+  if (!currentDate) return null;
+
 
   // Navigate to previous/next month
   const navigateMonth = (direction: "prev" | "next") => {
@@ -105,10 +106,7 @@ export default function DateRangePicker({ className }: { className?: string }) {
         <ChevronLeft className="h-6 w-6" />
       </Button>
       <p className="min-w-32 text-center font-medium">
-        {format(currentDate, "MMMM yyyy", { locale: ptBR })
-          .charAt(0)
-          .toUpperCase() +
-          format(currentDate, "MMMM yyyy", { locale: ptBR }).slice(1)}
+        {formatMonth(currentDate)}
       </p>
       <Button
         variant="ghost"
