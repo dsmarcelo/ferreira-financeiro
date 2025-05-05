@@ -56,8 +56,8 @@ export async function listPersonalExpenses(
       .from(personalExpense)
       .where(
         and(
-          gte(personalExpense.date, startDate),
-          lte(personalExpense.date, endDate),
+          gte(personalExpense.dueDate, startDate),
+          lte(personalExpense.dueDate, endDate),
         ),
       );
   }
@@ -74,8 +74,8 @@ export async function sumPersonalExpenseByDateRange(
     .from(personalExpense)
     .where(
       and(
-        gte(personalExpense.date, startDate),
-        lte(personalExpense.date, endDate),
+        gte(personalExpense.dueDate, startDate),
+        lte(personalExpense.dueDate, endDate),
       ),
     );
   return Number(result[0]?.sum ?? 0);

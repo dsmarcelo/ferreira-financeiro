@@ -19,12 +19,12 @@ import { getSelectedMonth } from "@/lib/utils";
 function groupByDate(purchases: ProductPurchase[]) {
   return purchases
     .sort((a, b) =>
-      a.date === b.date
+      a.dueDate === b.dueDate
         ? a.id.localeCompare(b.id)
-        : a.date.localeCompare(b.date),
+        : a.dueDate.localeCompare(b.dueDate),
     )
     .reduce<Record<string, ProductPurchase[]>>((acc, purchase) => {
-      const date = purchase.date;
+      const date = purchase.dueDate;
       acc[date] ??= [];
       acc[date].push(purchase);
       return acc;

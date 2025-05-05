@@ -16,7 +16,7 @@ import type {
 import { z } from "zod";
 
 const storeExpenseInsertSchema = z.object({
-  date: z
+  dueDate: z
     .string()
     .refine(
       (val) =>
@@ -26,7 +26,6 @@ const storeExpenseInsertSchema = z.object({
     ),
   value: z.number().min(0, { message: "Valor inválido" }),
   description: z.string().min(1, { message: "Descrição obrigatória" }),
-  dueDate: z.string().optional(),
   isPaid: z.boolean().optional(),
 });
 
@@ -68,10 +67,9 @@ export async function actionCreateStoreExpense(
   try {
     const dbValue = value !== undefined ? value.toFixed(2) : undefined;
     await createStoreExpense({
-      date: date as string,
+      dueDate: dueDate as string,
       value: dbValue!,
       description: description as string,
-      dueDate: dueDate ? (dueDate as string) : undefined,
       isPaid,
     });
     revalidatePath("/despesas-da-loja");
@@ -130,10 +128,9 @@ export async function actionUpdateStoreExpense(
 
   try {
     await updateStoreExpense(id, {
-      date: date as string,
+      dueDate: dueDate as string,
       value: value!.toFixed(2),
       description: description as string,
-      dueDate: dueDate ? (dueDate as string) : undefined,
       isPaid,
     });
     revalidatePath("/despesas-da-loja");

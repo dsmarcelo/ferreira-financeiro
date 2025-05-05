@@ -57,8 +57,8 @@ export async function listProductPurchases(
       .from(productPurchase)
       .where(
         and(
-          gte(productPurchase.date, startDate),
-          lte(productPurchase.date, endDate),
+          gte(productPurchase.dueDate, startDate),
+          lte(productPurchase.dueDate, endDate),
         ),
       );
   }
@@ -75,8 +75,8 @@ export async function sumProductPurchaseByDateRange(
     .from(productPurchase)
     .where(
       and(
-        gte(productPurchase.date, startDate),
-        lte(productPurchase.date, endDate),
+        gte(productPurchase.dueDate, startDate),
+        lte(productPurchase.dueDate, endDate),
       ),
     );
   return Number(result[0]?.sum ?? 0);

@@ -55,7 +55,10 @@ export async function listStoreExpenses(
       .select()
       .from(storeExpense)
       .where(
-        and(gte(storeExpense.date, startDate), lte(storeExpense.date, endDate)),
+        and(
+          gte(storeExpense.dueDate, startDate),
+          lte(storeExpense.dueDate, endDate),
+        ),
       );
   }
   return [];
@@ -70,7 +73,10 @@ export async function sumStoreExpenseByDateRange(
     .select({ sum: sum(storeExpense.value) })
     .from(storeExpense)
     .where(
-      and(gte(storeExpense.date, startDate), lte(storeExpense.date, endDate)),
+      and(
+        gte(storeExpense.dueDate, startDate),
+        lte(storeExpense.dueDate, endDate),
+      ),
     );
   return Number(result[0]?.sum ?? 0);
 }

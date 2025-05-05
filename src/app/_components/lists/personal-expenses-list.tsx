@@ -19,12 +19,12 @@ import { ExpenseListItem } from "./expense-list-item";
 function groupByDate(expenses: PersonalExpense[]) {
   return expenses
     .sort((a, b) =>
-      a.date === b.date
+      a.dueDate === b.dueDate
         ? a.id.localeCompare(b.id)
-        : a.date.localeCompare(b.date),
+        : a.dueDate.localeCompare(b.dueDate),
     )
     .reduce<Record<string, PersonalExpense[]>>((acc, expense) => {
-      const date = expense.date;
+      const date = expense.dueDate;
       acc[date] ??= [];
       acc[date].push(expense);
       return acc;

@@ -23,7 +23,7 @@ export async function listExpensesAndPurchasesByDateRange(
 ): Promise<ExpenseSummary[]> {
   const personal = await db
     .select({
-      dueDate: personalExpense.date,
+      dueDate: personalExpense.dueDate,
       description: personalExpense.description,
       value: personalExpense.value,
       isPaid: personalExpense.isPaid,
@@ -31,26 +31,29 @@ export async function listExpensesAndPurchasesByDateRange(
     .from(personalExpense)
     .where(
       and(
-        gte(personalExpense.date, startDate),
-        lte(personalExpense.date, endDate),
+        gte(personalExpense.dueDate, startDate),
+        lte(personalExpense.dueDate, endDate),
       ),
     );
 
   const store = await db
     .select({
-      dueDate: storeExpense.date,
+      dueDate: storeExpense.dueDate,
       description: storeExpense.description,
       value: storeExpense.value,
       isPaid: storeExpense.isPaid,
     })
     .from(storeExpense)
     .where(
-      and(gte(storeExpense.date, startDate), lte(storeExpense.date, endDate)),
+      and(
+        gte(storeExpense.dueDate, startDate),
+        lte(storeExpense.dueDate, endDate),
+      ),
     );
 
   const purchases = await db
     .select({
-      dueDate: productPurchase.date,
+      dueDate: productPurchase.dueDate,
       description: productPurchase.description,
       value: productPurchase.value,
       isPaid: productPurchase.isPaid,
@@ -58,8 +61,8 @@ export async function listExpensesAndPurchasesByDateRange(
     .from(productPurchase)
     .where(
       and(
-        gte(productPurchase.date, startDate),
-        lte(productPurchase.date, endDate),
+        gte(productPurchase.dueDate, startDate),
+        lte(productPurchase.dueDate, endDate),
       ),
     );
 

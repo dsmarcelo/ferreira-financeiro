@@ -16,7 +16,7 @@ import type {
 import { z } from "zod";
 
 const personalExpenseInsertSchema = z.object({
-  date: z
+  dueDate: z
     .string()
     .refine(
       (val) =>
@@ -42,14 +42,14 @@ export async function actionCreatePersonalExpense(
   _prevState: ActionResponse | undefined,
   formData: FormData,
 ): Promise<ActionResponse> {
-  const date = formData.get("date");
+  const dueDate = formData.get("dueDate");
   const valueStr = formData.get("amount");
   const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
   const description = formData.get("description");
   const isPaid = formData.get("isPaid") === "on";
 
   const result = personalExpenseInsertSchema.safeParse({
-    date,
+    dueDate,
     value,
     description,
     isPaid,
@@ -65,7 +65,7 @@ export async function actionCreatePersonalExpense(
   try {
     const dbValue = value !== undefined ? value.toFixed(2) : undefined;
     await createPersonalExpense({
-      date: date as string,
+      dueDate: dueDate as string,
       value: dbValue!,
       description: description as string,
       isPaid,
@@ -93,14 +93,14 @@ export async function actionUpdatePersonalExpense(
   if (!id || typeof id !== "string") {
     return { success: false, message: "ID inválido" };
   }
-  const date = formData.get("date");
+  const dueDate = formData.get("dueDate");
   const valueStr = formData.get("amount");
   const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
   const description = formData.get("description");
   const isPaid = formData.get("isPaid") === "on";
 
   const result = personalExpenseInsertSchema.safeParse({
-    date,
+    dueDate,
     value,
     description,
     isPaid,
@@ -115,7 +115,7 @@ export async function actionUpdatePersonalExpense(
 
   try {
     await updatePersonalExpense(id, {
-      date: date as string,
+      dueDate: dueDate as string,
       value: value!.toFixed(2),
       description: description as string,
       isPaid,

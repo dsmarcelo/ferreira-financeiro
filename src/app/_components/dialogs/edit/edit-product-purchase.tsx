@@ -66,11 +66,16 @@ export default function EditProductPurchase({
       >
         <input type="hidden" name="id" value={data.id} />
         <div className="space-y-2">
-          <Label htmlFor="date">Data</Label>
-          <DatePicker id="date" name="date" required defaultValue={data.date} />
-          {errors.date && (
+          <Label htmlFor="dueDate">Data</Label>
+          <DatePicker
+            id="dueDate"
+            name="dueDate"
+            required
+            defaultValue={data.dueDate}
+          />
+          {errors.dueDate && (
             <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.date[0]}
+              {errors.dueDate[0]}
             </p>
           )}
         </div>

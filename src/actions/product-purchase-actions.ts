@@ -65,7 +65,7 @@ export async function actionCreateProductPurchase(
   try {
     const dbValue = value !== undefined ? value.toFixed(2) : undefined;
     await createProductPurchase({
-      date: date as string,
+      dueDate: date as string,
       value: dbValue!,
       description: description as string,
       isPaid,
@@ -124,7 +124,7 @@ export async function actionUpdateProductPurchase(
 
   try {
     await updateProductPurchase(id, {
-      date: date as string,
+      dueDate: date as string,
       value: value!.toFixed(2),
       description: description as string,
       isPaid,
