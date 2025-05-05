@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
+import { IsPaidCheckbox } from "@/app/_components/inputs/is-paid-input";
 
 // Initial state for the form
 const initialState: ActionResponse = {
@@ -111,10 +112,7 @@ export default function AddPersonalExpense({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <input type="checkbox" id="isPaid" name="isPaid" defaultChecked />
-          <label htmlFor="isPaid">Pago</label>
-        </div>
+        <IsPaidCheckbox />
         <p className="text-sm font-medium text-green-600">
           {state.success ? "Despesa adicionada com sucesso!" : ""}
         </p>

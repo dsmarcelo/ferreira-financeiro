@@ -17,7 +17,7 @@ export async function createStoreExpense(
 
 // Get a store expense by ID
 export async function getStoreExpenseById(
-  id: string,
+  id: number,
 ): Promise<StoreExpense | undefined> {
   const [entry] = await db
     .select()
@@ -28,7 +28,7 @@ export async function getStoreExpenseById(
 
 // Update a store expense by ID
 export async function updateStoreExpense(
-  id: string,
+  id: number,
   data: Partial<StoreExpenseInsert>,
 ): Promise<StoreExpense | undefined> {
   const [updated] = await db
@@ -40,7 +40,7 @@ export async function updateStoreExpense(
 }
 
 // Delete a store expense by ID
-export async function deleteStoreExpense(id: string): Promise<void> {
+export async function deleteStoreExpense(id: number): Promise<void> {
   await db.delete(storeExpense).where(eq(storeExpense.id, id));
 }
 

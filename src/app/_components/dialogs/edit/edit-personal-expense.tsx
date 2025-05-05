@@ -15,7 +15,7 @@ import { DeleteDialog } from "../delete-dialog";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { IsPaidCheckbox } from "@/app/_components/inputs/is-paid-input";
 
 interface EditPersonalExpenseProps {
   data: PersonalExpense;
@@ -123,12 +123,7 @@ export default function EditPersonalExpense({
         </div>
 
         {/* Pago */}
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="isPaid">Pago</Label>
-            <Switch id="isPaid" name="isPaid" defaultChecked={data.isPaid} />
-          </div>
-        </div>
+        <IsPaidCheckbox isPaid={data.isPaid} />
 
         <div className="mt-8 flex gap-2">
           <DeleteDialog
@@ -142,7 +137,7 @@ export default function EditPersonalExpense({
         </div>
         {/* General message area for non-field errors/messages */}
         {state.message && (
-          <p className="mt-2 text-sm text-red-600" aria-live="polite">
+          <p className="mt-2 text-sm text-green-600" aria-live="polite">
             {state.message}
           </p>
         )}

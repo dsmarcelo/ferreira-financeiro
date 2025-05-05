@@ -89,8 +89,9 @@ export async function actionUpdatePersonalExpense(
   _prevState: ActionResponse | undefined,
   formData: FormData,
 ): Promise<ActionResponse> {
-  const id = formData.get("id");
-  if (!id || typeof id !== "string") {
+  const idRaw = formData.get("id");
+  const id = typeof idRaw === "string" ? Number(idRaw) : undefined;
+  if (!id || isNaN(id)) {
     return { success: false, message: "ID inválido" };
   }
   const dueDate = formData.get("dueDate");
@@ -135,7 +136,7 @@ export async function actionUpdatePersonalExpense(
 }
 
 export async function actionTogglePersonalExpenseIsPaid(
-  id: string,
+  id: number,
   isPaid: boolean,
 ): Promise<void> {
   await updatePersonalExpense(id, {
@@ -145,14 +146,14 @@ export async function actionTogglePersonalExpenseIsPaid(
 }
 
 // Server action to delete a personal expense entry
-export async function actionDeletePersonalExpense(id: string): Promise<void> {
+export async function actionDeletePersonalExpense(id: number): Promise<void> {
   await deletePersonalExpense(id);
   revalidatePath("/despesas-pessoais");
 }
 
 // Server action to get a personal expense entry by ID
 export async function actionGetPersonalExpenseById(
-  id: string,
+  id: number,
 ): Promise<PersonalExpense | undefined> {
   return getPersonalExpenseById(id);
 }

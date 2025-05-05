@@ -9,7 +9,7 @@ import * as React from "react";
 
 export interface ExpenseListItemProps {
   expense: PersonalExpense | StoreExpense | ProductPurchase;
-  onTogglePaid: (id: string, checked: boolean) => void;
+  onTogglePaid: (id: number, checked: boolean) => void;
   children?: React.ReactNode;
 }
 

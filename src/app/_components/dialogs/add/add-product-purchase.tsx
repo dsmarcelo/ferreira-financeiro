@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
 import { Label } from "@/components/ui/label";
+import { IsPaidCheckbox } from "@/app/_components/inputs/is-paid-input";
 
 // Initial state for the form
 const initialState: ActionResponse = {
@@ -106,10 +107,7 @@ export default function AddProductPurchase({
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <input type="checkbox" id="isPaid" name="isPaid" />
-          <Label htmlFor="isPaid">Pago</Label>
-        </div>
+        <IsPaidCheckbox />
         <Button type="submit" className="w-full" disabled={pending}>
           {pending ? "Adicionando..." : "Adicionar"}
         </Button>

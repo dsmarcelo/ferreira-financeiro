@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
 import { Label } from "@/components/ui/label";
+import { IsPaidCheckbox } from "@/app/_components/inputs/is-paid-input";
 
 // Initial state for the form
 const initialState: ActionResponse = {
@@ -108,23 +109,13 @@ export default function AddStoreExpense({
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="isPaid"
-            name="isPaid"
-            className="h-6 w-6"
-          />
-          <label htmlFor="isPaid" className="text-lg font-medium">
-            Pago
-          </label>
-        </div>
+        <IsPaidCheckbox />
         <Button type="submit" className="w-full" disabled={pending}>
           {pending ? "Adicionando..." : "Adicionar"}
         </Button>
         {/* General message area for non-field errors/messages */}
         {state.message && (
-          <p className="mt-2 text-sm text-red-600" aria-live="polite">
+          <p className="mt-2 text-sm text-green-600" aria-live="polite">
             {state.message}
           </p>
         )}

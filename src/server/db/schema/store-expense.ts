@@ -1,21 +1,19 @@
 import { sql } from "drizzle-orm";
 import { createTable } from "./table-creator";
 import {
-  uuid,
   decimal,
   date,
   timestamp,
   text,
   boolean,
+  serial,
 } from "drizzle-orm/pg-core";
 
 /**
  * Represents store-related expenses.
  */
 export const storeExpense = createTable("store_expense", {
-  id: uuid("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
+  id: serial("id").primaryKey(),
   value: decimal("value", { precision: 15, scale: 2 }).notNull(),
   description: text("description").notNull(),
   dueDate: date("due_date").notNull(),

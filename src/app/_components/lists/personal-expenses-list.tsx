@@ -16,13 +16,11 @@ import { actionTogglePersonalExpenseIsPaid } from "@/actions/personal-expense-ac
 import { ExpenseListItem } from "./expense-list-item";
 
 // Helper to group expenses by date string (YYYY-MM-DD)
+import { compareByDueDateAndId } from "./utils/compare";
+
 function groupByDate(expenses: PersonalExpense[]) {
   return expenses
-    .sort((a, b) =>
-      a.dueDate === b.dueDate
-        ? a.id.localeCompare(b.id)
-        : a.dueDate.localeCompare(b.dueDate),
-    )
+    .sort(compareByDueDateAndId)
     .reduce<Record<string, PersonalExpense[]>>((acc, expense) => {
       const date = expense.dueDate;
       acc[date] ??= [];
@@ -63,7 +61,7 @@ export default function PersonalExpensesList({
   // useOptimistic for optimistic expense updates
   const [optimisticExpenses, setOptimisticExpenses] = useOptimistic(
     allPersonalExpenses,
-    (state: PersonalExpense[], update: { id: string; checked: boolean }) =>
+    (state: PersonalExpense[], update: { id: number; checked: boolean }) =>
       state.map((expense) =>
         expense.id === update.id
           ? { ...expense, isPaid: update.checked }
@@ -156,7 +154,7 @@ export default function PersonalExpensesList({
                     <div>
                       <ExpenseListItem
                         expense={expense}
-                        onTogglePaid={(id: string, checked: boolean) => {
+                        onTogglePaid={(id: number, checked: boolean) => {
                           startTransition(() => {
                             setOptimisticExpenses({ id, checked });
                           });

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { DeleteDialog } from "../delete-dialog";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
+import { IsPaidCheckbox } from "@/app/_components/inputs/is-paid-input";
 
 interface EditStoreExpenseProps {
   data: StoreExpense;
@@ -108,15 +109,9 @@ export default function EditStoreExpense({
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="isPaid"
-            name="isPaid"
-            defaultChecked={data.isPaid}
-          />
-          <Label htmlFor="isPaid">Pago</Label>
-        </div>
+
+        <IsPaidCheckbox isPaid={data.isPaid} />
+
         <div className="mt-8 flex gap-2">
           <DeleteDialog
             onConfirm={() => {

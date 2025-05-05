@@ -18,7 +18,7 @@ export async function createProductPurchase(
 
 // Get a product purchase by ID
 export async function getProductPurchaseById(
-  id: string,
+  id: number,
 ): Promise<ProductPurchase | undefined> {
   const [entry] = await db
     .select()
@@ -29,7 +29,7 @@ export async function getProductPurchaseById(
 
 // Update a product purchase by ID
 export async function updateProductPurchase(
-  id: string,
+  id: number,
   data: Partial<ProductPurchaseInsert>,
 ): Promise<ProductPurchase | undefined> {
   const [updated] = await db
@@ -41,7 +41,7 @@ export async function updateProductPurchase(
 }
 
 // Delete a product purchase by ID
-export async function deleteProductPurchase(id: string): Promise<void> {
+export async function deleteProductPurchase(id: number): Promise<void> {
   await db.delete(productPurchase).where(eq(productPurchase.id, id));
 }
 

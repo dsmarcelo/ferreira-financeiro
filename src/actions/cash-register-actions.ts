@@ -75,7 +75,7 @@ export async function actionUpdateCashRegister(
   formData: FormData,
 ): Promise<ActionResponse> {
   const id = formData.get("id");
-  if (!id || typeof id !== "string") {
+  if (!id || typeof id !== "number") {
     return { success: false, message: "ID inválido" };
   }
   const date = formData.get("date");
@@ -108,13 +108,13 @@ export async function actionUpdateCashRegister(
 }
 
 // Server action to delete a cash register entry
-export async function actionDeleteCashRegister(id: string) {
+export async function actionDeleteCashRegister(id: number) {
   await deleteCashRegister(id);
   revalidatePath("/caixa");
 }
 
 // Server action to get a cash register entry by ID
-export async function actionGetCashRegisterById(id: string) {
+export async function actionGetCashRegisterById(id: number) {
   return getCashRegisterById(id);
 }
 

@@ -18,7 +18,7 @@ export async function createCashRegister(
 
 // Get a cash register entry by ID
 export async function getCashRegisterById(
-  id: string,
+  id: number,
 ): Promise<CashRegister | undefined> {
   // Find a record by its primary key
   const [entry] = await db
@@ -30,7 +30,7 @@ export async function getCashRegisterById(
 
 // Update a cash register entry by ID
 export async function updateCashRegister(
-  id: string,
+  id: number,
   data: Partial<CashRegisterInsert>,
 ): Promise<CashRegister | undefined> {
   // Update the record and return the updated row
@@ -43,7 +43,7 @@ export async function updateCashRegister(
 }
 
 // Delete a cash register entry by ID
-export async function deleteCashRegister(id: string): Promise<void> {
+export async function deleteCashRegister(id: number): Promise<void> {
   // Delete the record by its primary key
   await db.delete(cashRegister).where(eq(cashRegister.id, id));
 }

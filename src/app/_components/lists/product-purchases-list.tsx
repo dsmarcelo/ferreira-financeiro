@@ -16,13 +16,11 @@ import {
 import { getSelectedMonth } from "@/lib/utils";
 
 // Helper to group purchases by date string (YYYY-MM-DD)
+import { compareByDueDateAndId } from "./utils/compare";
+
 function groupByDate(purchases: ProductPurchase[]) {
   return purchases
-    .sort((a, b) =>
-      a.dueDate === b.dueDate
-        ? a.id.localeCompare(b.id)
-        : a.dueDate.localeCompare(b.dueDate),
-    )
+    .sort(compareByDueDateAndId)
     .reduce<Record<string, ProductPurchase[]>>((acc, purchase) => {
       const date = purchase.dueDate;
       acc[date] ??= [];
@@ -45,7 +43,7 @@ export default function ProductPurchasesList({
   // useOptimistic for optimistic paid state
   const [optimisticPurchases, setOptimisticPurchases] = useOptimistic(
     allProductPurchases,
-    (state: ProductPurchase[], update: { id: string; checked: boolean }) =>
+    (state: ProductPurchase[], update: { id: number; checked: boolean }) =>
       state.map((item) =>
         item.id === update.id ? { ...item, isPaid: update.checked } : item,
       ),
@@ -140,7 +138,7 @@ export default function ProductPurchasesList({
                     <div>
                       <ExpenseListItem
                         expense={item}
-                        onTogglePaid={(id: string, checked: boolean) => {
+                        onTogglePaid={(id: number, checked: boolean) => {
                           startTransition(() => {
                             setOptimisticPurchases({ id, checked });
                           });

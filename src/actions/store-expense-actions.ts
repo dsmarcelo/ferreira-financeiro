@@ -88,7 +88,7 @@ export async function actionCreateStoreExpense(
 
 // Toggle isPaid for a store expense
 export async function actionToggleStoreExpenseIsPaid(
-  id: string,
+  id: number,
   isPaid: boolean,
 ): Promise<void> {
   await updateStoreExpense(id, { isPaid });
@@ -101,7 +101,7 @@ export async function actionUpdateStoreExpense(
   formData: FormData,
 ): Promise<ActionResponse> {
   const id = formData.get("id");
-  if (!id || typeof id !== "string") {
+  if (!id || typeof id !== "number") {
     return { success: false, message: "ID inválido" };
   }
   const date = formData.get("date");
@@ -148,14 +148,14 @@ export async function actionUpdateStoreExpense(
 }
 
 // Server action to delete a store expense entry
-export async function actionDeleteStoreExpense(id: string): Promise<void> {
+export async function actionDeleteStoreExpense(id: number): Promise<void> {
   await deleteStoreExpense(id);
   revalidatePath("/despesas-da-loja");
 }
 
 // Server action to get a store expense entry by ID
 export async function actionGetStoreExpenseById(
-  id: string,
+  id: number,
 ): Promise<StoreExpense | undefined> {
   return getStoreExpenseById(id);
 }

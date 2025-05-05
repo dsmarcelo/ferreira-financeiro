@@ -86,7 +86,7 @@ export async function actionCreateProductPurchase(
 
 // Toggle isPaid for a product purchase
 export async function actionToggleProductPurchaseIsPaid(
-  id: string,
+  id: number,
   isPaid: boolean,
 ): Promise<void> {
   await updateProductPurchase(id, { isPaid });
@@ -98,8 +98,9 @@ export async function actionUpdateProductPurchase(
   _prevState: ActionResponse | undefined,
   formData: FormData,
 ): Promise<ActionResponse> {
-  const id = formData.get("id");
-  if (!id || typeof id !== "string") {
+  const idRaw = formData.get("id");
+  const id = typeof idRaw === "string" ? Number(idRaw) : undefined;
+  if (!id || isNaN(id)) {
     return { success: false, message: "ID inválido" };
   }
   const date = formData.get("date");
@@ -144,14 +145,14 @@ export async function actionUpdateProductPurchase(
 }
 
 // Server action to delete a product purchase entry
-export async function actionDeleteProductPurchase(id: string): Promise<void> {
+export async function actionDeleteProductPurchase(id: number): Promise<void> {
   await deleteProductPurchase(id);
   revalidatePath("/despesas-de-produtos");
 }
 
 // Server action to get a product purchase entry by ID
 export async function actionGetProductPurchaseById(
-  id: string,
+  id: number,
 ): Promise<ProductPurchase | undefined> {
   return getProductPurchaseById(id);
 }
