@@ -92,6 +92,9 @@ export function generateSummaryPDF(
     const dueDateStr = formatShortDate(group.dueDate); // Format due date as string
     // Section header text with pending or paid status
     const headerText = `${dueDateStr}`; // Compose section header
+    const totalNotPaid = group.entries
+      .filter((e) => !e.isPaid)
+      .reduce((acc, e) => acc + e.value, 0);
 
     // Draw light gray section header bar exactly aligned with the table
     doc.setFillColor(255, 255, 255); // Set fill color for section header
@@ -114,7 +117,10 @@ export function generateSummaryPDF(
 
     // Add subtotal row for the group
     rows.push([
-      { content: "TOTAL", styles: { fontStyle: "bold", fontSize: 12 } }, // Label for total row
+      {
+        content: `TOTAL${totalNotPaid > 0 ? ` (Falta pagar ${formatCurrency(totalNotPaid)})` : ""}`,
+        styles: { fontStyle: "bold", fontSize: 12 },
+      }, // Label for total row
       "", // Empty cell
       {
         content: formatCurrency(getTotal(group.entries)), // Total value for group
