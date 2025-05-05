@@ -49,7 +49,6 @@ export async function listStoreExpenses(
   startDate: string,
   endDate: string,
 ): Promise<StoreExpense[] | []> {
-  console.log("fetching store expenses", startDate, endDate);
   if (startDate && endDate) {
     return db
       .select()

@@ -18,7 +18,6 @@ export default function CashRegisterList({
   cashRegisters: Promise<CashRegister[]>;
 }) {
   const allCashRegisters = use(cashRegisters);
-  console.log(allCashRegisters[0]);
   const selectedMonth = getSelectedMonth();
 
   // PDF actions (hooks must be above any return)

@@ -50,7 +50,6 @@ export async function listProductPurchases(
   startDate: string,
   endDate: string,
 ): Promise<ProductPurchase[] | []> {
-  console.log("fetching product purchases", startDate, endDate);
   if (startDate && endDate) {
     return db
       .select()

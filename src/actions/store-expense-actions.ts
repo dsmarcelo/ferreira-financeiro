@@ -16,14 +16,7 @@ import type {
 import { z } from "zod";
 
 const storeExpenseInsertSchema = z.object({
-  dueDate: z
-    .string()
-    .refine(
-      (val) =>
-        /^\d{4}-\d{2}-\d{2}$/.test(val) &&
-        new Date(val + "T00:00:00") >= new Date("2024-01-01T00:00:00"),
-      { message: "Data inválida" },
-    ),
+  dueDate: z.string({ message: "Data inválida" }),
   value: z.number().min(0, { message: "Valor inválido" }),
   description: z.string().min(1, { message: "Descrição obrigatória" }),
   isPaid: z.boolean().optional(),
@@ -42,7 +35,6 @@ export async function actionCreateStoreExpense(
   _prevState: ActionResponse | undefined,
   formData: FormData,
 ): Promise<ActionResponse> {
-  const date = formData.get("date");
   const valueStr = formData.get("amount");
   const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
   const description = formData.get("description");
@@ -50,7 +42,6 @@ export async function actionCreateStoreExpense(
   const isPaid = formData.get("isPaid") === "on";
 
   const result = storeExpenseInsertSchema.safeParse({
-    date,
     value,
     description,
     dueDate,
@@ -100,11 +91,10 @@ export async function actionUpdateStoreExpense(
   _prevState: ActionResponse | undefined,
   formData: FormData,
 ): Promise<ActionResponse> {
-  const id = formData.get("id");
+  const id = Number(formData.get("id"));
   if (!id || typeof id !== "number") {
     return { success: false, message: "ID inválido" };
   }
-  const date = formData.get("date");
   const valueStr = formData.get("amount");
   const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
   const description = formData.get("description");
@@ -112,7 +102,6 @@ export async function actionUpdateStoreExpense(
   const isPaid = formData.get("isPaid") === "on";
 
   const result = storeExpenseInsertSchema.safeParse({
-    date,
     value,
     description,
     dueDate,

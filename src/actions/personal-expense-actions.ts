@@ -16,14 +16,7 @@ import type {
 import { z } from "zod";
 
 const personalExpenseInsertSchema = z.object({
-  dueDate: z
-    .string()
-    .refine(
-      (val) =>
-        /^\d{4}-\d{2}-\d{2}$/.test(val) &&
-        new Date(val + "T00:00:00") >= new Date("2024-01-01T00:00:00"),
-      { message: "Data inválida" },
-    ),
+  dueDate: z.string({ message: "Data inválida" }),
   value: z.number().min(0, { message: "Valor inválido" }),
   description: z.string().min(1, { message: "Descrição obrigatória" }),
   isPaid: z.boolean().optional(),
@@ -47,7 +40,6 @@ export async function actionCreatePersonalExpense(
   const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
   const description = formData.get("description");
   const isPaid = formData.get("isPaid") === "on";
-
   const result = personalExpenseInsertSchema.safeParse({
     dueDate,
     value,
@@ -90,7 +82,7 @@ export async function actionUpdatePersonalExpense(
   formData: FormData,
 ): Promise<ActionResponse> {
   const idRaw = formData.get("id");
-  const id = typeof idRaw === "string" ? Number(idRaw) : undefined;
+  const id = Number(idRaw);
   if (!id || isNaN(id)) {
     return { success: false, message: "ID inválido" };
   }

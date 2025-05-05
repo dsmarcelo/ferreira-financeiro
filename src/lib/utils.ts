@@ -36,14 +36,11 @@ export function getSelectedMonth() {
 }
 
 export function formatMonth(date: Date | string) {
-  console.log("date", date);
   const dateObject = typeof date === "string" ? stringToDate(date) : date;
-  console.log("dateObject", dateObject);
   const formatted = new Intl.DateTimeFormat("pt-BR", {
     month: "long",
     year: "numeric",
   }).format(dateObject);
-  console.log("formatted", formatted);
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 }
 

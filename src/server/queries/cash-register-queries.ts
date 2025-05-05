@@ -53,7 +53,6 @@ export async function listCashRegisters(
   startDate: string,
   endDate: string,
 ): Promise<CashRegister[] | []> {
-  console.log("fetching cash registers", startDate, endDate);
   if (startDate && endDate) {
     return db
       .select()

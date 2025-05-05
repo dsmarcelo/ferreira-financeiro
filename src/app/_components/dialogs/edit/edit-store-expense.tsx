@@ -63,6 +63,7 @@ export default function EditStoreExpense({
         action={formAction}
         className="space-y-4"
       >
+        <input type="hidden" name="id" value={data.id} />
         <div className="space-y-2">
           <Label htmlFor="description">Descrição</Label>
           <Input
@@ -123,9 +124,17 @@ export default function EditStoreExpense({
           </Button>
         </div>
         {state.message && (
-          <p className="mt-2 text-sm text-red-600" aria-live="polite">
-            {state.message}
-          </p>
+          <>
+            {state.success === true ? (
+              <p className="mt-2 text-sm text-green-500" aria-live="polite">
+                {state.message}
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-red-500" aria-live="polite">
+                {state.message}
+              </p>
+            )}
+          </>
         )}
       </form>
     </ResponsiveDialog>

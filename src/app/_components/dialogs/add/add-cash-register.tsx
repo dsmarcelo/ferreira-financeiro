@@ -94,6 +94,20 @@ export default function AddCashRegister({
         <Button type="submit" className="w-full" disabled={pending}>
           {pending ? "Adicionando..." : "Adicionar"}
         </Button>
+        {/* General message area for non-field errors/messages */}
+        {state.message && (
+          <>
+            {state.success === true ? (
+              <p className="mt-2 text-sm text-green-600" aria-live="polite">
+                {state.message}
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-red-500" aria-live="polite">
+                {state.message}
+              </p>
+            )}
+          </>
+        )}
       </form>
     </ResponsiveDialog>
   );

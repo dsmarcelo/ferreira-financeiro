@@ -66,7 +66,7 @@ export default async function HomePage({
           </AddStoreExpense>
           <AddProductPurchase>
             <Button className="h-14 rounded-xl">
-              Adicionar Despesa de Produto
+              Adicionar Compra de produto
             </Button>
           </AddProductPurchase>
         </div>

@@ -49,7 +49,6 @@ export async function listPersonalExpenses(
   startDate: string,
   endDate: string,
 ): Promise<PersonalExpense[] | []> {
-  console.log("fetching personal expenses", startDate, endDate);
   if (startDate && endDate) {
     return db
       .select()

@@ -16,14 +16,7 @@ import type {
 import { z } from "zod";
 
 const productPurchaseInsertSchema = z.object({
-  date: z
-    .string()
-    .refine(
-      (val) =>
-        /^\d{4}-\d{2}-\d{2}$/.test(val) &&
-        new Date(val + "T00:00:00") >= new Date("2024-01-01T00:00:00"),
-      { message: "Data inválida" },
-    ),
+  dueDate: z.string({ message: "Data inválida" }),
   value: z.number().min(0, { message: "Valor inválido" }),
   description: z.string().min(1, { message: "Descrição obrigatória" }),
   isPaid: z.boolean().optional(),
@@ -42,14 +35,14 @@ export async function actionCreateProductPurchase(
   _prevState: ActionResponse | undefined,
   formData: FormData,
 ): Promise<ActionResponse> {
-  const date = formData.get("date");
+  const dueDate = formData.get("dueDate");
   const valueStr = formData.get("amount");
   const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
   const description = formData.get("description");
   const isPaid = formData.get("isPaid") === "on";
 
   const result = productPurchaseInsertSchema.safeParse({
-    date,
+    dueDate,
     value,
     description,
     isPaid,
@@ -65,7 +58,7 @@ export async function actionCreateProductPurchase(
   try {
     const dbValue = value !== undefined ? value.toFixed(2) : undefined;
     await createProductPurchase({
-      dueDate: date as string,
+      dueDate: dueDate as string,
       value: dbValue!,
       description: description as string,
       isPaid,
@@ -73,13 +66,13 @@ export async function actionCreateProductPurchase(
     revalidatePath("/despesas-de-produtos");
     return {
       success: true,
-      message: "Despesa de produto adicionada com sucesso!",
+      message: "Compra de produto adicionada com sucesso!",
     };
   } catch (error) {
     return {
       success: false,
       message:
-        (error as Error)?.message ?? "Erro ao adicionar despesa de produto.",
+        (error as Error)?.message ?? "Erro ao adicionar compra de produto.",
     };
   }
 }
@@ -99,18 +92,18 @@ export async function actionUpdateProductPurchase(
   formData: FormData,
 ): Promise<ActionResponse> {
   const idRaw = formData.get("id");
-  const id = typeof idRaw === "string" ? Number(idRaw) : undefined;
+  const id = Number(idRaw);
   if (!id || isNaN(id)) {
     return { success: false, message: "ID inválido" };
   }
-  const date = formData.get("date");
+  const dueDate = formData.get("dueDate");
   const valueStr = formData.get("amount");
   const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
   const description = formData.get("description");
   const isPaid = formData.get("isPaid") === "on";
 
   const result = productPurchaseInsertSchema.safeParse({
-    date,
+    dueDate,
     value,
     description,
     isPaid,
@@ -125,7 +118,7 @@ export async function actionUpdateProductPurchase(
 
   try {
     await updateProductPurchase(id, {
-      dueDate: date as string,
+      dueDate: dueDate as string,
       value: value!.toFixed(2),
       description: description as string,
       isPaid,
@@ -133,13 +126,13 @@ export async function actionUpdateProductPurchase(
     revalidatePath("/despesas-de-produtos");
     return {
       success: true,
-      message: "Despesa de produto atualizada com sucesso!",
+      message: "Compra de produto atualizada com sucesso!",
     };
   } catch (error) {
     return {
       success: false,
       message:
-        (error as Error)?.message ?? "Erro ao atualizar despesa de produto.",
+        (error as Error)?.message ?? "Erro ao atualizar compra de produto.",
     };
   }
 }

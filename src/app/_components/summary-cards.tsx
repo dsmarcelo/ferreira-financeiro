@@ -29,8 +29,17 @@ export default async function SummaryCards({ from, to }: SummaryCardsProps) {
         href="/caixa"
         className="bg-background-secondary flex flex-wrap items-center justify-between gap-2 rounded-lg p-4 py-3"
       >
-        <p className="">Caixa</p>
-        <p className="text-lg font-semibold">{formatCurrency(cashRegister)}</p>
+        <p className="">
+          Caixa <span className="text-muted-foreground text-sm">(28%)</span>
+        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-lg font-semibold">
+            {formatCurrency(cashRegister)}
+          </p>
+          <p className="text-muted-foreground text-sm font-medium">
+            {"(" + formatCurrency(cashRegister * 0.28) + ")"}
+          </p>
+        </div>
       </Link>
       <div className="grid grid-cols-2 gap-4">
         {/* Personal Expenses Card */}
@@ -59,7 +68,7 @@ export default async function SummaryCards({ from, to }: SummaryCardsProps) {
         href="/compras-produtos"
         className="bg-background-secondary flex flex-wrap items-center justify-between gap-2 rounded-lg p-4 py-3"
       >
-        <p className="text-sm md:text-base">Despesas de Produtos</p>
+        <p className="text-sm md:text-base">Compras de Produtos</p>
         <p className="text-lg font-semibold">
           {formatCurrency(productPurchases)}
         </p>

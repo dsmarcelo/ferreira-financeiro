@@ -53,12 +53,12 @@ export default function EditProductPurchase({
     <ResponsiveDialog
       triggerButton={
         children ?? (
-          <Button className="rounded-full">Editar Despesa de Produto</Button>
+          <Button className="rounded-full">Editar Compra de Produto</Button>
         )
       }
       isOpen={isOpen}
       onOpenChange={setIsOpen}
-      title="Editar Despesa de Produto"
+      title="Editar Compra de Produto"
     >
       <form
         key={isOpen ? "open" : "closed"}
@@ -66,20 +66,23 @@ export default function EditProductPurchase({
         className="space-y-4"
       >
         <input type="hidden" name="id" value={data.id} />
+
         <div className="space-y-2">
-          <Label htmlFor="dueDate">Data</Label>
-          <DatePicker
-            id="dueDate"
-            name="dueDate"
+          <Label htmlFor="description">Descrição</Label>
+          <Input
+            type="text"
+            id="description"
+            name="description"
             required
-            defaultValue={data.dueDate}
+            defaultValue={data.description}
           />
-          {errors.dueDate && (
+          {errors.description && (
             <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.dueDate[0]}
+              {errors.description[0]}
             </p>
           )}
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="amount">Valor</Label>
           <CurrencyInput
@@ -96,18 +99,18 @@ export default function EditProductPurchase({
             </p>
           )}
         </div>
+
         <div className="space-y-2">
-          <Label htmlFor="description">Descrição</Label>
-          <Input
-            type="text"
-            id="description"
-            name="description"
+          <Label htmlFor="dueDate">Data</Label>
+          <DatePicker
+            id="dueDate"
+            name="dueDate"
             required
-            defaultValue={data.description}
+            defaultValue={data.dueDate}
           />
-          {errors.description && (
+          {errors.dueDate && (
             <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.description[0]}
+              {errors.dueDate[0]}
             </p>
           )}
         </div>
@@ -125,9 +128,17 @@ export default function EditProductPurchase({
           </Button>
         </div>
         {state.message && (
-          <p className="mt-2 text-sm text-green-600" aria-live="polite">
-            {state.message}
-          </p>
+          <>
+            {state.success === true ? (
+              <p className="mt-2 text-sm text-green-500" aria-live="polite">
+                {state.message}
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-red-500" aria-live="polite">
+                {state.message}
+              </p>
+            )}
+          </>
         )}
       </form>
     </ResponsiveDialog>

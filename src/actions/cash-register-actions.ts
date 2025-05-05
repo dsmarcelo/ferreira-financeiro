@@ -13,14 +13,7 @@ import type { CashRegisterInsert } from "@/server/db/schema/cash-register";
 import { z } from "zod";
 
 const cashRegisterInsertSchema = z.object({
-  date: z
-    .string()
-    .refine(
-      (val) =>
-        /^\d{4}-\d{2}-\d{2}$/.test(val) &&
-        new Date(val + "T00:00:00") >= new Date("2024-01-01T00:00:00"),
-      { message: "Data inválida" },
-    ),
+  date: z.string({ message: "Data inválida" }),
   value: z.number().min(0, { message: "Valor inválido" }),
 });
 
@@ -74,8 +67,8 @@ export async function actionUpdateCashRegister(
   _prevState: ActionResponse | undefined,
   formData: FormData,
 ): Promise<ActionResponse> {
-  const id = formData.get("id");
-  if (!id || typeof id !== "number") {
+  const id = Number(formData.get("id"));
+  if (!id || isNaN(id)) {
     return { success: false, message: "ID inválido" };
   }
   const date = formData.get("date");

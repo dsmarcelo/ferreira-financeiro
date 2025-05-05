@@ -95,6 +95,7 @@ export default function AddStoreExpense({
             </p>
           )}
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="dueDate">Vencimento</Label>
           <DatePicker
@@ -109,15 +110,25 @@ export default function AddStoreExpense({
             </p>
           )}
         </div>
+
         <IsPaidCheckbox />
+
         <Button type="submit" className="w-full" disabled={pending}>
           {pending ? "Adicionando..." : "Adicionar"}
         </Button>
         {/* General message area for non-field errors/messages */}
         {state.message && (
-          <p className="mt-2 text-sm text-green-600" aria-live="polite">
-            {state.message}
-          </p>
+          <>
+            {state.success === true ? (
+              <p className="mt-2 text-sm text-green-600" aria-live="polite">
+                {state.message}
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-red-500" aria-live="polite">
+                {state.message}
+              </p>
+            )}
+          </>
         )}
       </form>
     </ResponsiveDialog>
