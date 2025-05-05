@@ -50,10 +50,6 @@ export async function getProfit(startDate: string, endDate: string) {
     )[0]?.sum ?? 0,
   );
 
-  console.log(cashRegisterSum, personalExpensesSum, storeExpensesSum);
-  console.log(cashRegisterSum * 0.28);
-  console.log(personalExpensesSum + storeExpensesSum);
-
   const profit =
     cashRegisterSum * 0.28 - (personalExpensesSum + storeExpensesSum);
   return profit;
