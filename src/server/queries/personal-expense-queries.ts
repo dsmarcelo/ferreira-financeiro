@@ -1,3 +1,5 @@
+"use server";
+
 import { db } from "@/server/db";
 import { personalExpense } from "@/server/db/schema/personal-expense";
 import type {

@@ -7,8 +7,10 @@ import { productPurchase } from "@/server/db/schema/product-purchase";
 import { cashRegister } from "@/server/db/schema/cash-register";
 import { and, gte, lte, sum } from "drizzle-orm";
 
-// Calculate profit with margin
-export async function getProfit(startDate: string, endDate: string) {
+export async function sumCashRegisterByDateRange(
+  startDate: string,
+  endDate: string,
+) {
   const cashRegisterSum = Number(
     (
       await db
@@ -22,6 +24,13 @@ export async function getProfit(startDate: string, endDate: string) {
         )
     )[0]?.sum ?? 0,
   );
+  return cashRegisterSum;
+}
+
+export async function sumPersonalExpenseByDateRange(
+  startDate: string,
+  endDate: string,
+) {
   const personalExpensesSum = Number(
     (
       await db
@@ -35,7 +44,13 @@ export async function getProfit(startDate: string, endDate: string) {
         )
     )[0]?.sum ?? 0,
   );
+  return personalExpensesSum;
+}
 
+export async function sumStoreExpenseByDateRange(
+  startDate: string,
+  endDate: string,
+) {
   const storeExpensesSum = Number(
     (
       await db
@@ -49,7 +64,37 @@ export async function getProfit(startDate: string, endDate: string) {
         )
     )[0]?.sum ?? 0,
   );
+  return storeExpensesSum;
+}
 
+export async function sumProductPurchaseByDateRange(
+  startDate: string,
+  endDate: string,
+) {
+  const productPurchasesSum = Number(
+    (
+      await db
+        .select({ sum: sum(productPurchase.value) })
+        .from(productPurchase)
+        .where(
+          and(
+            gte(productPurchase.dueDate, startDate),
+            lte(productPurchase.dueDate, endDate),
+          ),
+        )
+    )[0]?.sum ?? 0,
+  );
+  return productPurchasesSum;
+}
+
+// Calculate profit with margin
+export async function getProfit(startDate: string, endDate: string) {
+  const cashRegisterSum = await sumCashRegisterByDateRange(startDate, endDate);
+  const personalExpensesSum = await sumPersonalExpenseByDateRange(
+    startDate,
+    endDate,
+  );
+  const storeExpensesSum = await sumStoreExpenseByDateRange(startDate, endDate);
   const profit =
     cashRegisterSum * 0.28 - (personalExpensesSum + storeExpensesSum);
   return profit;

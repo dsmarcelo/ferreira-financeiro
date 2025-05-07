@@ -5,6 +5,10 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatCurrency, formatShortDate, stringToDate } from "@/lib/utils";
 import type { ExpenseSummary } from "@/server/queries/summary-queries";
+import { listCashRegisters } from "@/server/queries/cash-register-queries";
+import { listPersonalExpenses } from "@/server/queries/personal-expense-queries";
+import { listStoreExpenses } from "@/server/queries/store-expense-queries";
+import { listProductPurchases } from "@/server/queries/product-purchase-queries";
 
 // Helper type for grouping entries by due date
 type GroupedExpenses = {
@@ -41,6 +45,12 @@ function getTotal(entries: ExpenseSummary[]) {
 export function generateSummaryPDF(
   expenses: ExpenseSummary[], // Array of grouped expense data
   title = "Despesas", // Title for the PDF document
+  totalProfit: number,
+  totalExpenses: number,
+  totalCashRegister: number,
+  totalPersonalExpenses: number,
+  totalStoreExpenses: number,
+  totalProductPurchases: number,
 ): jsPDF {
   const doc = new jsPDF(); // Create a new jsPDF instance
   const grouped = groupExpensesByDueDate(expenses); // Group expenses by due date
@@ -51,7 +61,56 @@ export function generateSummaryPDF(
   const textWidth = doc.getTextWidth(title); // Calculate width of the title text
   doc.text(title, (pageWidth - textWidth) / 2, 15); // Draw the title centered at y=15
 
-  let y = 25; // Initial y position for content below the title
+  // Render summary table below the main title
+  doc.setFontSize(10);
+  doc.setFont(undefined, "bold");
+  // Render summary as columns instead of rows
+  const summaryLabels = [
+    "CAIXA",
+    "LUCRO",
+    "DESPESAS PESSOAIS",
+    "DESPESAS DA LOJA",
+    "TOTAL DE DESPESAS",
+    "COMPRAS DE PRODUTOS",
+  ];
+  const summaryValues = [
+    formatCurrency(totalCashRegister),
+    formatCurrency(totalProfit),
+    formatCurrency(totalPersonalExpenses),
+    formatCurrency(totalStoreExpenses),
+    formatCurrency(totalExpenses),
+    formatCurrency(totalProductPurchases),
+  ];
+  autoTable(doc, {
+    startY: 22,
+    head: [summaryLabels],
+    body: [summaryValues],
+    theme: "grid",
+    headStyles: {
+      fillColor: [180, 180, 180],
+      textColor: 20,
+      fontStyle: "bold",
+    },
+    styles: {
+      fontSize: 10,
+      cellPadding: 1,
+      valign: "middle",
+    },
+    columnStyles: {
+      0: { textColor: 20 },
+      1: { textColor: 20 },
+      2: { textColor: 20 },
+      3: { textColor: 20 },
+      4: { textColor: 20 },
+      5: { textColor: 20 },
+    },
+    margin: { left: 10, right: 10 },
+    tableWidth: pageWidth - 20,
+  });
+
+  // Compute where to start the main table (after summary table)
+  let y = doc.lastAutoTable.finalY + 8;
+
   // Render the global header row once for all tables
   autoTable(doc, {
     startY: y, // Start table at current y

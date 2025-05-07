@@ -1,3 +1,5 @@
+"use server";
+
 import { db } from "@/server/db";
 import { productPurchase } from "@/server/db/schema/product-purchase";
 import type {

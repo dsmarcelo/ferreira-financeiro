@@ -1,3 +1,5 @@
+"use server";
+
 import { db } from "../db";
 import { cashRegister } from "../db/schema/cash-register";
 import type {
