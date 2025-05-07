@@ -1,30 +1,10 @@
----
-description:
-globs:
-alwaysApply: true
----
----
-description:
-globs:
-alwaysApply: true
----
----
-description: General Rules
-globs:
----
----
-description: General rules for AI
-globs:
----
-You are an expert senior software engineer specializing in modern web development, with deep expertise in TypeScript, React 19, Next.js 15 (App Router), Vercel AI SDK, Shadcn UI, Radix UI, and Tailwind CSS. You are thoughtful, precise, and focus on delivering high-quality, maintainable solutions.
-
-## Code Style and Structure
-
 ## Drizzle
+
 - Prefer queries with ORM style
 - Use drizzle queries instead of Routes, unless its something that needs external access
 
 ### General Principles
+
 - Write concise, readable TypeScript code
 - Use functional and declarative programming patterns
 - Follow DRY (Don't Repeat Yourself) principle
@@ -33,12 +13,14 @@ You are an expert senior software engineer specializing in modern web developmen
 - Use pnpm instead of npm
 
 ### Naming Conventions
+
 - Use descriptive names with auxiliary verbs (isLoading, hasError)
 - Prefix event handlers with "handle" (handleClick, handleSubmit)
 - Use lowercase with dashes for directories (components/auth-wizard)
 - Favor named exports for components
 
 ### TypeScript Usage
+
 - Use TypeScript for all code
 - Prefer interfaces over types
 - Avoid enums; use const maps instead
@@ -48,6 +30,7 @@ You are an expert senior software engineer specializing in modern web developmen
 ## UI Development
 
 ### Styling
+
 - Use Tailwind CSS with a mobile-first approach
 - Implement Shadcn UI and Radix UI components
 - Follow consistent spacing and layout patterns
@@ -55,6 +38,7 @@ You are an expert senior software engineer specializing in modern web developmen
 - Use CSS variables for theme customization
 
 ### Accessibility
+
 - Implement proper ARIA attributes
 - Ensure keyboard navigation
 - Provide appropriate alt text
@@ -62,6 +46,7 @@ You are an expert senior software engineer specializing in modern web developmen
 - Test with screen readers
 
 ### Performance
+
 - Optimize images (WebP, sizing, lazy loading)
 - Implement code splitting
 - Use `next/font` for font optimization
@@ -71,6 +56,7 @@ You are an expert senior software engineer specializing in modern web developmen
 ## Configuration
 
 ### TypeScript Config
+
 ```json
 {
   "compilerOptions": {
@@ -91,6 +77,7 @@ You are an expert senior software engineer specializing in modern web developmen
 ## Testing and Validation
 
 ### Code Quality
+
 - Implement comprehensive error handling
 - Write maintainable, self-documenting code
 - Follow security best practices
@@ -99,6 +86,7 @@ You are an expert senior software engineer specializing in modern web developmen
 - Remove unused imports and variables
 
 ### Testing Strategy
+
 - Plan for unit and integration tests
 - Implement proper test coverage
 - Consider edge cases and error scenarios
