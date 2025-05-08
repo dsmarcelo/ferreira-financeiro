@@ -2,6 +2,9 @@
 import { ptBR } from "date-fns/locale";
 import { format, parseISO } from "date-fns";
 import EditProductPurchase from "../dialogs/edit/edit-product-purchase";
+import { useState } from "react";
+import { actionGetProductPurchaseWithInstallments } from "@/actions/product-purchase-actions";
+import type { ProductPurchaseWithInstallments } from "@/server/db/schema/product-purchase";
 import { formatCurrency } from "@/lib/utils";
 import { ExpenseListItem } from "./expense-list-item";
 import { actionToggleProductPurchaseIsPaid } from "@/actions/product-purchase-actions";
@@ -22,7 +25,14 @@ function groupByDate(purchases: ProductPurchase[]) {
   return purchases
     .sort(compareByDueDateAndId)
     .reduce<Record<string, ProductPurchase[]>>((acc, purchase) => {
-      const date = purchase.dueDate;
+      // Use createdAt as grouping date, formatted as YYYY-MM-DD
+      const createdAt = purchase.createdAt as string | Date;
+      const date =
+        typeof createdAt === "string"
+          ? createdAt.slice(0, 10)
+          : createdAt instanceof Date
+            ? createdAt.toISOString().slice(0, 10)
+            : "";
       acc[date] ??= [];
       acc[date].push(purchase);
       return acc;
@@ -38,6 +48,9 @@ export default function ProductPurchasesList({
 }: {
   productPurchases: Promise<ProductPurchase[]>;
 }) {
+  const [selectedPurchase, setSelectedPurchase] =
+    useState<ProductPurchaseWithInstallments | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const allProductPurchases = use(productPurchases);
 
   // useOptimistic for optimistic paid state
@@ -55,12 +68,12 @@ export default function ProductPurchasesList({
   const selectedMonth = getSelectedMonth();
 
   const total = allProductPurchases.reduce(
-    (acc, item) => acc + Number(item.value),
+    (acc, item) => acc + Number(item.totalAmount),
     0,
   );
   const totalPaid = allProductPurchases
     .filter((item) => item.isPaid)
-    .reduce((acc, item) => acc + Number(item.value), 0);
+    .reduce((acc, item) => acc + Number(item.totalAmount), 0);
   const totalUnpaid = total - totalPaid;
 
   if (allProductPurchases.length === 0) {
@@ -125,7 +138,7 @@ export default function ProductPurchasesList({
                   (
                   {formatCurrency(
                     grouped[date]?.reduce(
-                      (acc, item) => acc + Number(item.value),
+                      (acc, item) => acc + Number(item.totalAmount),
                       0,
                     ) ?? 0,
                   )}
@@ -134,8 +147,21 @@ export default function ProductPurchasesList({
               </div>
               <div className="flex w-full flex-col justify-between divide-y divide-gray-100">
                 {grouped[date]?.map((item) => (
-                  <EditProductPurchase data={item} key={item.id}>
-                    <div>
+                  <div key={item.id}>
+                    <button
+                      type="button"
+                      className="w-full text-left"
+                      onClick={async () => {
+                        const purchaseWithInstallments =
+                          await actionGetProductPurchaseWithInstallments(
+                            item.id,
+                          );
+                        if (purchaseWithInstallments) {
+                          setSelectedPurchase(purchaseWithInstallments);
+                          setIsDialogOpen(true);
+                        }
+                      }}
+                    >
                       <ExpenseListItem
                         expense={item}
                         onTogglePaid={(id: number, checked: boolean) => {
@@ -145,9 +171,19 @@ export default function ProductPurchasesList({
                           void actionToggleProductPurchaseIsPaid(id, checked);
                         }}
                       />
-                    </div>
-                  </EditProductPurchase>
+                    </button>
+                  </div>
                 ))}
+                {selectedPurchase && (
+                  <EditProductPurchase
+                    data={selectedPurchase}
+                    open={isDialogOpen}
+                    onOpenChange={(open: boolean) => {
+                      setIsDialogOpen(open);
+                      if (!open) setSelectedPurchase(null);
+                    }}
+                  />
+                )}
               </div>
             </div>
           </div>

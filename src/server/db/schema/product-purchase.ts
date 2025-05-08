@@ -7,6 +7,7 @@ import {
   timestamp,
   text,
   boolean,
+  numeric,
 } from "drizzle-orm/pg-core";
 
 /**
@@ -14,9 +15,8 @@ import {
  */
 export const productPurchase = createTable("product_purchase", {
   id: serial("id").primaryKey(),
-  value: decimal("value", { precision: 15, scale: 2 }).notNull(),
+  totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).notNull(),
   description: text("description").notNull(),
-  dueDate: date("due_date").notNull(),
   isPaid: boolean("is_paid").default(false).notNull(),
   createdAt: timestamp("createdAt", { withTimezone: true })
     .default(sql`CURRENT_TIMESTAMP`)
@@ -26,5 +26,44 @@ export const productPurchase = createTable("product_purchase", {
   ),
 });
 
+export const productPurchaseInstallment = createTable(
+  "product_purchase_installments",
+  {
+    id: serial("id").primaryKey(),
+    // Foreign key linking to the bills table
+    productPurchaseId: serial("product_purchase_id")
+      .references(() => productPurchase.id)
+      .notNull(),
+    description: text("description").notNull(),
+    installmentNumber: serial("installment_number").notNull(), // e.g., 1, 2, 3
+    // Amount due for this specific installment
+    amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+    // Due date for this specific installment
+    dueDate: date("due_date").notNull(),
+    // Flag to track if this installment has been paid
+    isPaid: boolean("is_paid").default(false).notNull(),
+    // Timestamp when this installment was paid (nullable)
+    paidAt: timestamp("paid_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+);
+
 export type ProductPurchase = typeof productPurchase.$inferSelect;
 export type ProductPurchaseInsert = typeof productPurchase.$inferInsert;
+
+export type ProductPurchaseInstallment =
+  typeof productPurchaseInstallment.$inferSelect;
+
+export type ProductPurchaseInstallmentInsert =
+  typeof productPurchaseInstallment.$inferInsert;
+
+export type ProductPurchaseWithInstallments =
+  typeof productPurchase.$inferSelect & {
+    installments: ProductPurchaseInstallment[];
+  };
+
+export type ProductPurchaseInstallmentWithProductPurchase =
+  typeof productPurchaseInstallment.$inferSelect & {
+    productPurchase: ProductPurchase;
+  };
