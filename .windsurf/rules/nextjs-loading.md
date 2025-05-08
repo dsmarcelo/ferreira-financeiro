@@ -1,7 +1,7 @@
 ---
+trigger: manual
 description:
 globs:
-alwaysApply: false
 ---
 # Loading Components in Next.js
 

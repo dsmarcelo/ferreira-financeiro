@@ -1,10 +1,13 @@
-# Forms
-
+---
+trigger: model_decision
+description: Forms, data insertion
+globs:
+---
+### Forms
 - Use zod and server actions when creating forms
 - Add the error/message field on the bottom of each input
 - Follow the example:
-
-```tsx
+```
 'use server'
 
 import { z } from 'zod'
@@ -64,22 +67,23 @@ export async function submitAddress(prevState: ActionResponse | null, formData: 
 
 ```
 
+
 Then, you can pass your action to the useActionState hook and use the returned state to display an error message.
 
 Form component:
 
-```tsx
-"use client";
+```
+'use client'
 
-import { useActionState } from "react";
-import { createUser } from "@/app/actions";
+import { useActionState } from 'react'
+import { createUser } from '@/app/actions'
 
 const initialState = {
-  message: "",
-};
+  message: '',
+}
 
 export function Signup() {
-  const [state, formAction, pending] = useActionState(createUser, initialState);
+  const [state, formAction, pending] = useActionState(createUser, initialState)
 
   return (
     <form action={formAction}>
@@ -89,6 +93,6 @@ export function Signup() {
       <p aria-live="polite">{state?.message}</p>
       <button disabled={pending}>Sign up</button>
     </form>
-  );
+  )
 }
 ```
