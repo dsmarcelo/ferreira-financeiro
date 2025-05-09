@@ -1,10 +1,10 @@
 import AddProductPurchase from "@/app/_components/dialogs/add/add-product-purchase";
 import { Button } from "@/components/ui/button";
-import { listProductPurchases } from "@/server/queries/product-purchase-queries";
+import { listInstallmentsByDateRange } from "@/server/queries/product-purchase-queries";
 import Header from "../_components/header";
 import { Suspense } from "react";
 import Loading from "@/app/_components/loading/loading";
-import ProductPurchasesList from "@/app/_components/lists/product-purchases-list";
+import ProductPurchasesInstallmentsList from "@/app/_components/lists/product-purchases-installments-list";
 
 export default async function ComprasProdutosPage({
   searchParams,
@@ -12,7 +12,7 @@ export default async function ComprasProdutosPage({
   searchParams: Promise<{ from: string; to: string }>;
 }) {
   const { from, to } = await searchParams;
-  const productPurchases = listProductPurchases(from, to);
+  const productPurchases = listInstallmentsByDateRange(from, to);
 
   return (
     <div className="flex min-h-screen flex-col pb-24">
@@ -27,7 +27,9 @@ export default async function ComprasProdutosPage({
       </Header>
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5">
         <Suspense fallback={<Loading />}>
-          <ProductPurchasesList productPurchases={productPurchases} />
+          <ProductPurchasesInstallmentsList
+            productPurchaseInstallments={productPurchases}
+          />
         </Suspense>
       </main>
       <div className="fixed bottom-24 block w-full px-5 sm:hidden">
