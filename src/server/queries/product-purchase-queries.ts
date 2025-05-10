@@ -285,3 +285,29 @@ export async function sumInstallmentsByDateRange(
     throw new Error(`Erro ao somar parcelas: ${(error as Error).message}`);
   }
 }
+
+export async function listProductPurchasesWithInstallmentsByDateRange(
+  startDate: string,
+  endDate: string,
+): Promise<ProductPurchaseWithInstallments[]> {
+  try {
+    if (startDate && endDate) {
+      const purchases = await listProductPurchases(startDate, endDate);
+      const installments = await listInstallmentsByDateRange(
+        startDate,
+        endDate,
+      );
+      return purchases.map((purchase) => ({
+        ...purchase,
+        installments: installments.filter(
+          (installment) => installment.productPurchaseId === purchase.id,
+        ),
+      }));
+    }
+    return [];
+  } catch (error) {
+    throw new Error(
+      `Erro ao listar compras de produtos com parcelas: ${(error as Error).message}`,
+    );
+  }
+}

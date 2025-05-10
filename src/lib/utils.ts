@@ -48,3 +48,8 @@ export function stringToDate(date: string): Date {
   const parsed = parseISO(date);
   return toZonedTime(parsed, "UTC");
 }
+export function getToday(): string {
+  const iso = new Date().toISOString();
+  const [date] = iso.split("T");
+  return typeof date === "string" ? date : "";
+}

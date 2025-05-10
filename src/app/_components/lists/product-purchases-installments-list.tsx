@@ -1,8 +1,10 @@
 "use client";
-
 import { ptBR } from "date-fns/locale";
 import { format, parseISO } from "date-fns";
 import { useState, startTransition, useOptimistic, use } from "react";
+import EditProductPurchase from "../dialogs/edit/edit-product-purchase";
+import { actionGetProductPurchaseWithInstallments } from "@/actions/product-purchase-actions";
+import type { ProductPurchaseWithInstallments } from "@/server/db/schema/product-purchase";
 import { formatCurrency } from "@/lib/utils";
 import type { ProductPurchaseInstallment } from "@/server/db/schema/product-purchase";
 import {
@@ -16,6 +18,7 @@ import ShareButton from "../buttons/share-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { compareByDueDateAndId } from "@/app/_components/lists/utils/compare";
 
 interface ProductPurchasesInstallmentsListProps {
   productPurchaseInstallments: Promise<ProductPurchaseInstallment[]>;
@@ -23,19 +26,11 @@ interface ProductPurchasesInstallmentsListProps {
 
 function groupInstallmentsByDate(installments: ProductPurchaseInstallment[]) {
   return installments
-    .slice()
-    .sort((a, b) =>
-      a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : a.id - b.id,
-    )
-    .reduce<Record<string, ProductPurchaseInstallment[]>>((acc, inst) => {
-      const date =
-        typeof inst.dueDate === "string"
-          ? inst.dueDate.slice(0, 10)
-          : inst.dueDate instanceof Date
-            ? inst.dueDate.toISOString().slice(0, 10)
-            : "";
+    .sort(compareByDueDateAndId)
+    .reduce<Record<string, ProductPurchaseInstallment[]>>((acc, expense) => {
+      const date = expense.dueDate;
       acc[date] ??= [];
-      acc[date].push(inst);
+      acc[date].push(expense);
       return acc;
     }, {});
 }
@@ -44,8 +39,8 @@ export default function ProductPurchasesInstallmentsList({
   productPurchaseInstallments,
 }: ProductPurchasesInstallmentsListProps) {
   const allInstallments = use(productPurchaseInstallments);
-  const [selectedInstallment, setSelectedInstallment] =
-    useState<ProductPurchaseInstallment | null>(null);
+  const [selectedPurchase, setSelectedPurchase] =
+    useState<ProductPurchaseWithInstallments | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Optimistic UI for paid toggle
@@ -141,7 +136,43 @@ export default function ProductPurchasesInstallmentsList({
               </div>
               <div className="flex w-full flex-col justify-between divide-y divide-gray-100">
                 {grouped[date]?.map((item) => (
-                  <div key={item.id}>
+                  <div
+                    key={item.id}
+                    role="button"
+                    tabIndex={0}
+                    className="hover:bg-background-secondary active:bg-accent focus:ring-accent flex w-full cursor-pointer items-center gap-2 py-2 focus:ring-2 focus:outline-none sm:px-2"
+                    aria-label={`Editar parcela ${item.installmentNumber}`}
+                    onClick={async () => {
+                      const purchase =
+                        await actionGetProductPurchaseWithInstallments(
+                          item.productPurchaseId,
+                        );
+                      if (purchase) {
+                        setSelectedPurchase(purchase);
+                        setIsDialogOpen(true);
+                      } else {
+                        toast.error(
+                          "Não foi possível carregar a compra para edição.",
+                        );
+                      }
+                    }}
+                    onKeyDown={async (e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        const purchase =
+                          await actionGetProductPurchaseWithInstallments(
+                            item.productPurchaseId,
+                          );
+                        if (purchase) {
+                          setSelectedPurchase(purchase);
+                          setIsDialogOpen(true);
+                        } else {
+                          toast.error(
+                            "Não foi possível carregar a compra para edição.",
+                          );
+                        }
+                      }
+                    }}
+                  >
                     <div className="hover:bg-background-secondary active:bg-accent flex w-full items-center gap-2 py-2 sm:px-2">
                       <Checkbox
                         className="h-6 w-6 active:bg-slate-500"
@@ -189,7 +220,7 @@ export default function ProductPurchasesInstallmentsList({
                             variant="ghost"
                             aria-label="Editar parcela"
                             onClick={() => {
-                              setSelectedInstallment(item);
+                              setSelectedPurchase(item.productPurchaseId);
                               setIsDialogOpen(true);
                             }}
                           >
@@ -216,25 +247,16 @@ export default function ProductPurchasesInstallmentsList({
                     </div>
                   </div>
                 ))}
-                {/* Dialog for editing installment (to be implemented, or reuse existing patterns) */}
-                {selectedInstallment && isDialogOpen && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                    <div className="min-w-[300px] rounded bg-white p-4 shadow">
-                      <h3 className="mb-2 text-lg font-bold">Editar Parcela</h3>
-                      {/* Implement edit form or reuse a dialog component if available */}
-                      <p className="mb-2 text-sm">
-                        Funcionalidade de edição a ser implementada.
-                      </p>
-                      <Button
-                        onClick={() => {
-                          setIsDialogOpen(false);
-                          setSelectedInstallment(null);
-                        }}
-                      >
-                        Fechar
-                      </Button>
-                    </div>
-                  </div>
+                {/* EditProductPurchase Dialog for selected installment's purchase */}
+                {selectedPurchase && isDialogOpen && (
+                  <EditProductPurchase
+                    data={selectedPurchase}
+                    open={isDialogOpen}
+                    onOpenChange={(open) => {
+                      setIsDialogOpen(open);
+                      if (!open) setSelectedPurchase(null);
+                    }}
+                  />
                 )}
               </div>
             </div>
