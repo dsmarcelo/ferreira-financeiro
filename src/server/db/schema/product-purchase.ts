@@ -16,6 +16,7 @@ import {
 export const productPurchase = createTable("product_purchase", {
   id: serial("id").primaryKey(),
   totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).notNull(),
+  totalInstallments: serial("total_installments").notNull(),
   description: text("description").notNull(),
   isPaid: boolean("is_paid").default(false).notNull(),
   createdAt: timestamp("createdAt", { withTimezone: true })
@@ -36,6 +37,7 @@ export const productPurchaseInstallment = createTable(
       .notNull(),
     description: text("description").notNull(),
     installmentNumber: serial("installment_number").notNull(), // e.g., 1, 2, 3
+    totalInstallments: serial("total_installments").notNull(),
     // Amount due for this specific installment
     amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
     // Due date for this specific installment
