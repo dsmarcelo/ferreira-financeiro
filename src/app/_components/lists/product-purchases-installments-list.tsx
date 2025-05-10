@@ -19,6 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { compareByDueDateAndId } from "@/app/_components/lists/utils/compare";
+import Link from "next/link";
 
 interface ProductPurchasesInstallmentsListProps {
   productPurchaseInstallments: Promise<ProductPurchaseInstallment[]>;
@@ -136,42 +137,13 @@ export default function ProductPurchasesInstallmentsList({
               </div>
               <div className="flex w-full flex-col justify-between divide-y divide-gray-100">
                 {grouped[date]?.map((item) => (
-                  <div
+                  <Link
                     key={item.id}
+                    href={`/compras-produtos/${item.productPurchaseId}/editar#installment-${item.id}`}
                     role="button"
                     tabIndex={0}
                     className="hover:bg-background-secondary active:bg-accent focus:ring-accent flex w-full cursor-pointer items-center gap-2 py-2 focus:ring-2 focus:outline-none sm:px-2"
                     aria-label={`Editar parcela ${item.installmentNumber}`}
-                    onClick={async () => {
-                      const purchase =
-                        await actionGetProductPurchaseWithInstallments(
-                          item.productPurchaseId,
-                        );
-                      if (purchase) {
-                        setSelectedPurchase(purchase);
-                        setIsDialogOpen(true);
-                      } else {
-                        toast.error(
-                          "Não foi possível carregar a compra para edição.",
-                        );
-                      }
-                    }}
-                    onKeyDown={async (e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        const purchase =
-                          await actionGetProductPurchaseWithInstallments(
-                            item.productPurchaseId,
-                          );
-                        if (purchase) {
-                          setSelectedPurchase(purchase);
-                          setIsDialogOpen(true);
-                        } else {
-                          toast.error(
-                            "Não foi possível carregar a compra para edição.",
-                          );
-                        }
-                      }
-                    }}
                   >
                     <div className="hover:bg-background-secondary active:bg-accent flex w-full items-center gap-2 py-2 sm:px-2">
                       <Checkbox
@@ -220,8 +192,7 @@ export default function ProductPurchasesInstallmentsList({
                             variant="ghost"
                             aria-label="Editar parcela"
                             onClick={() => {
-                              setSelectedPurchase(item.productPurchaseId);
-                              setIsDialogOpen(true);
+                              window.location.href = `/compras-produtos/${item.productPurchaseId}/editar#installment-${item.id}`;
                             }}
                           >
                             <span className="sr-only">Editar</span>
@@ -245,7 +216,7 @@ export default function ProductPurchasesInstallmentsList({
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
                 {/* EditProductPurchase Dialog for selected installment's purchase */}
                 {selectedPurchase && isDialogOpen && (
