@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
 import { toast } from "sonner";
-import { ExpenseListItem } from "../lists/expense-list-item";
+import InstallmentItemForm from "./installment-item-form";
 
 interface EditProductPurchaseFormProps {
   productPurchase: ProductPurchaseWithInstallments;
@@ -79,25 +79,9 @@ export default function EditProductPurchaseForm({
         <h2 className="mb-2 font-semibold">Parcelas</h2>
         <div className="flex flex-col gap-2">
           {optimisticInstallments.map((installment) => (
-            <ExpenseListItem
+            <InstallmentItemForm
               key={installment.id}
-              expense={{
-                id: installment.id,
-                description: installment.description,
-                isPaid: installment.isPaid,
-                createdAt: installment.createdAt,
-                updatedAt: installment.updatedAt,
-                dueDate: installment.dueDate,
-                value: installment.amount,
-              }}
-              onTogglePaid={(id, checked) => {
-                startTransition(() => {
-                  setOptimisticInstallments({
-                    id,
-                    checked,
-                  });
-                });
-              }}
+              installment={installment}
             />
           ))}
         </div>

@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { compareByDueDateAndId } from "@/app/_components/lists/utils/compare";
 import Link from "next/link";
+import { ExpenseListItem } from "./expense-list-item";
 
 interface ProductPurchasesInstallmentsListProps {
   productPurchaseInstallments: Promise<ProductPurchaseInstallment[]>;
@@ -145,77 +146,20 @@ export default function ProductPurchasesInstallmentsList({
                     className="hover:bg-background-secondary active:bg-accent focus:ring-accent flex w-full cursor-pointer items-center gap-2 py-2 focus:ring-2 focus:outline-none sm:px-2"
                     aria-label={`Editar parcela ${item.installmentNumber}`}
                   >
-                    <div className="hover:bg-background-secondary active:bg-accent flex w-full items-center gap-2 py-2 sm:px-2">
-                      <Checkbox
-                        className="h-6 w-6 active:bg-slate-500"
-                        checked={item.isPaid}
-                        aria-label={
-                          item.isPaid
-                            ? "Desmarcar como pago"
-                            : "Marcar como pago"
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                        onCheckedChange={(checked) => {
-                          startTransition(() => {
-                            setOptimisticInstallments({
-                              id: item.id,
-                              checked: checked as boolean,
-                            });
+                    <ExpenseListItem
+                      installment={item}
+                      onTogglePaid={(id, checked) => {
+                        startTransition(() => {
+                          setOptimisticInstallments({
+                            id,
+                            checked,
                           });
-                          void actionUpdateProductPurchaseInstallment(item.id, {
-                            isPaid: checked as boolean,
-                          });
-                        }}
-                      />
-                      <div className="flex-1">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                          <span className="text-xs font-medium">
-                            Parcela {item.installmentNumber}
-                          </span>
-                          <span className="text-muted-foreground text-xs">
-                            Venc: {format(parseISO(item.dueDate), "dd/MM/yyyy")}
-                          </span>
-                        </div>
-                        <p className="font-medium break-words">
-                          {item.description}
-                        </p>
-                      </div>
-                      <div className="flex min-w-[80px] flex-col items-end gap-1">
-                        <span
-                          className={`text-right whitespace-nowrap ${item.isPaid ? "line-through-gray" : ""}`}
-                        >
-                          {formatCurrency(item.amount)}
-                        </span>
-                        <div className="flex gap-1">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            aria-label="Editar parcela"
-                            onClick={() => {
-                              window.location.href = `/compras-produtos/${item.productPurchaseId}/editar#installment-${item.id}`;
-                            }}
-                          >
-                            <span className="sr-only">Editar</span>
-                            ✏️
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            aria-label="Excluir parcela"
-                            onClick={async () => {
-                              await actionDeleteProductPurchaseInstallment(
-                                item.id,
-                              );
-                              toast.success("Parcela excluída.");
-                              // Optionally: refresh UI
-                            }}
-                          >
-                            <span className="sr-only">Excluir</span>
-                            🗑️
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                        });
+                        void actionUpdateProductPurchaseInstallment(id, {
+                          isPaid: checked,
+                        });
+                      }}
+                    />
                   </Link>
                 ))}
                 {/* EditProductPurchase Dialog for selected installment's purchase */}
