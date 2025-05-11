@@ -19,11 +19,19 @@ export function DatePicker({
   name,
   defaultValue,
   required,
+  onChange,
+  value,
+  className,
+  shortDate = false,
 }: {
   id?: string;
   name?: string;
   defaultValue?: string;
   required?: boolean;
+  onChange?: (date: string | undefined) => void;
+  value?: string;
+  className?: string;
+  shortDate?: boolean;
 }) {
   // Parse defaultValue (yyyy-MM-dd) to Date with timezone handling
   const initialDate = React.useMemo(() => {
@@ -42,7 +50,35 @@ export function DatePicker({
     }
   }, [defaultValue]);
 
-  const [date, setDate] = React.useState<Date | undefined>(initialDate);
+  // Controlled: derive date from value if provided, else fall back to state/defaultValue
+  const controlledDate = React.useMemo(() => {
+    if (value) {
+      try {
+        const parsedDate = parse(value, "yyyy-MM-dd", new Date());
+        parsedDate.setUTCHours(12, 0, 0, 0);
+        return parsedDate;
+      } catch (error) {
+        return undefined;
+      }
+    }
+    return initialDate;
+  }, [value, initialDate]);
+
+  // Internal state only for uncontrolled usage (for backward compat)
+  const [uncontrolledDate, setUncontrolledDate] = React.useState<
+    Date | undefined
+  >(initialDate);
+
+  // Pick which date to show: controlled (from prop) or uncontrolled (from state)
+  const date = value !== undefined ? controlledDate : uncontrolledDate;
+
+  // When value changes externally, update uncontrolled state for backward compat
+  React.useEffect(() => {
+    if (value === undefined && initialDate !== uncontrolledDate) {
+      setUncontrolledDate(initialDate);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDate]);
 
   return (
     <>
@@ -53,12 +89,17 @@ export function DatePicker({
             className={cn(
               "w-full justify-start text-left font-normal",
               !date && "text-muted-foreground",
+              className,
             )}
             id={id}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {date ? (
-              format(date, "PPP", { locale: ptBR })
+              shortDate ? (
+                format(date, "dd/MM/yyyy", { locale: ptBR })
+              ) : (
+                format(date, "PPP", { locale: ptBR })
+              )
             ) : (
               <span>Selecione uma data</span>
             )}
@@ -68,7 +109,16 @@ export function DatePicker({
           <Calendar
             mode="single"
             selected={date}
-            onSelect={setDate}
+            onSelect={(selectedDate) => {
+              if (value !== undefined) {
+                // Controlled: just call onChange
+                onChange?.(selectedDate?.toISOString().split("T")[0]);
+              } else {
+                // Uncontrolled: update state and call onChange
+                setUncontrolledDate(selectedDate);
+                onChange?.(selectedDate?.toISOString().split("T")[0]);
+              }
+            }}
             initialFocus
             locale={ptBR}
           />

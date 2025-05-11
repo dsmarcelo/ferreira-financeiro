@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useActionState,
-  useState,
-  useEffect,
-  useOptimistic,
-  startTransition,
-} from "react";
+import { useActionState, useState, useEffect } from "react";
 import type {
   ProductPurchaseWithInstallments,
   ProductPurchaseInstallment,
@@ -39,16 +33,43 @@ export default function EditProductPurchaseForm({
     ProductPurchaseInstallment[]
   >(productPurchase.installments ?? []);
 
-  const [optimisticInstallments, setOptimisticInstallments] = useOptimistic(
-    installments,
-    (
-      state: ProductPurchaseInstallment[],
-      update: { id: number; checked: boolean },
-    ) =>
-      state.map((item) =>
-        item.id === update.id ? { ...item, isPaid: update.checked } : item,
-      ),
+  // Local state for totalAmount, initialized from productPurchase
+  const [totalAmount, setTotalAmount] = useState<number>(
+    Number(productPurchase.totalAmount ?? 0),
   );
+
+  const [optimisticInstallments, setOptimisticInstallments] =
+    useState<ProductPurchaseInstallment[]>(installments);
+
+  // Handler for when any field changes in an installment
+  const handleInstallmentFieldChange = (
+    id: number,
+    field: keyof ProductPurchaseInstallment,
+    value: string | number | boolean | Date | undefined,
+  ) => {
+    setOptimisticInstallments((prev) => {
+      const updated = prev.map((inst) =>
+        inst.id === id ? { ...inst, [field]: value } : inst,
+      );
+      // If amount changed, recalculate total
+      if (field === "amount") {
+        const newTotal = updated.reduce(
+          (sum, inst) => sum + Number(inst.amount ?? 0),
+          0,
+        );
+        setTotalAmount(newTotal);
+      }
+      return updated;
+    });
+  };
+
+  // Keep totalAmount in sync if installments change externally
+  useEffect(() => {
+    setOptimisticInstallments(installments);
+    setTotalAmount(
+      installments.reduce((sum, inst) => sum + Number(inst.amount ?? 0), 0),
+    );
+  }, [installments]);
 
   useEffect(() => {
     setInstallments(productPurchase.installments ?? []);
@@ -69,19 +90,33 @@ export default function EditProductPurchaseForm({
         />
         <CurrencyInput
           name="totalAmount"
-          defaultValue={Number(productPurchase.totalAmount)}
+          value={totalAmount}
           required
           min={0}
           step={0.01}
+          readOnly
         />
       </div>
       <div>
         <h2 className="mb-2 font-semibold">Parcelas</h2>
+        <div className="grid grid-cols-5 gap-4">
+          <p className="col-span-2">Descrição</p>
+          <p className="col-span-2">Valor</p>
+          <p>Data de vencimento</p>
+          <p>Pago</p>
+        </div>
         <div className="flex flex-col gap-2">
           {optimisticInstallments.map((installment) => (
             <InstallmentItemForm
               key={installment.id}
               installment={installment}
+              onFieldChange={(field, value) =>
+                handleInstallmentFieldChange(
+                  installment.id,
+                  field,
+                  value ?? undefined,
+                )
+              }
             />
           ))}
         </div>

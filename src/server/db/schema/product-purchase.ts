@@ -9,6 +9,7 @@ import {
   boolean,
   numeric,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 /**
  * Represents expenses related to product inventory (entries and exits).
@@ -33,7 +34,7 @@ export const productPurchaseInstallment = createTable(
     id: serial("id").primaryKey(),
     // Foreign key linking to the bills table
     productPurchaseId: serial("product_purchase_id")
-      .references(() => productPurchase.id)
+      .references(() => productPurchase.id, { onDelete: "cascade" })
       .notNull(),
     description: text("description").notNull(),
     installmentNumber: serial("installment_number").notNull(), // e.g., 1, 2, 3
@@ -49,6 +50,25 @@ export const productPurchaseInstallment = createTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
+);
+
+// ProductPurchase → Installments (one-to-many)
+export const productPurchaseRelations = relations(
+  productPurchase,
+  ({ many }) => ({
+    installments: many(productPurchaseInstallment),
+  }),
+);
+
+// Installment → ProductPurchase (many-to-one)
+export const productPurchaseInstallmentRelations = relations(
+  productPurchaseInstallment,
+  ({ one }) => ({
+    productPurchase: one(productPurchase, {
+      fields: [productPurchaseInstallment.productPurchaseId],
+      references: [productPurchase.id],
+    }),
+  }),
 );
 
 export type ProductPurchase = typeof productPurchase.$inferSelect;

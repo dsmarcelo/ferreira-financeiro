@@ -1,22 +1,21 @@
 "use client";
 
-import { useActionState, useState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
   actionCreateProductPurchase,
   type ActionResponse,
 } from "@/actions/product-purchase-actions";
-import ResponsiveDialog from "@/app/_components/responsive-dialog";
 import InstallmentsForm from "@/app/_components/forms/installments-form";
 import type { ProductPurchaseInstallmentInsert } from "@/server/db/schema/product-purchase";
 import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
 import { Button } from "@/components/ui/button";
-import { cn, getToday } from "@/lib/utils";
+import { getToday } from "@/lib/utils";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
-import { IsPaidCheckbox } from "@/app/_components/inputs/is-paid-input";
 import { FieldError } from "@/app/_components/forms/field-error";
 import { InstallmentErrorsList } from "@/app/_components/forms/installment-errors-list";
+import Header from "@/app/_components/header";
 
 // Initial state for the form
 const initialState: ActionResponse = {
@@ -25,14 +24,7 @@ const initialState: ActionResponse = {
 };
 
 // Dialog component for adding a product purchase
-export default function AddProductPurchase({
-  className,
-  children,
-}: {
-  className?: string;
-  children?: React.ReactNode;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function AddProductPurchasePage() {
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionCreateProductPurchase,
     initialState,
@@ -89,9 +81,12 @@ export default function AddProductPurchase({
         ).toFixed(2),
         dueDate: i === 0 ? today : addMonths(today, i),
         description:
-          totalInstallments === 1 ? descBase : `${descBase} ${i + 1}`.trim(),
+          totalInstallments === 1
+            ? descBase
+            : `${descBase} | ${i + 1}/${totalInstallments}`.trim(),
         installmentNumber: i + 1,
         isPaid: false,
+        totalInstallments,
         productPurchaseId: 0, // will be set by backend
         paidAt: null,
         createdAt: undefined,
@@ -111,22 +106,11 @@ export default function AddProductPurchase({
   };
 
   return (
-    <ResponsiveDialog
-      triggerButton={
-        children ?? (
-          <Button className={cn("rounded-full", className)}>
-            Adicionar Compra de Produtos
-          </Button>
-        )
-      }
-      isOpen={isOpen}
-      onOpenChange={setIsOpen}
-      title="Adicionar Compra de Produtos"
-    >
+    <div className="">
+      <Header showBackButton={true} />
       <form
-        key={isOpen ? "open" : "closed"}
         action={formAction}
-        className="space-y-4"
+        className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5"
         onSubmit={(e) => {
           // Prevent submit if any installment is missing dueDate
           if (installments.some((inst) => !inst.dueDate)) {
@@ -149,7 +133,7 @@ export default function AddProductPurchase({
           <FieldError messages={errors.description} />
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <div className="space-y-2">
             <Label htmlFor="totalAmount">Valor</Label>
             <CurrencyInput
@@ -165,17 +149,38 @@ export default function AddProductPurchase({
           </div>
           <div className="space-y-2">
             <Label htmlFor="totalInstallments">Número de Parcelas</Label>
-            <Input
-              type="number"
-              id="totalInstallments"
-              name="totalInstallments"
-              min={1}
-              value={totalInstallments}
-              onChange={(e) =>
-                setTotalInstallments(Math.max(1, Number(e.target.value)))
-              }
-              required
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                id="totalInstallments"
+                name="totalInstallments"
+                min={1}
+                value={totalInstallments}
+                onChange={(e) =>
+                  setTotalInstallments(Math.max(1, Number(e.target.value)))
+                }
+                required
+              />
+              <Button
+                size="icon"
+                type="button"
+                onClick={() => {
+                  if (totalInstallments <= 1) return;
+                  setTotalInstallments(totalInstallments - 1);
+                }}
+              >
+                -
+              </Button>
+              <Button
+                size="icon"
+                type="button"
+                onClick={() => {
+                  setTotalInstallments(totalInstallments + 1);
+                }}
+              >
+                +
+              </Button>
+            </div>
           </div>
         </div>
         {/* InstallmentsForm renders the list of installments with calculated values */}
@@ -197,7 +202,6 @@ export default function AddProductPurchase({
             value={JSON.stringify(installments)}
           />
         </div>
-        <IsPaidCheckbox />
         <Button type="submit" className="w-full" disabled={pending}>
           {pending ? "Adicionando..." : "Adicionar"}
         </Button>
@@ -216,6 +220,6 @@ export default function AddProductPurchase({
           </>
         )}
       </form>
-    </ResponsiveDialog>
+    </div>
   );
 }

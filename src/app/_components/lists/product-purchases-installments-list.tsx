@@ -3,20 +3,14 @@ import { ptBR } from "date-fns/locale";
 import { format, parseISO } from "date-fns";
 import { useState, startTransition, useOptimistic, use } from "react";
 import EditProductPurchase from "../dialogs/edit/edit-product-purchase";
-import { actionGetProductPurchaseWithInstallments } from "@/actions/product-purchase-actions";
 import type { ProductPurchaseWithInstallments } from "@/server/db/schema/product-purchase";
 import { formatCurrency } from "@/lib/utils";
 import type { ProductPurchaseInstallment } from "@/server/db/schema/product-purchase";
-import {
-  actionUpdateProductPurchaseInstallment,
-  actionDeleteProductPurchaseInstallment,
-} from "@/actions/product-purchase-actions";
+import { actionUpdateProductPurchaseInstallment } from "@/actions/product-purchase-actions";
 import DownloadButton from "../buttons/download-button";
 import ShareButton from "../buttons/share-button";
 // You may want to implement PDF helpers for installments, similar to purchases
 // import { downloadInstallmentsPDF, shareInstallmentsPDF } from "@/lib/pdf/installments-pdf";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { compareByDueDateAndId } from "@/app/_components/lists/utils/compare";
 import Link from "next/link";

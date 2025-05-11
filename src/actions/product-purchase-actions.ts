@@ -26,6 +26,9 @@ import { z } from "zod";
 
 const productPurchaseInsertSchema = z.object({
   totalAmount: z.number().min(0, { message: "Valor inválido" }),
+  totalInstallments: z
+    .number()
+    .min(1, { message: "Número de parcelas obrigatório" }),
   description: z.string().min(1, { message: "Descrição obrigatória" }),
   isPaid: z.boolean().optional(),
 });
@@ -57,13 +60,20 @@ export async function actionCreateProductPurchase(
   const totalAmount =
     typeof totalAmountStr === "string" ? Number(totalAmountStr) : undefined;
   const description = formData.get("description");
+  const totalInstallmentsStr = formData.get("totalInstallments");
+  const totalInstallments =
+    typeof totalInstallmentsStr === "string"
+      ? Number(totalInstallmentsStr)
+      : undefined;
   const isPaid = formData.get("isPaid") === "on";
 
   const result = productPurchaseInsertSchema.safeParse({
     totalAmount,
+    totalInstallments,
     description,
     isPaid,
   });
+
   if (!result.success) {
     return {
       success: false,
@@ -79,6 +89,7 @@ export async function actionCreateProductPurchase(
     const purchase = await createProductPurchase({
       ...result.data,
       totalAmount: dbValue!,
+      totalInstallments: totalInstallments!,
     });
     if (!purchase) {
       return {
@@ -89,18 +100,19 @@ export async function actionCreateProductPurchase(
 
     // --- Handle installments creation ---
     const installmentsRaw = formData.get("installments");
+    console.log("installmentsRaw", installmentsRaw);
     if (typeof installmentsRaw === "string") {
       // --- Zod validation for installments ---
       const productPurchaseInstallmentInsertSchema = z.object({
-        productPurchaseId: z.number().optional(),
+        productPurchaseId: z.number(),
         description: z.string().min(1),
         amount: z.string(),
         dueDate: z.string(),
-        isPaid: z.boolean().optional(),
-        installmentNumber: z.number().optional(),
-        paidAt: z.string().optional(),
+        isPaid: z.boolean(),
+        installmentNumber: z.number(),
+        paidAt: z.string().optional().nullable(),
         createdAt: z.string().optional(),
-        updatedAt: z.string().optional(),
+        updatedAt: z.string().optional().nullable(),
       });
       const installmentsArraySchema = z.array(
         productPurchaseInstallmentInsertSchema,
@@ -109,6 +121,9 @@ export async function actionCreateProductPurchase(
       try {
         const parsed: unknown = JSON.parse(installmentsRaw); // Type as unknown for Zod
         const result = installmentsArraySchema.safeParse(parsed);
+
+        console.log("result", result);
+
         if (!result.success) {
           // Group Zod issues by installment index and field
           const fieldErrorsRaw: Record<number, InstallmentFieldErrors> = {};
@@ -197,11 +212,17 @@ export async function actionUpdateProductPurchase(
     typeof totalAmountStr === "string" ? Number(totalAmountStr) : undefined;
   const description = formData.get("description");
   const isPaid = formData.get("isPaid") === "on";
+  const totalInstallmentsStr = formData.get("totalInstallments");
+  const totalInstallments =
+    typeof totalInstallmentsStr === "string"
+      ? Number(totalInstallmentsStr)
+      : undefined;
 
   const result = productPurchaseInsertSchema.safeParse({
     totalAmount,
     description,
     isPaid,
+    totalInstallments,
   });
   if (!result.success) {
     return {
@@ -216,6 +237,7 @@ export async function actionUpdateProductPurchase(
       totalAmount !== undefined ? totalAmount.toFixed(2) : undefined;
     await updateProductPurchase(id, {
       totalAmount: dbValue!,
+      totalInstallments: totalInstallments!,
       description: description as string,
       isPaid,
     });

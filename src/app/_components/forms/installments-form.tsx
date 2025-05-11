@@ -1,9 +1,6 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { DatePicker } from "@/components/inputs/date-picker";
-import { formatCurrency } from "@/lib/utils";
+import InstallmentItemForm from "./installment-item-form";
 import type { ProductPurchaseInstallmentInsert } from "@/server/db/schema/product-purchase";
 import { cn } from "@/lib/utils";
 
@@ -30,58 +27,44 @@ export default function InstallmentsForm({
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      {installments.map((inst, idx) => (
-        <div
-          key={idx}
-          className={cn(
-            "rounded border p-3 flex flex-col gap-2 bg-muted/40",
-            disabled && "opacity-70 pointer-events-none",
-          )}
-        >
-          <div className="flex gap-2 items-center">
-            <Label className="min-w-[80px]">Parcela {idx + 1}</Label>
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              value={inst.amount}
-              onChange={(e) =>
-                handleFieldChange(idx, "amount", Number(e.target.value).toFixed(2))
-              }
-              className="max-w-[120px]"
-              aria-label={`Valor da parcela ${idx + 1}`}
-              disabled={disabled}
-            />
-            <span className="text-xs text-muted-foreground">
-              {formatCurrency(Number(inst.amount))}
-            </span>
-          </div>
-          <div className="flex gap-2 items-center">
-            <Label className="min-w-[80px]">Vencimento</Label>
-            <DatePicker
-              id={`dueDate-${idx}`}
-              name={`dueDate-${idx}`}
-              defaultValue={inst.dueDate}
-              onChange={(date: string) => handleFieldChange(idx, "dueDate", date)}
-              required
-              disabled={disabled}
-            />
-          </div>
-          <div className="flex gap-2 items-center">
-            <Label className="min-w-[80px]">Descrição</Label>
-            <Input
-              type="text"
-              value={inst.description}
-              onChange={(e) =>
-                handleFieldChange(idx, "description", e.target.value)
-              }
-              aria-label={`Descrição da parcela ${idx + 1}`}
-              disabled={disabled}
-            />
-          </div>
+    <div>
+      <div className="mb-2 hidden gap-2 px-2 text-center sm:flex">
+        <div className="w-10">
+          <p className="w-10">n°</p>
         </div>
-      ))}
+        <p className="w-fit">Pago</p>
+        <p className="w-full">Descrição</p>
+        <div className="flex gap-2">
+          <p className="w-36">Vencimento</p>
+          <p className="w-36">Valor</p>
+        </div>
+      </div>
+      <div className="flex flex-col gap-4">
+        {installments.map((inst, idx) => (
+          <div key={idx}>
+            <InstallmentItemForm
+              installment={inst}
+              onFieldChange={(field, value) => {
+                // Only pass value if defined, fallback to empty string/false/0 as appropriate
+                let castValue: string | number | boolean | Date = value ?? "";
+                if (field === "isPaid") castValue = Boolean(value);
+                else if (
+                  field === "amount" ||
+                  field === "installmentNumber" ||
+                  field === "totalInstallments"
+                )
+                  castValue = Number(value) || 0;
+                else if (field === "dueDate" && typeof value === "string")
+                  castValue = value;
+                else if (field === "description")
+                  castValue = String(value ?? "");
+                handleFieldChange(idx, field, castValue);
+              }}
+              disabled={disabled}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

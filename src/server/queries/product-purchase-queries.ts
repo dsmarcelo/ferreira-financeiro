@@ -19,6 +19,10 @@ export async function createProductPurchase(
   data: ProductPurchaseInsert,
 ): Promise<ProductPurchase> {
   try {
+    // Ensure totalInstallments is present in insert
+    if (typeof data.totalInstallments !== "number") {
+      throw new Error("totalInstallments é obrigatório");
+    }
     const [created] = await db.insert(productPurchase).values(data).returning();
     if (!created)
       throw new Error("Falha ao criar a entrada/saída de mercadoria.");
@@ -53,6 +57,10 @@ export async function updateProductPurchase(
   data: Partial<ProductPurchaseInsert>,
 ): Promise<ProductPurchase | undefined> {
   try {
+    // If totalInstallments is being updated, ensure it's valid
+    if (data.totalInstallments !== undefined && typeof data.totalInstallments !== "number") {
+      throw new Error("totalInstallments deve ser um número");
+    }
     const [updated] = await db
       .update(productPurchase)
       .set(data)
