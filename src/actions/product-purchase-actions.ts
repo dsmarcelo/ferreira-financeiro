@@ -150,7 +150,8 @@ export async function actionCreateProductPurchase(
           updatedAt: inst.updatedAt ? new Date(inst.updatedAt) : undefined,
           paidAt: inst.paidAt ? new Date(inst.paidAt) : undefined,
         }));
-      } catch (_e) {
+      } catch (error) {
+        console.error("Erro ao processar parcelas da compra:", error);
         return {
           success: false,
           message: "Erro ao processar parcelas da compra.",

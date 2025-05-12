@@ -58,6 +58,7 @@ export function DatePicker({
         parsedDate.setUTCHours(12, 0, 0, 0);
         return parsedDate;
       } catch (error) {
+        console.error("Error parsing date:", error);
         return undefined;
       }
     }

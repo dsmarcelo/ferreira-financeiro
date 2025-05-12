@@ -1,5 +1,7 @@
 import { relations, sql } from "drizzle-orm";
+
 import { createTable } from "./table-creator";
+
 import {
   serial,
   decimal,
@@ -13,6 +15,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 // Expense type: one_time, installment, recurring
+
 export const expenseTypeEnum = pgEnum("expense_type", [
   "one_time",
   "installment",
@@ -20,6 +23,7 @@ export const expenseTypeEnum = pgEnum("expense_type", [
 ]);
 
 // Expense source: personal, store, product_purchase
+
 export const expenseSourceEnum = pgEnum("expense_source", [
   "personal",
   "store",
@@ -44,6 +48,7 @@ export const recurrenceRule = createTable("recurrence_rule", {
 });
 
 // Unified expense table
+
 export const expense = createTable("expense", {
   id: serial("id").primaryKey(),
   description: text("description").notNull(),
@@ -52,40 +57,45 @@ export const expense = createTable("expense", {
   type: expenseTypeEnum("type").notNull(),
   source: expenseSourceEnum("source").notNull(),
   isPaid: boolean("is_paid").default(false).notNull(),
-  parentId: integer("parent_id"), // For grouping installments or recurring
-  recurrenceRuleId: uuid("recurrence_rule_id"),
+  recurrenceRuleId: uuid("recurrence_rule_id").references(
+    () => recurrenceRule.id,
+  ),
+
   installmentNumber: integer("installment_number"),
+
   totalInstallments: integer("total_installments"),
+
   createdAt: timestamp("created_at", { withTimezone: true })
     .default(sql`CURRENT_TIMESTAMP`)
+
     .notNull(),
+
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date(),
   ),
 });
 
 // Expense → Parent (many-to-one, self-referencing)
-export const expenseRelations = relations(
-  expense,
-  ({ one, many }) => ({
-    parent: one(expense, {
-      fields: [expense.parentId],
-      references: [expense.id],
-    }),
-    children: many(expense), // No fields/references needed on the 'many' side
-    recurrenceRule: one(recurrenceRule, {
-      fields: [expense.recurrenceRuleId],
-      references: [recurrenceRule.id],
-    }),
-  })
-);
+
+export const expenseRelations = relations(expense, ({ one, many }) => ({
+  children: many(expense, { relationName: "expense_parent" }),
+
+  recurrenceRule: one(recurrenceRule, {
+    fields: [expense.recurrenceRuleId],
+
+    references: [recurrenceRule.id],
+
+    relationName: "expense_recurrence_rule",
+  }),
+}));
 
 // RecurrenceRule → Expenses (one-to-many)
+
 export const recurrenceRuleRelations = relations(
   recurrenceRule,
   ({ many }) => ({
-    expenses: many(expense), // No fields/references needed on the 'many' side
-  })
+    expenses: many(expense, { relationName: "expense_recurrence_rule" }),
+  }),
 );
 
 export type Expense = typeof expense.$inferSelect;

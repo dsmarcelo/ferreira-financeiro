@@ -1,6 +1,10 @@
 "use server";
 import { z } from "zod";
-import { addExpense, addRecurrenceRule } from "@/server/queries/expense";
+import {
+  addExpense,
+  addRecurrenceRule,
+  updateExpense,
+} from "@/server/queries/expense";
 import { revalidatePath } from "next/cache";
 import type { ExpenseInsert } from "@/server/db/schema/expense";
 
@@ -77,7 +81,19 @@ const recurrenceRuleSchema = z.object({
   description: z.string().optional(),
 });
 
-type RecurrenceRuleFormData = z.infer<typeof recurrenceRuleSchema>;
+// Toggle isPaid for any expense
+export async function actionToggleExpenseIsPaid(id: number, isPaid: boolean) {
+  try {
+    await updateExpense(id, { isPaid });
+    revalidatePath("/compras-produtos");
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      message: (error as Error)?.message ?? "Erro ao atualizar despesa.",
+    };
+  }
+}
 
 export async function actionAddRecurrenceRule(
   prevState: ActionResponse,

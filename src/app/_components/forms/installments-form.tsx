@@ -2,7 +2,6 @@
 
 import InstallmentItemForm from "./installment-item-form";
 import type { ProductPurchaseInstallmentInsert } from "@/server/db/schema/product-purchase";
-import { cn } from "@/lib/utils";
 
 interface InstallmentFormProps {
   installments: ProductPurchaseInstallmentInsert[];
