@@ -10,6 +10,7 @@ import {
   numeric,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { recurringExpense } from "@/server/db/schema/recurring-expense";
 
 /**
  * Represents expenses related to product inventory (entries and exits).
@@ -49,6 +50,10 @@ export const productPurchaseInstallment = createTable(
     paidAt: timestamp("paid_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    // Recurring template link (nullable, for subscriptions)
+    recurringExpenseId: serial("recurring_expense_id").references(
+      () => recurringExpense.id,
+    ),
   },
 );
 

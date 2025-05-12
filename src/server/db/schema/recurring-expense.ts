@@ -23,3 +23,6 @@ export const recurringExpense = createTable("recurring_expense", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export type RecurringExpense = typeof recurringExpense.$inferSelect;
+export type RecurringExpenseInsert = typeof recurringExpense.$inferInsert;
