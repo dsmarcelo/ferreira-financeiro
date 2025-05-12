@@ -23,6 +23,8 @@ const expenseFormSchema = z.object({
 
 const updateExpenseSchema = expenseFormSchema.extend({
   id: z.number(),
+  type: z.enum(["one_time", "installment", "recurring"]).optional(),
+  source: z.enum(["personal", "store", "product_purchase"]).optional(),
 });
 
 export type ExpenseFormData = z.infer<typeof expenseFormSchema>;
@@ -97,16 +99,11 @@ export async function actionUpdateExpense(
     const parsed = updateExpenseSchema.safeParse({
       ...data,
       id: Number(data.id),
+      date: data.date,
       isPaid: data.isPaid === "on",
       parentId: data.parentId ? Number(data.parentId) : undefined,
-      installmentNumber: data.installmentNumber
-        ? Number(data.installmentNumber)
-        : undefined,
-      totalInstallments: data.totalInstallments
-        ? Number(data.totalInstallments)
-        : undefined,
     });
-    console.log(parsed.error?.flatten().fieldErrors);
+    console.log(parsed.error);
     if (!parsed.success) {
       return {
         success: false,
