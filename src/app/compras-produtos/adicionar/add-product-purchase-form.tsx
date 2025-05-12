@@ -1,10 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import {
-  actionCreateProductPurchase,
-  type ActionResponse,
-} from "@/actions/product-purchase-actions";
+import { useEffect, useState } from "react";
+import { actionAddExpense } from "@/actions/expense-actions";
+import type { ExpenseInsert } from "@/server/db/schema/expense";
 import InstallmentsForm from "@/app/_components/forms/installments-form";
 import type { ProductPurchaseInstallmentInsert } from "@/server/db/schema/product-purchase";
 import { Input } from "@/components/ui/input";
@@ -14,24 +12,28 @@ import { getToday } from "@/lib/utils";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { FieldError } from "@/app/_components/forms/field-error";
-import { InstallmentErrorsList } from "@/app/_components/forms/installment-errors-list";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RecurringExpenseForm } from "./recurring-expense-form";
 
-const initialState: ActionResponse = {
+const initialState: {
+  success: boolean;
+  message: string;
+  errors: Partial<Record<keyof ExpenseInsert, string[]>>;
+} = {
   success: false,
   message: "",
+  errors: {},
 };
 
 interface AddProductPurchaseFormProps {
   header?: React.ReactNode;
 }
 
-export function AddProductPurchaseForm({ header }: AddProductPurchaseFormProps) {
-  const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
-    actionCreateProductPurchase,
-    initialState,
-  );
+export function AddProductPurchaseForm({
+  header,
+}: AddProductPurchaseFormProps) {
+  const [state, setState] = useState(initialState);
+  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     if (state.success === true && state.message) {
@@ -97,6 +99,47 @@ export function AddProductPurchaseForm({ header }: AddProductPurchaseFormProps) 
     setAmount(value);
   };
 
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPending(true);
+    setState(initialState);
+    let hasError = false;
+    for (const inst of installments) {
+      if (!inst) continue;
+      const formData = new FormData();
+      formData.append("description", inst.description ?? "");
+      formData.append("value", inst.amount ?? "");
+      formData.append("date", inst.dueDate ?? "");
+      formData.append("type", "installment");
+      formData.append("source", "product_purchase");
+      if (inst.isPaid) formData.append("isPaid", "on");
+      if (inst.installmentNumber !== undefined)
+        formData.append("installmentNumber", String(inst.installmentNumber));
+      if (totalInstallments !== undefined)
+        formData.append("totalInstallments", String(totalInstallments));
+      const res = await actionAddExpense(initialState, formData);
+      if (!res.success) {
+        setState({
+          success: false,
+          message: res.message,
+          errors: res.errors ?? {},
+        });
+        toast.error(res.message);
+        hasError = true;
+        break;
+      }
+    }
+    if (!hasError) {
+      setState({
+        success: true,
+        message: "Despesas adicionadas com sucesso!",
+        errors: {},
+      });
+      toast.success("Despesas adicionadas com sucesso!");
+    }
+    setPending(false);
+  }
+
   return (
     <div className="">
       {header}
@@ -107,15 +150,8 @@ export function AddProductPurchaseForm({ header }: AddProductPurchaseFormProps) 
         </TabsList>
         <TabsContent value="parcelado">
           <form
-            action={formAction}
             className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5"
-            onSubmit={(e) => {
-              if (installments.some((inst) => !inst.dueDate)) {
-                e.preventDefault();
-                toast.error("Preencha a data de vencimento de todas as parcelas.");
-                return;
-              }
-            }}
+            onSubmit={handleSubmit}
           >
             <div className="space-y-2">
               <Label htmlFor="description">Descrição</Label>
@@ -127,7 +163,7 @@ export function AddProductPurchaseForm({ header }: AddProductPurchaseFormProps) 
                 onChange={handleDescriptionChange}
                 required
               />
-              <FieldError messages={errors.description} />
+              <FieldError messages={errors?.description} />
             </div>
             <div className="flex items-center gap-2">
               <div className="space-y-2">
@@ -141,7 +177,8 @@ export function AddProductPurchaseForm({ header }: AddProductPurchaseFormProps) 
                   onValueChange={(v) => handleAmountChange(v ?? 0)}
                   required
                 />
-                <FieldError messages={errors.totalAmount} />
+                {/* 'totalAmount' is not a field in ExpenseInsert; use 'value' for error display */}
+                <FieldError messages={errors?.value} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="totalInstallments">Número de Parcelas</Label>
@@ -185,14 +222,6 @@ export function AddProductPurchaseForm({ header }: AddProductPurchaseFormProps) 
                 installments={installments}
                 onChange={setInstallments}
                 disabled={false}
-              />
-              {errors.installments && errors.installments.length > 0 && (
-                <InstallmentErrorsList errors={errors.installments} />
-              )}
-              <input
-                type="hidden"
-                name="installments"
-                value={JSON.stringify(installments)}
               />
             </div>
             <Button type="submit" className="w-full" disabled={pending}>

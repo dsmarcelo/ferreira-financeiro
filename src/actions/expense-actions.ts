@@ -1,8 +1,10 @@
+"use server";
 import { z } from "zod";
 import { addExpense, addRecurrenceRule } from "@/server/queries/expense";
 import { revalidatePath } from "next/cache";
+import type { ExpenseInsert } from "@/server/db/schema/expense";
 
-export const expenseFormSchema = z.object({
+const expenseFormSchema = z.object({
   description: z.string().min(1),
   value: z.string().min(1),
   date: z.string(),
@@ -17,33 +19,57 @@ export const expenseFormSchema = z.object({
 
 export type ExpenseFormData = z.infer<typeof expenseFormSchema>;
 
-export async function actionAddExpense(prevState: any, formData: FormData) {
-  const data = Object.fromEntries(formData.entries());
-  const parse = expenseFormSchema.safeParse({
-    ...data,
-    value: data.value,
-    isPaid: data.isPaid === "on" || data.isPaid === true,
-    parentId: data.parentId ? Number(data.parentId) : undefined,
-    installmentNumber: data.installmentNumber
-      ? Number(data.installmentNumber)
-      : undefined,
-    totalInstallments: data.totalInstallments
-      ? Number(data.totalInstallments)
-      : undefined,
-  });
-  if (!parse.success) {
-    return {
-      success: false,
-      message: "Dados inválidos",
-      errors: parse.error.flatten().fieldErrors,
-    };
-  }
-  await addExpense(parse.data);
-  revalidatePath("/despesas");
-  return { success: true, message: "Despesa adicionada com sucesso!" };
+export interface ActionResponse {
+  success: boolean;
+  message: string;
+  errors?: Partial<Record<keyof ExpenseInsert, string[]>>;
 }
 
-export const recurrenceRuleSchema = z.object({
+export async function actionAddExpense(
+  prevState: ActionResponse,
+  formData: FormData,
+) {
+  try {
+    const data = Object.fromEntries(formData.entries());
+    const parsed = expenseFormSchema.safeParse({
+      ...data,
+      value: data.value,
+      isPaid: data.isPaid === "on",
+      parentId: data.parentId ? Number(data.parentId) : undefined,
+      installmentNumber: data.installmentNumber
+        ? Number(data.installmentNumber)
+        : undefined,
+      totalInstallments: data.totalInstallments
+        ? Number(data.totalInstallments)
+        : undefined,
+    });
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        message: "Por favor, corrija os erros no formulário.",
+        errors: parsed.error.flatten().fieldErrors,
+      };
+    }
+
+    await addExpense(parsed.data);
+    revalidatePath("/despesas");
+
+    return {
+      success: true,
+      message: "Despesa adicionada com sucesso!",
+      errors: undefined,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: (error as Error)?.message ?? "Erro ao adicionar despesa.",
+      errors: undefined,
+    };
+  }
+}
+
+const recurrenceRuleSchema = z.object({
   type: z.enum(["monthly", "weekly", "yearly"]),
   startDate: z.string(),
   endDate: z.string().optional(),
@@ -51,10 +77,10 @@ export const recurrenceRuleSchema = z.object({
   description: z.string().optional(),
 });
 
-export type RecurrenceRuleFormData = z.infer<typeof recurrenceRuleSchema>;
+type RecurrenceRuleFormData = z.infer<typeof recurrenceRuleSchema>;
 
 export async function actionAddRecurrenceRule(
-  prevState: any,
+  prevState: ActionResponse,
   formData: FormData,
 ) {
   const data = Object.fromEntries(formData.entries());
