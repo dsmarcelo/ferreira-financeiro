@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { Expense } from "@/server/db/schema/expense";
 import * as React from "react";
+import EditExpenseSheet from "../sheets/edit-expense-sheet";
 
 export interface ExpenseListItemProps {
   expense: Expense;
@@ -16,10 +17,14 @@ export function ExpenseListItem({
   onTogglePaid,
   children,
 }: ExpenseListItemProps) {
-  return (
+  // Only the checkbox toggles paid, the rest opens the sheet
+  // Use EditExpenseSheet with custom trigger
+  // SheetTrigger wraps the content except the checkbox
+  // Children are preserved
+  const itemContent = (
     <div
       className={cn(
-        "hover:bg-background-secondary active:bg-accent flex cursor-pointer items-center gap-2 py-2 sm:px-2",
+        "hover:bg-background-secondary active:bg-accent flex w-full items-center gap-2 py-2 sm:px-2",
         expense.isPaid && "",
       )}
     >
@@ -32,9 +37,7 @@ export function ExpenseListItem({
             onTogglePaid(expense.id, checked as boolean);
           }}
         />
-        <p className="flex-1 break-words">
-          {expense.description}
-        </p>
+        <p className="flex-1 break-words">{expense.description}</p>
       </div>
       <div className="flex items-center gap-1">
         <p
@@ -49,4 +52,6 @@ export function ExpenseListItem({
       {children}
     </div>
   );
+
+  return <EditExpenseSheet expense={expense}>{itemContent}</EditExpenseSheet>;
 }

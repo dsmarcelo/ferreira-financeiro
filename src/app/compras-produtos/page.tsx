@@ -17,7 +17,6 @@ export default async function ComprasProdutosPage({
     end: to,
     source: "product_purchase",
   });
-  console.log(expensesPromise);
   return (
     <div className="flex min-h-screen flex-col pb-24">
       <Header className="sticky top-0 z-50 flex-none">

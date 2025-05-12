@@ -58,7 +58,10 @@ export async function updateProductPurchase(
 ): Promise<ProductPurchase | undefined> {
   try {
     // If totalInstallments is being updated, ensure it's valid
-    if (data.totalInstallments !== undefined && typeof data.totalInstallments !== "number") {
+    if (
+      data.totalInstallments !== undefined &&
+      typeof data.totalInstallments !== "number"
+    ) {
       throw new Error("totalInstallments deve ser um número");
     }
     const [updated] = await db
@@ -255,7 +258,6 @@ export async function listInstallmentsByDateRange(
   startDate: string,
   endDate: string,
 ): Promise<ProductPurchaseInstallment[]> {
-  console.log(startDate, endDate);
   try {
     if (startDate && endDate) {
       return await db

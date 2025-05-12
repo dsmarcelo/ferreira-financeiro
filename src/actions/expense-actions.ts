@@ -9,9 +9,9 @@ import { revalidatePath } from "next/cache";
 import type { ExpenseInsert } from "@/server/db/schema/expense";
 
 const expenseFormSchema = z.object({
-  description: z.string().min(1),
-  value: z.string().min(1),
-  date: z.string(),
+  description: z.string().min(1, { message: "Descrição obrigatória" }),
+  value: z.string().min(1, { message: "Valor obrigatório" }),
+  date: z.string({ message: "Data inválida" }),
   type: z.enum(["one_time", "installment", "recurring"]),
   source: z.enum(["personal", "store", "product_purchase"]),
   isPaid: z.boolean().optional(),
@@ -19,6 +19,10 @@ const expenseFormSchema = z.object({
   recurrenceRuleId: z.string().optional(),
   installmentNumber: z.number().optional(),
   totalInstallments: z.number().optional(),
+});
+
+const updateExpenseSchema = expenseFormSchema.extend({
+  id: z.number(),
 });
 
 export type ExpenseFormData = z.infer<typeof expenseFormSchema>;
@@ -30,7 +34,7 @@ export interface ActionResponse {
 }
 
 export async function actionAddExpense(
-  prevState: ActionResponse,
+  _prevState: ActionResponse,
   formData: FormData,
 ) {
   try {
@@ -57,7 +61,17 @@ export async function actionAddExpense(
     }
 
     await addExpense(parsed.data);
-    revalidatePath("/despesas");
+    switch (parsed.data.source) {
+      case "personal":
+        revalidatePath("/despesas-pessoais");
+        break;
+      case "store":
+        revalidatePath("/despesas-loja");
+        break;
+      case "product_purchase":
+        revalidatePath("/compras-produtos");
+        break;
+    }
 
     return {
       success: true,
@@ -73,13 +87,60 @@ export async function actionAddExpense(
   }
 }
 
-const recurrenceRuleSchema = z.object({
-  type: z.enum(["monthly", "weekly", "yearly"]),
-  startDate: z.string(),
-  endDate: z.string().optional(),
-  value: z.string().optional(),
-  description: z.string().optional(),
-});
+// Update expense
+export async function actionUpdateExpense(
+  _prevState: ActionResponse,
+  formData: FormData,
+) {
+  try {
+    const data = Object.fromEntries(formData.entries());
+    const parsed = updateExpenseSchema.safeParse({
+      ...data,
+      id: Number(data.id),
+      isPaid: data.isPaid === "on",
+      parentId: data.parentId ? Number(data.parentId) : undefined,
+      installmentNumber: data.installmentNumber
+        ? Number(data.installmentNumber)
+        : undefined,
+      totalInstallments: data.totalInstallments
+        ? Number(data.totalInstallments)
+        : undefined,
+    });
+    console.log(parsed.error?.flatten().fieldErrors);
+    if (!parsed.success) {
+      return {
+        success: false,
+        message: "Por favor, corrija os erros no formulário.",
+        errors: parsed.error?.flatten().fieldErrors,
+      };
+    }
+
+    await updateExpense(parsed.data.id, parsed.data);
+    switch (parsed.data.source) {
+      case "personal":
+        revalidatePath("/despesas-pessoais");
+        break;
+      case "store":
+        revalidatePath("/despesas-loja");
+        break;
+      case "product_purchase":
+        revalidatePath("/compras-produtos");
+        break;
+    }
+
+    return {
+      success: true,
+      message: "Despesa atualizada com sucesso!",
+      errors: undefined,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: (error as Error)?.message ?? "Erro ao atualizar despesa.",
+      errors: undefined,
+    };
+  }
+}
 
 // Toggle isPaid for any expense
 export async function actionToggleExpenseIsPaid(id: number, isPaid: boolean) {
@@ -95,8 +156,16 @@ export async function actionToggleExpenseIsPaid(id: number, isPaid: boolean) {
   }
 }
 
+const recurrenceRuleSchema = z.object({
+  type: z.enum(["monthly", "weekly", "yearly"]),
+  startDate: z.string(),
+  endDate: z.string().optional(),
+  value: z.string().optional(),
+  description: z.string().optional(),
+});
+
 export async function actionAddRecurrenceRule(
-  prevState: ActionResponse,
+  _prevState: ActionResponse,
   formData: FormData,
 ) {
   const data = Object.fromEntries(formData.entries());
