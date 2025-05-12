@@ -33,7 +33,7 @@ export async function actionCreateRecurringExpense(
     value: data.value,
     recurrenceType: data.recurrenceType,
     startDate: data.startDate,
-    endDate: data.endDate ?? undefined,
+    endDate: data.endDate && data.endDate !== "" ? data.endDate : undefined,
   });
   if (!parse.success) {
     return {

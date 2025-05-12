@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { actionCreateRecurringExpense } from "@/actions/recurring-expense-actions";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/inputs/date-picker";
 import CurrencyInput from "@/components/inputs/currency-input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -37,8 +38,8 @@ export function RecurringExpenseForm() {
   const [description, setDescription] = useState("");
   const [value, setValue] = useState<number>(0);
   const [recurrenceType, setRecurrenceType] = useState("monthly");
-  const [startDate, setStartDate] = useState(() =>
-    new Date().toISOString().slice(0, 10),
+  const [startDate, setStartDate] = useState<string | undefined>(
+    () => new Date().toISOString().slice(0, 10)
   );
   const [endDate, setEndDate] = useState<string | undefined>(undefined);
 
@@ -93,24 +94,24 @@ export function RecurringExpenseForm() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="startDate">Início</Label>
-          <Input
-            type="date"
+          <DatePicker
             id="startDate"
             name="startDate"
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            onChange={(d: string | undefined) => setStartDate(d ?? undefined)}
             required
+            shortDate
           />
           <FieldError messages={errors.startDate} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="endDate">Fim (opcional)</Label>
-          <Input
-            type="date"
+          <DatePicker
             id="endDate"
             name="endDate"
             value={endDate ?? ""}
-            onChange={(e) => setEndDate(e.target.value ?? undefined)}
+            onChange={(d: string | undefined) => setEndDate(d ?? undefined)}
+            shortDate
           />
           <FieldError messages={errors.endDate} />
         </div>
