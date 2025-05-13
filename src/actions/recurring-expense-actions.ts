@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createRecurringExpense } from "@/server/queries/recurring-expense";
+import { createRecurringExpense } from "@/server/queries/recurring-expense-queries";
 import { revalidatePath } from "next/cache";
 import type { RecurringExpenseInsert } from "@/server/db/schema/recurring-expense";
 
