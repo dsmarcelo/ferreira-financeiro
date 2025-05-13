@@ -69,7 +69,7 @@ export async function listRecurringExpenseOccurrencesByPeriod({
       and(
         lte(recurringExpense.startDate, end),
         or(
-          eq(recurringExpense.endDate, ""),
+          eq(recurringExpense.endDate, null),
           gte(recurringExpense.endDate, start),
         ),
       ),
