@@ -1,5 +1,4 @@
-import { relations, sql } from "drizzle-orm";
-
+import { sql } from "drizzle-orm";
 import { createTable } from "./table-creator";
 
 import {
@@ -32,20 +31,11 @@ export const expenseSourceEnum = pgEnum("expense_source", [
 
 // Recurrence type: monthly, weekly, yearly
 export const recurrenceTypeEnum = pgEnum("recurrence_type", [
-  "monthly",
   "weekly",
+  "monthly",
   "yearly",
+  "custom_days",
 ]);
-
-// Recurrence rule table
-export const recurrenceRule = createTable("recurrence_rule", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  type: recurrenceTypeEnum("type").notNull(),
-  startDate: date("start_date").notNull(),
-  endDate: date("end_date"),
-  value: decimal("value", { precision: 15, scale: 2 }),
-  description: text("description"),
-});
 
 // Unified expense table
 export const expense = createTable("expense", {
@@ -56,12 +46,12 @@ export const expense = createTable("expense", {
   type: expenseTypeEnum("type").notNull(),
   source: expenseSourceEnum("source").notNull(),
   isPaid: boolean("is_paid").default(false).notNull(),
-  recurrenceRuleId: uuid("recurrence_rule_id").references(
-    () => recurrenceRule.id,
-  ),
   installmentNumber: integer("installment_number"),
   totalInstallments: integer("total_installments"),
-  installmentId: uuid("installment_id"), // To link installments of the same purchase (now UUID)
+  groupId: uuid("group_id"), // To link expenses of the same purchase (now UUID)
+  recurrenceType: recurrenceTypeEnum("recurrence_type"), // weekly, monthly, yearly, custom_days
+  recurrenceInterval: integer("recurrence_interval"), // Number of days between repetitions if custom_days, otherwise null
+  recurrenceEndDate: date("recurrence_end_date"), // Optional end date for recurrence
   createdAt: timestamp("created_at", { withTimezone: true })
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
@@ -70,30 +60,7 @@ export const expense = createTable("expense", {
   ),
 });
 
-// Expense → Parent (many-to-one, self-referencing)
-
-export const expenseRelations = relations(expense, ({ one, many }) => ({
-  children: many(expense, { relationName: "expense_parent" }),
-  recurrenceRule: one(recurrenceRule, {
-    fields: [expense.recurrenceRuleId],
-    references: [recurrenceRule.id],
-    relationName: "expense_recurrence_rule",
-  }),
-}));
-
-// RecurrenceRule → Expenses (one-to-many)
-
-export const recurrenceRuleRelations = relations(
-  recurrenceRule,
-  ({ many }) => ({
-    expenses: many(expense, { relationName: "expense_recurrence_rule" }),
-  }),
-);
-
 export type Expense = typeof expense.$inferSelect;
 export type ExpenseInsert = typeof expense.$inferInsert;
-export type RecurrenceRule = typeof recurrenceRule.$inferSelect;
-export type RecurrenceRuleInsert = typeof recurrenceRule.$inferInsert;
 export type ExpenseType = typeof expenseTypeEnum;
 export type ExpenseSource = (typeof expenseSourceEnum.enumValues)[number];
-export type RecurrenceType = (typeof recurrenceTypeEnum.enumValues)[number];

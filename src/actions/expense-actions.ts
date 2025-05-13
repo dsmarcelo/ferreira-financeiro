@@ -1,10 +1,6 @@
 "use server";
 import { z } from "zod";
-import {
-  addExpense,
-  addRecurrenceRule,
-  updateExpense,
-} from "@/server/queries/expense-queries";
+import { addExpense, updateExpense } from "@/server/queries/expense-queries";
 import { revalidatePath } from "next/cache";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 
@@ -154,33 +150,4 @@ export async function actionToggleExpenseIsPaid(id: number, isPaid: boolean) {
       message: (error as Error)?.message ?? "Erro ao atualizar despesa.",
     };
   }
-}
-
-const recurrenceRuleSchema = z.object({
-  type: z.enum(["monthly", "weekly", "yearly"]),
-  startDate: z.string(),
-  endDate: z.string().optional(),
-  value: z.string().optional(),
-  description: z.string().optional(),
-});
-
-export async function actionAddRecurrenceRule(
-  _prevState: ActionResponse,
-  formData: FormData,
-) {
-  const data = Object.fromEntries(formData.entries());
-  const parse = recurrenceRuleSchema.safeParse(data);
-  if (!parse.success) {
-    return {
-      success: false,
-      message: "Dados inválidos",
-      errors: parse.error.flatten().fieldErrors,
-    };
-  }
-  await addRecurrenceRule(parse.data);
-  revalidatePath("/despesas");
-  return {
-    success: true,
-    message: "Regra de recorrência adicionada com sucesso!",
-  };
 }
