@@ -15,6 +15,7 @@ import { FieldError } from "@/app/_components/forms/field-error";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RecurringExpenseForm } from "../../compras-produtos/adicionar/recurring-expense-form";
 import { Minus, Plus } from "lucide-react";
+import { UniquePaymentForm } from "./unique-payment-form";
 
 const initialState: {
   success: boolean;
@@ -145,13 +146,16 @@ export function AddProductPurchaseForm() {
 
   return (
     <div className="">
-      <Tabs defaultValue="unique" className="w-full">
+      <Tabs defaultValue="one_time" className="w-full">
         <TabsList className="mx-auto mb-4">
-          <TabsTrigger value="unique">Único</TabsTrigger>
-          <TabsTrigger value="parcelado">Parcelado</TabsTrigger>
-          <TabsTrigger value="recorrente">Recorrente</TabsTrigger>
+          <TabsTrigger value="one_time">Único</TabsTrigger>
+          <TabsTrigger value="installment">Parcelado</TabsTrigger>
+          <TabsTrigger value="recurring">Recorrente</TabsTrigger>
         </TabsList>
-        <TabsContent value="parcelado">
+        <TabsContent value="one_time">
+          <UniquePaymentForm source="product_purchase" />
+        </TabsContent>
+        <TabsContent value="installment">
           <form
             className="container mx-auto flex h-full max-w-screen-lg flex-1 flex-col gap-2 px-5"
             onSubmit={handleSubmit}
@@ -163,6 +167,7 @@ export function AddProductPurchaseForm() {
                 id="description"
                 name="description"
                 value={description}
+                placeholder="Ex: Compra/Boleto parcelado"
                 onChange={handleDescriptionChange}
                 required
               />
@@ -245,8 +250,8 @@ export function AddProductPurchaseForm() {
             )}
           </form>
         </TabsContent>
-        <TabsContent value="recorrente">
-          <RecurringExpenseForm />
+        <TabsContent value="recurring">
+          <RecurringExpenseForm source="product_purchase" />
         </TabsContent>
       </Tabs>
     </div>

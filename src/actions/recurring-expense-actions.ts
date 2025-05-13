@@ -24,7 +24,7 @@ const recurringExpenseSchema = z.object({
 export type RecurringExpenseFormData = z.infer<typeof recurringExpenseSchema>;
 
 export async function actionCreateRecurringExpense(
-  prevState: ActionResponse,
+  _prevState: ActionResponse,
   formData: FormData,
 ) {
   const data = Object.fromEntries(formData.entries());

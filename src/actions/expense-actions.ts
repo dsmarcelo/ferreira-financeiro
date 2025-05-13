@@ -53,9 +53,9 @@ export async function actionAddExpense(
       totalInstallments: data.totalInstallments
         ? Number(data.totalInstallments)
         : undefined,
-      installmentId: data.installmentId || undefined, // NEW: pass through as uuid string if present
+      installmentId: data.installmentId ?? undefined, // NEW: pass through as uuid string if present
     });
-
+    console.log(parsed.error);
     if (!parsed.success) {
       return {
         success: false,

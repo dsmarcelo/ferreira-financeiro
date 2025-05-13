@@ -12,6 +12,7 @@ import { FieldError } from "../forms/field-error";
 import CurrencyInput from "@/components/inputs/currency-input";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
+import { useRouter } from "next/navigation";
 
 // Cleaned up: removed unused/duplicate types and stray zod schema
 
@@ -29,19 +30,26 @@ export default function EditExpenseForm({
   expense,
   onSuccess,
 }: EditExpenseFormProps) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionUpdateExpense,
     initialState,
   );
 
+  const backUrl =
+    expense.source === "product_purchase"
+      ? "/compras-produtos"
+      : "/despesas-pessoais";
+
   useEffect(() => {
     if (state.success && state.message) {
       toast.success(state.message);
       onSuccess?.();
+      router.push(backUrl);
     } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
-  }, [state, onSuccess]);
+  }, [state, onSuccess, backUrl, router]);
 
   const errors = state?.errors ?? {};
 

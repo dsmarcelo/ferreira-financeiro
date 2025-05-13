@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { FieldError } from "@/app/_components/forms/field-error";
 import { type ActionResponse } from "@/actions/recurring-expense-actions";
+import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 
 const recurrenceOptions = [
   { value: "monthly", label: "Mensal" },
@@ -23,7 +24,11 @@ const initialState = {
   errors: {},
 };
 
-export function RecurringExpenseForm() {
+export function RecurringExpenseForm({
+  source,
+}: {
+  source: ExpenseInsert["source"];
+}) {
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionCreateRecurringExpense,
     initialState,
@@ -48,6 +53,7 @@ export function RecurringExpenseForm() {
       action={formAction}
       className="container mx-auto flex h-full max-w-screen-lg flex-1 flex-col gap-2 px-5"
     >
+      <input type="hidden" name="source" value={source} />
       <div className="space-y-2">
         <Label htmlFor="description">Descrição</Label>
         <Input

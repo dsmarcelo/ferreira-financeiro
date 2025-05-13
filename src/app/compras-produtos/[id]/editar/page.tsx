@@ -4,15 +4,15 @@ import EditExpenseForm from "@/app/_components/forms/edit-expense-form";
 import SubPageHeader from "@/app/_components/sub-page-header";
 
 interface EditExpensePageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditExpensePage({
   params,
 }: EditExpensePageProps) {
-  const id = Number(params.id);
+  const { id } = await params;
   if (!id) return notFound();
-  const expense = await getExpenseById(id);
+  const expense = await getExpenseById(Number(id));
   if (!expense) return notFound();
 
   return (

@@ -33,7 +33,9 @@ export default async function ComprasProdutosPage({
       </main>
       <div className="fixed bottom-24 block w-full px-5 sm:hidden">
         <Link href="/compras-produtos/adicionar">
-          <Button>Adicionar Compra de Produto</Button>
+          <Button className="h-12 w-full rounded-full">
+            Adicionar Compra de Produto
+          </Button>
         </Link>
       </div>
     </div>
