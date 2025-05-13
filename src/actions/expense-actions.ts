@@ -4,9 +4,9 @@ import {
   addExpense,
   addRecurrenceRule,
   updateExpense,
-} from "@/server/queries/expense";
+} from "@/server/queries/expense-queries";
 import { revalidatePath } from "next/cache";
-import type { ExpenseInsert } from "@/server/db/schema/expense";
+import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 
 const expenseFormSchema = z.object({
   description: z.string().min(1, { message: "Descrição obrigatória" }),
@@ -19,6 +19,7 @@ const expenseFormSchema = z.object({
   recurrenceRuleId: z.string().optional(),
   installmentNumber: z.number().optional(),
   totalInstallments: z.number().optional(),
+  installmentId: z.string().uuid().optional(), // NEW: to link all installments as uuid
 });
 
 const updateExpenseSchema = expenseFormSchema.extend({
@@ -27,7 +28,7 @@ const updateExpenseSchema = expenseFormSchema.extend({
   source: z.enum(["personal", "store", "product_purchase"]).optional(),
 });
 
-export type ExpenseFormData = z.infer<typeof expenseFormSchema>;
+export type ExpenseFormData = z.infer<typeof expenseFormSchema>; // includes optional installmentId
 
 export interface ActionResponse {
   success: boolean;
@@ -52,6 +53,7 @@ export async function actionAddExpense(
       totalInstallments: data.totalInstallments
         ? Number(data.totalInstallments)
         : undefined,
+      installmentId: data.installmentId || undefined, // NEW: pass through as uuid string if present
     });
 
     if (!parsed.success) {
@@ -88,6 +90,7 @@ export async function actionAddExpense(
     };
   }
 }
+// Now supports passing an installmentId to link multiple expenses as a group of installments.
 
 // Update expense
 export async function actionUpdateExpense(

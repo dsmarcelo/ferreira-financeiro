@@ -2,9 +2,11 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn, formatCurrency } from "@/lib/utils";
-import type { Expense } from "@/server/db/schema/expense";
+import type { Expense } from "@/server/db/schema/expense-schema";
 import * as React from "react";
 import EditExpenseSheet from "../sheets/edit-expense-sheet";
+import { useMediaQuery } from "usehooks-ts";
+import Link from "next/link";
 
 export interface ExpenseListItemProps {
   expense: Expense;
@@ -17,6 +19,15 @@ export function ExpenseListItem({
   onTogglePaid,
   children,
 }: ExpenseListItemProps) {
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const editLinkMap: Record<string, string> = {
+    personal: `/despesas-pessoais/${expense.id}/editar`,
+    store: `/despesas-loja/${expense.id}/editar`,
+    product_purchase: `/compras-produtos/${expense.id}/editar`,
+  };
+  const editLink =
+    editLinkMap[expense.source] ?? `/compras-produtos/${expense.id}/editar`;
+
   // Only the checkbox toggles paid, the rest opens the sheet
   // Use EditExpenseSheet with custom trigger
   // SheetTrigger wraps the content except the checkbox
@@ -53,5 +64,13 @@ export function ExpenseListItem({
     </div>
   );
 
-  return <EditExpenseSheet expense={expense}>{itemContent}</EditExpenseSheet>;
+  return (
+    <>
+      {isMobile ? (
+        <Link href={editLink}>{itemContent}</Link>
+      ) : (
+        <EditExpenseSheet expense={expense}>{itemContent}</EditExpenseSheet>
+      )}
+    </>
+  );
 }

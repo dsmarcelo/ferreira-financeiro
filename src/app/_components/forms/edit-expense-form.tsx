@@ -5,7 +5,7 @@ import {
   actionUpdateExpense,
   type ActionResponse,
 } from "@/actions/expense-actions";
-import type { Expense } from "@/server/db/schema/expense";
+import type { Expense } from "@/server/db/schema/expense-schema";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "../forms/field-error";

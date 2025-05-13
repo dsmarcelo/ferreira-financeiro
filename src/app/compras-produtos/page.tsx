@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { getExpensesByPeriod } from "@/server/queries/expense";
+import { getExpensesByPeriod } from "@/server/queries/expense-queries";
 import Header from "../_components/header";
 import { Suspense } from "react";
 import Loading from "@/app/_components/loading/loading";

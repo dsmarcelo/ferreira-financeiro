@@ -5,7 +5,7 @@ import { startTransition, use } from "react";
 import { formatCurrency } from "@/lib/utils";
 import { ExpenseListItem } from "./expense-list-item";
 import { useOptimistic } from "react";
-import type { Expense } from "@/server/db/schema/expense";
+import type { Expense } from "@/server/db/schema/expense-schema";
 
 function groupByDate(expenses: Expense[]) {
   return expenses

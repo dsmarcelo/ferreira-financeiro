@@ -1,7 +1,7 @@
 "use client";
 
 import Header from "@/app/_components/header";
-import { AddProductPurchaseForm } from "./add-product-purchase-form";
+import { AddProductPurchaseForm } from "../../_components/forms/add-product-purchase-form";
 
 export default function AddProductPurchasePage() {
   return (

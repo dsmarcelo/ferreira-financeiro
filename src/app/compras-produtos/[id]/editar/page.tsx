@@ -1,32 +1,26 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { getProductPurchaseWithInstallments } from "@/server/queries/product-purchase-queries";
-import EditProductPurchaseForm from "@/app/_components/forms/edit-product-purchase-form";
+import { getExpenseById } from "@/server/queries/expense-queries";
+import EditExpenseForm from "@/app/_components/forms/edit-expense-form";
+import SubPageHeader from "@/app/_components/sub-page-header";
 
-interface EditProductPurchasePageProps {
+interface EditExpensePageProps {
   params: { id: string };
 }
 
-export default async function EditProductPurchasePage({
+export default async function EditExpensePage({
   params,
-}: EditProductPurchasePageProps) {
+}: EditExpensePageProps) {
   const id = Number(params.id);
   if (!id) return notFound();
-  const purchase = await getProductPurchaseWithInstallments(id);
-  if (!purchase) return notFound();
+  const expense = await getExpenseById(id);
+  if (!expense) return notFound();
 
   return (
-    <main className="mx-auto max-w-2xl p-4">
-      <header className="mb-6 flex items-center gap-4">
-        <Link
-          href="/compras-produtos"
-          className="bg-muted hover:bg-muted/80 inline-flex items-center rounded border px-3 py-2 text-sm font-medium"
-        >
-          ← Voltar
-        </Link>
-        <h1 className="text-xl font-bold">Editar Compra de Produto</h1>
-      </header>
-      <EditProductPurchaseForm productPurchase={purchase} />
+    <main className="mx-auto max-w-2xl">
+      <SubPageHeader title="Editar Despesa" prevURL="/compras-produtos" />
+      <div className="p-4">
+        <EditExpenseForm expense={expense} />
+      </div>
     </main>
   );
 }

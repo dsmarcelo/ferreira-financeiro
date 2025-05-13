@@ -10,7 +10,7 @@ import {
   SheetClose,
   SheetDescription,
 } from "@/components/ui/sheet";
-import type { Expense } from "@/server/db/schema/expense";
+import type { Expense } from "@/server/db/schema/expense-schema";
 import EditExpenseForm from "../forms/edit-expense-form";
 import { useMediaQuery } from "usehooks-ts";
 interface EditExpenseSheetProps {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { actionAddExpense } from "@/actions/expense-actions";
-import type { ExpenseInsert } from "@/server/db/schema/expense";
+import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 import InstallmentsForm from "@/app/_components/forms/installments-form";
 import type { ProductPurchaseInstallmentInsert } from "@/server/db/schema/product-purchase";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { FieldError } from "@/app/_components/forms/field-error";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { RecurringExpenseForm } from "./recurring-expense-form";
+import { RecurringExpenseForm } from "../../compras-produtos/adicionar/recurring-expense-form";
 
 const initialState: {
   success: boolean;
@@ -104,6 +104,11 @@ export function AddProductPurchaseForm({
     setPending(true);
     setState(initialState);
     let hasError = false;
+
+    // Generate a unique installmentId for this group of expenses (installments)
+    // Using crypto.randomUUID() for a collision-resistant UUID
+    const installmentId = crypto.randomUUID();
+
     for (const inst of installments) {
       if (!inst) continue;
       const formData = new FormData();
@@ -117,6 +122,7 @@ export function AddProductPurchaseForm({
         formData.append("installmentNumber", String(inst.installmentNumber));
       if (totalInstallments !== undefined)
         formData.append("totalInstallments", String(totalInstallments));
+      formData.append("installmentId", String(installmentId)); // NEW: link all expenses to this group
       const res = await actionAddExpense(initialState, formData);
       if (!res.success) {
         setState({
@@ -139,6 +145,8 @@ export function AddProductPurchaseForm({
     }
     setPending(false);
   }
+
+  // Each expense created as part of an installment group now shares the same installmentId (integer), making it easy to fetch all related expenses from the backend.
 
   return (
     <div className="">

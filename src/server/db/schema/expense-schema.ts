@@ -3,14 +3,14 @@ import { relations, sql } from "drizzle-orm";
 import { createTable } from "./table-creator";
 
 import {
-  serial,
-  decimal,
-  date,
-  timestamp,
-  text,
   boolean,
+  date,
+  decimal,
   integer,
   pgEnum,
+  serial,
+  text,
+  timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -48,7 +48,6 @@ export const recurrenceRule = createTable("recurrence_rule", {
 });
 
 // Unified expense table
-
 export const expense = createTable("expense", {
   id: serial("id").primaryKey(),
   description: text("description").notNull(),
@@ -60,16 +59,12 @@ export const expense = createTable("expense", {
   recurrenceRuleId: uuid("recurrence_rule_id").references(
     () => recurrenceRule.id,
   ),
-
   installmentNumber: integer("installment_number"),
-
   totalInstallments: integer("total_installments"),
-
+  installmentId: uuid("installment_id"), // To link installments of the same purchase (now UUID)
   createdAt: timestamp("created_at", { withTimezone: true })
     .default(sql`CURRENT_TIMESTAMP`)
-
     .notNull(),
-
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date(),
   ),
@@ -79,12 +74,9 @@ export const expense = createTable("expense", {
 
 export const expenseRelations = relations(expense, ({ one, many }) => ({
   children: many(expense, { relationName: "expense_parent" }),
-
   recurrenceRule: one(recurrenceRule, {
     fields: [expense.recurrenceRuleId],
-
     references: [recurrenceRule.id],
-
     relationName: "expense_recurrence_rule",
   }),
 }));

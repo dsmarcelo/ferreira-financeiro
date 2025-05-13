@@ -1,15 +1,15 @@
 "use server";
 import { db } from "../db";
 import {
-  expense,
-  recurrenceRule,
-  type ExpenseSource,
-  type ExpenseInsert,
-  type RecurrenceRuleInsert,
-  type RecurrenceRule,
   type Expense,
-} from "../db/schema/expense";
-import { eq, and, gte, lte } from "drizzle-orm";
+  expense,
+  type ExpenseInsert,
+  type ExpenseSource,
+  type RecurrenceRule,
+  recurrenceRule,
+  type RecurrenceRuleInsert,
+} from "../db/schema/expense-schema";
+import { and, eq, gte, lte } from "drizzle-orm";
 
 export async function addExpense(data: ExpenseInsert) {
   return db.insert(expense).values(data).returning();
@@ -56,6 +56,14 @@ export async function updateExpense(
     .returning();
   return updated;
 }
+
+/**
+ * Fetch all expenses that share the same installmentId (i.e., all installments of a purchase).
+ */
+export async function getExpensesByInstallmentId(installmentId: string) {
+  return db.select().from(expense).where(eq(expense.installmentId, installmentId));
+}
+
 
 export async function getExpenseById(id: number): Promise<Expense | undefined> {
   return db.query.expense.findFirst({ where: eq(expense.id, id) });
