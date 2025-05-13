@@ -4,6 +4,7 @@ import { storeExpense } from "./store-expense";
 import { productPurchase } from "./product-purchase";
 import { expense } from "./expense";
 import { recurrenceRule } from "./expense";
+import { recurringExpenseOccurrence } from "./recurring-expense-occurrence";
 
 export const schema = {
   cashRegister,
@@ -12,4 +13,5 @@ export const schema = {
   productPurchase,
   expense,
   recurrenceRule,
+  recurringExpenseOccurrence,
 };

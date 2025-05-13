@@ -1,10 +1,9 @@
 "use client";
 import { ptBR } from "date-fns/locale";
 import { format, parseISO } from "date-fns";
-import { use } from "react";
+import { startTransition, use } from "react";
 import { formatCurrency } from "@/lib/utils";
 import { ExpenseListItem } from "./expense-list-item";
-
 import { useOptimistic } from "react";
 import type { Expense } from "@/server/db/schema/expense";
 
@@ -52,7 +51,9 @@ export default function ExpensesList({
   // }; // TODO
 
   const handleTogglePaid = async (id: number, checked: boolean) => {
-    setOptimisticExpenses({ id, checked });
+    startTransition(() => {
+      setOptimisticExpenses({ id, checked });
+    });
     try {
       await actionToggleExpenseIsPaid(id, checked);
     } catch {
