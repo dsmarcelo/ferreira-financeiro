@@ -27,7 +27,7 @@ export async function getExpensesByPeriod({
   start: string;
   end: string;
   source?: ExpenseSource;
-}): Promise<Expense[] | undefined> {
+}): Promise<Expense[]> {
   // Optionally filter by source (personal, store, product_purchase)
   if (start && end) {
     return db
@@ -41,7 +41,7 @@ export async function getExpensesByPeriod({
         ),
       );
   }
-  return undefined;
+  return [];
 }
 
 // Update a unified expense by ID
