@@ -38,15 +38,15 @@ export function RecurringExpenseForm() {
   const [description, setDescription] = useState("");
   const [value, setValue] = useState<number>(0);
   const [recurrenceType, setRecurrenceType] = useState("monthly");
-  const [startDate, setStartDate] = useState<string | undefined>(
-    () => new Date().toISOString().slice(0, 10)
+  const [startDate, setStartDate] = useState<string | undefined>(() =>
+    new Date().toISOString().slice(0, 10),
   );
   const [endDate, setEndDate] = useState<string | undefined>(undefined);
 
   return (
     <form
       action={formAction}
-      className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5"
+      className="container mx-auto flex h-full max-w-screen-lg flex-1 flex-col gap-2 px-5"
     >
       <div className="space-y-2">
         <Label htmlFor="description">Descrição</Label>
@@ -55,12 +55,13 @@ export function RecurringExpenseForm() {
           id="description"
           name="description"
           value={description}
+          placeholder="Netflix, Assinatura mensal, etc."
           onChange={(e) => setDescription(e.target.value)}
           required
         />
         <FieldError messages={errors.description} />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2">
         <div className="space-y-2">
           <Label htmlFor="value">Valor</Label>
           <CurrencyInput

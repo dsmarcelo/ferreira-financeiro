@@ -1,12 +1,13 @@
 "use client";
 
-import Header from "@/app/_components/header";
 import { AddProductPurchaseForm } from "../../_components/forms/add-product-purchase-form";
+import SubPageHeader from "@/app/_components/sub-page-header";
 
 export default function AddProductPurchasePage() {
   return (
     <>
-      <AddProductPurchaseForm header={<Header showBackButton={true} />} />
+      <SubPageHeader title="Adicionar Compra" prevURL="/compras-produtos" />
+      <AddProductPurchaseForm />
     </>
   );
 }

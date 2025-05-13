@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { FieldError } from "@/app/_components/forms/field-error";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RecurringExpenseForm } from "../../compras-produtos/adicionar/recurring-expense-form";
+import { Minus, Plus } from "lucide-react";
 
 const initialState: {
   success: boolean;
@@ -25,13 +26,7 @@ const initialState: {
   errors: {},
 };
 
-interface AddProductPurchaseFormProps {
-  header?: React.ReactNode;
-}
-
-export function AddProductPurchaseForm({
-  header,
-}: AddProductPurchaseFormProps) {
+export function AddProductPurchaseForm() {
   const [state, setState] = useState(initialState);
   const [pending, setPending] = useState(false);
 
@@ -150,15 +145,15 @@ export function AddProductPurchaseForm({
 
   return (
     <div className="">
-      {header}
-      <Tabs defaultValue="parcelado" className="w-full">
-        <TabsList className="mb-4">
+      <Tabs defaultValue="unique" className="w-full">
+        <TabsList className="mx-auto mb-4">
+          <TabsTrigger value="unique">Único</TabsTrigger>
           <TabsTrigger value="parcelado">Parcelado</TabsTrigger>
           <TabsTrigger value="recorrente">Recorrente</TabsTrigger>
         </TabsList>
         <TabsContent value="parcelado">
           <form
-            className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5"
+            className="container mx-auto flex h-full max-w-screen-lg flex-1 flex-col gap-2 px-5"
             onSubmit={handleSubmit}
           >
             <div className="space-y-2">
@@ -210,7 +205,7 @@ export function AddProductPurchaseForm({
                       setTotalInstallments(totalInstallments - 1);
                     }}
                   >
-                    -
+                    <Minus />
                   </Button>
                   <Button
                     size="icon"
@@ -219,7 +214,7 @@ export function AddProductPurchaseForm({
                       setTotalInstallments(totalInstallments + 1);
                     }}
                   >
-                    +
+                    <Plus />
                   </Button>
                 </div>
               </div>
