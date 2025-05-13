@@ -26,6 +26,8 @@ type EditExpenseFormProps = {
   onSuccess?: () => void;
 };
 
+import { actionDeleteExpense } from "@/actions/expense-actions";
+
 export default function EditExpenseForm({
   expense,
   onSuccess,
@@ -51,76 +53,89 @@ export default function EditExpenseForm({
     }
   }, [state, onSuccess, backUrl, router]);
 
+  const [deleteState, deleteAction, deletePending] = useActionState<
+    ActionResponse,
+    FormData
+  >(actionDeleteExpense, initialState);
+
+  useEffect(() => {
+    if (deleteState.success && deleteState.message) {
+      toast.success(deleteState.message);
+      router.push(backUrl);
+    } else if (deleteState.success === false && deleteState.message) {
+      toast.error(deleteState.message);
+    }
+  }, [deleteState, backUrl, router]);
+
   const errors = state?.errors ?? {};
 
   return (
-    <form className="space-y-4" action={formAction} aria-label="Editar Despesa">
-      {/* Hidden fields required by the action */}
-      <input type="hidden" name="id" value={expense.id} />
-      <input type="hidden" name="type" value={expense.type} />
-      <input type="hidden" name="source" value={expense.source} />
-      <div>
-        <label htmlFor="description" className="block text-sm font-medium">
-          Descrição
-        </label>
-        <Input
-          id="description"
-          name="description"
-          defaultValue={expense.description ?? ""}
-          required
-          aria-invalid={!!errors.description}
-        />
-        <FieldError messages={errors.description} />
-      </div>
-
-      <div>
-        <label htmlFor="value" className="block text-sm font-medium">
-          Valor
-        </label>
-        <CurrencyInput
-          id="value"
-          name="value"
-          initialValue={Number(expense.value)}
-          required
-          aria-invalid={!!errors.value}
-        />
-        <FieldError messages={errors.value} />
-      </div>
-
-      <div>
-        <label htmlFor="date" className="block text-sm font-medium">
-          Data
-        </label>
-        <DatePicker
-          id="date"
-          name="date"
-          defaultValue={expense.date}
-          required
-          aria-invalid={!!errors.date}
-        />
-        <FieldError messages={errors.date} />
-      </div>
-
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="isPaid"
-          name="isPaid"
-          defaultChecked={expense.isPaid}
-          className="accent-primary border-input h-4 w-4 rounded border"
-        />
-        <label htmlFor="isPaid" className="text-sm font-medium">
-          Pago
-        </label>
-      </div>
-      <Button
-        type="submit"
-        disabled={pending}
-        aria-busy={pending}
-        className="w-full"
+    <>
+      <form
+        className="space-y-4"
+        action={formAction}
+        aria-label="Editar Despesa"
       >
-        {pending ? "Salvando..." : "Salvar"}
-      </Button>
-    </form>
+        {/* Hidden fields required by the action */}
+        <input type="hidden" name="id" value={expense.id} />
+        <input type="hidden" name="type" value={expense.type} />
+        <input type="hidden" name="source" value={expense.source} />
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium">
+            Descrição
+          </label>
+          <Input
+            id="description"
+            name="description"
+            defaultValue={expense.description ?? ""}
+            required
+            aria-invalid={!!errors.description}
+          />
+          <FieldError messages={errors.description} />
+        </div>
+
+        <div>
+          <label htmlFor="value" className="block text-sm font-medium">
+            Valor
+          </label>
+          <CurrencyInput
+            id="value"
+            name="value"
+            initialValue={Number(expense.value)}
+            required
+            aria-invalid={!!errors.value}
+          />
+          <FieldError messages={errors.value} />
+        </div>
+
+        <div>
+          <label htmlFor="date" className="block text-sm font-medium">
+            Data
+          </label>
+          <DatePicker
+            id="date"
+            name="date"
+            defaultValue={expense.date}
+            required
+            aria-invalid={!!errors.date}
+          />
+          <FieldError messages={errors.date} />
+        </div>
+      </form>
+      <div className="mt-6 flex justify-end">
+        <form
+          action={deleteAction}
+          onSubmit={(e) => {
+            if (!window.confirm("Tem certeza que deseja excluir esta despesa?"))
+              e.preventDefault();
+          }}
+        >
+          <input type="hidden" name="id" value={expense.id} />
+          <Button type="submit" variant="destructive" disabled={deletePending}>
+            {deletePending ? "Excluindo..." : "Excluir"}
+          </Button>
+        </form>
+      </div>
+    </>
   );
 }

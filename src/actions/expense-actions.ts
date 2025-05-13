@@ -1,6 +1,6 @@
 "use server";
 import { z } from "zod";
-import { addExpense, updateExpense } from "@/server/queries/expense-queries";
+import { addExpense, updateExpense, deleteExpense as dbDeleteExpense } from "@/server/queries/expense-queries";
 import { revalidatePath } from "next/cache";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 
@@ -178,6 +178,32 @@ export async function actionAddRecurringExpense(
       success: false,
       message: (error as Error)?.message ?? "Erro ao adicionar despesa.",
       errors: undefined,
+    };
+  }
+}
+
+// Delete expense action
+
+export async function actionDeleteExpense(
+  _prevState: ActionResponse,
+  formData: FormData,
+) {
+  try {
+    const id = Number(formData.get("id"));
+    if (!id) {
+      return {
+        success: false,
+        message: "ID da despesa inválido para exclusão.",
+      };
+    }
+    await dbDeleteExpense(id);
+    revalidatePath("/compras-produtos");
+    revalidatePath("/despesas-pessoais");
+    return { success: true, message: "Despesa excluída com sucesso!" };
+  } catch (error) {
+    return {
+      success: false,
+      message: (error as Error)?.message ?? "Erro ao excluir despesa.",
     };
   }
 }
