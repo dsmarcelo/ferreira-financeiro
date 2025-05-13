@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { actionAddExpense } from "@/actions/expense-actions";
+import { actionAddOneTimeExpense } from "@/actions/expense-actions";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
@@ -76,7 +76,7 @@ export function UniquePaymentForm({
     formData.append("source", source);
     if (isPaid) formData.append("isPaid", "on");
 
-    const res = await actionAddExpense(initialState, formData);
+    const res = await actionAddOneTimeExpense(initialState, formData);
     if (!res.success) {
       setState({
         success: false,

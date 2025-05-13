@@ -6,7 +6,7 @@ import {
   type ExpenseInsert,
   type ExpenseSource,
 } from "../db/schema/expense-schema";
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gte, lte, or, sum } from "drizzle-orm";
 
 export async function addExpense(data: ExpenseInsert) {
   return db.insert(expense).values(data).returning();
@@ -52,4 +52,24 @@ export async function updateExpense(
 
 export async function getExpenseById(id: number): Promise<Expense | undefined> {
   return db.query.expense.findFirst({ where: eq(expense.id, id) });
+}
+
+export async function sumExpensesByPeriod({
+  start,
+  end,
+}: {
+  start: string;
+  end: string;
+}): Promise<number> {
+  const result = await db
+    .select({ sum: sum(expense.value) })
+    .from(expense)
+    .where(
+      and(
+        gte(expense.date, start),
+        lte(expense.date, end),
+        or(eq(expense.source, "store"), eq(expense.source, "personal")),
+      ),
+    );
+  return Number(result?.[0]?.sum ?? 0);
 }

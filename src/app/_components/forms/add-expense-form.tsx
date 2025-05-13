@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { actionAddExpense } from "@/actions/expense-actions";
+import { actionAddInstallmentExpense } from "@/actions/expense-actions";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
-import InstallmentsForm from "@/app/_components/forms/installments-form";
-import type { ProductPurchaseInstallmentInsert } from "@/server/db/schema/product-purchase";
+
 import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
 import { Button } from "@/components/ui/button";
@@ -13,9 +12,9 @@ import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { FieldError } from "@/app/_components/forms/field-error";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { RecurringExpenseForm } from "../../compras-produtos/adicionar/recurring-expense-form";
 import { Minus, Plus } from "lucide-react";
 import { UniquePaymentForm } from "./unique-payment-form";
+import { RecurringExpenseForm } from "./recurring-expense-form";
 
 const initialState: {
   success: boolean;
@@ -27,7 +26,11 @@ const initialState: {
   errors: {},
 };
 
-export function AddProductPurchaseForm() {
+export function AddExpenseForm({
+  source,
+}: {
+  source: ExpenseInsert["source"];
+}) {
   const [state, setState] = useState(initialState);
   const [pending, setPending] = useState(false);
 
@@ -43,10 +46,6 @@ export function AddProductPurchaseForm() {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<number>(0);
   const [totalInstallments, setTotalInstallments] = useState(1);
-  const [installments, setInstallments] = useState<
-    ProductPurchaseInstallmentInsert[]
-  >([]);
-
   const addMonths = (dateStr: string, months: number) => {
     const date = new Date(dateStr);
     const d = date.getDate();
@@ -56,37 +55,6 @@ export function AddProductPurchaseForm() {
     }
     return date.toISOString().split("T")[0] ?? "";
   };
-
-  useEffect(() => {
-    if (!totalInstallments || totalInstallments < 1) return;
-    const baseAmount = Math.floor((amount * 100) / totalInstallments) / 100;
-    const remainder =
-      Math.round((amount - baseAmount * totalInstallments) * 100) / 100;
-    const descBase = description || "";
-    const today = getToday();
-    const newInstallments = Array.from(
-      { length: totalInstallments },
-      (_, i) => ({
-        amount: (i === totalInstallments - 1
-          ? baseAmount + remainder
-          : baseAmount
-        ).toFixed(2),
-        dueDate: i === 0 ? today : addMonths(today, i),
-        description:
-          totalInstallments === 1
-            ? descBase
-            : `${descBase} | ${i + 1}/${totalInstallments}`.trim(),
-        installmentNumber: i + 1,
-        isPaid: false,
-        totalInstallments,
-        productPurchaseId: 0, // will be set by backend
-        paidAt: null,
-        createdAt: undefined,
-        updatedAt: undefined,
-      }),
-    );
-    setInstallments(newInstallments);
-  }, [totalInstallments, amount, description]);
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDescription(e.target.value);
@@ -99,50 +67,65 @@ export function AddProductPurchaseForm() {
     e.preventDefault();
     setPending(true);
     setState(initialState);
+
+    // Validation
+    if (!description || !amount || !totalInstallments) {
+      toast.error("Preencha todos os campos obrigatórios.");
+      setPending(false);
+      return;
+    }
+
+    // Generate a unique groupId for this group of expenses (installments)
+    const groupId = crypto.randomUUID();
+    const today = getToday();
+    const baseAmount = Math.floor((amount * 100) / totalInstallments) / 100;
+    const remainder =
+      Math.round((amount - baseAmount * totalInstallments) * 100) / 100;
+
     let hasError = false;
 
-    // Generate a unique installmentId for this group of expenses (installments)
-    // Using crypto.randomUUID() for a collision-resistant UUID
-    const installmentId = crypto.randomUUID();
-
-    for (const inst of installments) {
-      if (!inst) continue;
+    for (let i = 0; i < totalInstallments; i++) {
+      const installmentValue = (
+        i === totalInstallments - 1 ? baseAmount + remainder : baseAmount
+      ).toFixed(2);
+      const dueDate = i === 0 ? today : addMonths(today, i);
       const formData = new FormData();
-      formData.append("description", inst.description ?? "");
-      formData.append("value", inst.amount ?? "");
-      formData.append("date", inst.dueDate ?? "");
+      formData.append(
+        "description",
+        totalInstallments === 1
+          ? description
+          : `${description} | ${i + 1}/${totalInstallments}`,
+      );
+      formData.append("value", installmentValue);
+      formData.append("date", dueDate);
       formData.append("type", "installment");
-      formData.append("source", "product_purchase");
-      if (inst.isPaid) formData.append("isPaid", "on");
-      if (inst.installmentNumber !== undefined)
-        formData.append("installmentNumber", String(inst.installmentNumber));
-      if (totalInstallments !== undefined)
-        formData.append("totalInstallments", String(totalInstallments));
-      formData.append("installmentId", String(installmentId)); // NEW: link all expenses to this group
-      const res = await actionAddExpense(initialState, formData);
+      formData.append("source", source);
+      formData.append("installmentNumber", String(i + 1));
+      formData.append("totalInstallments", String(totalInstallments));
+      formData.append("groupId", groupId);
+      // Optionally, handle isPaid if you want to support marking as paid on creation
+      const res = await actionAddInstallmentExpense(initialState, formData);
       if (!res.success) {
-        setState({
-          success: false,
-          message: res.message,
-          errors: res.errors ?? {},
-        });
-        toast.error(res.message);
         hasError = true;
+        setState(res);
+        toast.error(res.message);
         break;
       }
     }
+
+    setPending(false);
     if (!hasError) {
+      setDescription("");
+      setAmount(0);
+      setTotalInstallments(1);
       setState({
         success: true,
         message: "Despesas adicionadas com sucesso!",
         errors: {},
       });
-      toast.success("Despesas adicionadas com sucesso!");
+      toast.success("Despesas parceladas adicionadas com sucesso!");
     }
-    setPending(false);
   }
-
-  // Each expense created as part of an installment group now shares the same installmentId (integer), making it easy to fetch all related expenses from the backend.
 
   return (
     <div className="">
@@ -224,14 +207,7 @@ export function AddProductPurchaseForm() {
                 </div>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Parcelas</Label>
-              <InstallmentsForm
-                installments={installments}
-                onChange={setInstallments}
-                disabled={false}
-              />
-            </div>
+
             <Button type="submit" className="w-full" disabled={pending}>
               {pending ? "Adicionando..." : "Adicionar"}
             </Button>

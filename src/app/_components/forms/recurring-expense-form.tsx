@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { actionCreateRecurringExpense } from "@/actions/recurring-expense-actions";
+import { actionAddRecurringExpense } from "@/actions/expense-actions";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/inputs/date-picker";
 import CurrencyInput from "@/components/inputs/currency-input";
@@ -9,13 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { FieldError } from "@/app/_components/forms/field-error";
-import { type ActionResponse } from "@/actions/recurring-expense-actions";
+import { type ActionResponse } from "@/actions/expense-actions";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 
 const recurrenceOptions = [
   { value: "monthly", label: "Mensal" },
   { value: "weekly", label: "Semanal" },
   { value: "yearly", label: "Anual" },
+  { value: "custom_days", label: "Personalizado (dias)" },
 ];
 
 const initialState = {
@@ -30,7 +31,7 @@ export function RecurringExpenseForm({
   source: ExpenseInsert["source"];
 }) {
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
-    actionCreateRecurringExpense,
+    actionAddRecurringExpense,
     initialState,
   );
 
@@ -43,6 +44,7 @@ export function RecurringExpenseForm({
   const [description, setDescription] = useState("");
   const [value, setValue] = useState<number>(0);
   const [recurrenceType, setRecurrenceType] = useState("monthly");
+  const [recurrenceInterval, setRecurrenceInterval] = useState<number>(1);
   const [startDate, setStartDate] = useState<string | undefined>(() =>
     new Date().toISOString().slice(0, 10),
   );
@@ -52,6 +54,7 @@ export function RecurringExpenseForm({
     <form
       action={formAction}
       className="container mx-auto flex h-full max-w-screen-lg flex-1 flex-col gap-2 px-5"
+      autoComplete="off"
     >
       <input type="hidden" name="source" value={source} />
       <div className="space-y-2">
@@ -90,6 +93,7 @@ export function RecurringExpenseForm({
             onChange={(e) => setRecurrenceType(e.target.value)}
             className="border-input ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             required
+            aria-describedby="recurrenceType-desc"
           >
             {recurrenceOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -97,13 +101,41 @@ export function RecurringExpenseForm({
               </option>
             ))}
           </select>
+          <div id="recurrenceType-desc" className="sr-only">
+            Selecione o tipo de recorrência. Escolha &quot;Personalizado
+            (dias)&quot; para definir um intervalo específico de dias.
+          </div>
           <FieldError messages={errors.recurrenceType} />
         </div>
+        {recurrenceType === "custom_days" && (
+          <div className="space-y-2">
+            <Label htmlFor="recurrenceInterval">Intervalo de dias</Label>
+            <Input
+              id="recurrenceInterval"
+              name="recurrenceInterval"
+              type="number"
+              min={1}
+              value={recurrenceInterval}
+              onChange={(e) =>
+                setRecurrenceInterval(Number(e.target.value) || 1)
+              }
+              required
+              aria-describedby="recurrenceInterval-desc"
+            />
+            <div
+              id="recurrenceInterval-desc"
+              className="text-muted-foreground text-xs"
+            >
+              Quantos dias entre cada repetição?
+            </div>
+            <FieldError messages={errors.recurrenceInterval} />
+          </div>
+        )}
         <div className="space-y-2">
           <Label htmlFor="startDate">Início</Label>
           <DatePicker
-            id="startDate"
-            name="startDate"
+            id="date"
+            name="date"
             value={startDate}
             onChange={(d: string | undefined) => setStartDate(d ?? undefined)}
             required

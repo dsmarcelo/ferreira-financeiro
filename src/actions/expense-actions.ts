@@ -4,27 +4,16 @@ import { addExpense, updateExpense } from "@/server/queries/expense-queries";
 import { revalidatePath } from "next/cache";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 
-const expenseFormSchema = z.object({
+// One-time expense schema & action
+
+const oneTimeExpenseSchema = z.object({
   description: z.string().min(1, { message: "Descrição obrigatória" }),
   value: z.string().min(1, { message: "Valor obrigatório" }),
   date: z.string({ message: "Data inválida" }),
-  type: z.enum(["one_time", "installment", "recurring"]),
+  type: z.literal("one_time"),
   source: z.enum(["personal", "store", "product_purchase"]),
   isPaid: z.boolean().optional(),
-  parentId: z.number().optional(),
-  recurrenceRuleId: z.string().optional(),
-  installmentNumber: z.number().optional(),
-  totalInstallments: z.number().optional(),
-  installmentId: z.string().uuid().optional(), // NEW: to link all installments as uuid
 });
-
-const updateExpenseSchema = expenseFormSchema.extend({
-  id: z.number(),
-  type: z.enum(["one_time", "installment", "recurring"]).optional(),
-  source: z.enum(["personal", "store", "product_purchase"]).optional(),
-});
-
-export type ExpenseFormData = z.infer<typeof expenseFormSchema>; // includes optional installmentId
 
 export interface ActionResponse {
   success: boolean;
@@ -32,26 +21,17 @@ export interface ActionResponse {
   errors?: Partial<Record<keyof ExpenseInsert, string[]>>;
 }
 
-export async function actionAddExpense(
+export async function actionAddOneTimeExpense(
   _prevState: ActionResponse,
   formData: FormData,
 ) {
   try {
     const data = Object.fromEntries(formData.entries());
-    const parsed = expenseFormSchema.safeParse({
+    const parsed = oneTimeExpenseSchema.safeParse({
       ...data,
       value: data.value,
       isPaid: data.isPaid === "on",
-      parentId: data.parentId ? Number(data.parentId) : undefined,
-      installmentNumber: data.installmentNumber
-        ? Number(data.installmentNumber)
-        : undefined,
-      totalInstallments: data.totalInstallments
-        ? Number(data.totalInstallments)
-        : undefined,
-      installmentId: data.installmentId ?? undefined, // NEW: pass through as uuid string if present
     });
-    console.log(parsed.error);
     if (!parsed.success) {
       return {
         success: false,
@@ -59,25 +39,9 @@ export async function actionAddExpense(
         errors: parsed.error.flatten().fieldErrors,
       };
     }
-
     await addExpense(parsed.data);
-    switch (parsed.data.source) {
-      case "personal":
-        revalidatePath("/despesas-pessoais");
-        break;
-      case "store":
-        revalidatePath("/despesas-loja");
-        break;
-      case "product_purchase":
-        revalidatePath("/compras-produtos");
-        break;
-    }
-
-    return {
-      success: true,
-      message: "Despesa adicionada com sucesso!",
-      errors: undefined,
-    };
+    revalidatePath("/compras-produtos");
+    return { success: true, message: "Despesa adicionada com sucesso!" };
   } catch (error) {
     return {
       success: false,
@@ -86,9 +50,158 @@ export async function actionAddExpense(
     };
   }
 }
-// Now supports passing an installmentId to link multiple expenses as a group of installments.
 
-// Update expense
+// Installment expense schema & action
+
+const installmentExpenseSchema = z.object({
+  description: z.string().min(1, { message: "Descrição obrigatória" }),
+  value: z.string().min(1, { message: "Valor obrigatório" }),
+  date: z.string({ message: "Data inválida" }),
+  type: z.literal("installment"),
+  source: z.enum(["personal", "store", "product_purchase"]),
+  isPaid: z.boolean().optional(),
+  installmentNumber: z.number().min(1),
+  totalInstallments: z.number().min(1),
+  groupId: z.string().uuid(),
+});
+
+export async function actionAddInstallmentExpense(
+  _prevState: ActionResponse,
+  formData: FormData,
+) {
+  try {
+    const data = Object.fromEntries(formData.entries());
+    const parsed = installmentExpenseSchema.safeParse({
+      ...data,
+      value: data.value,
+      isPaid: data.isPaid === "on",
+      installmentNumber: data.installmentNumber ? Number(data.installmentNumber) : undefined,
+      totalInstallments: data.totalInstallments ? Number(data.totalInstallments) : undefined,
+      groupId: data.groupId,
+    });
+    if (!parsed.success) {
+      return {
+        success: false,
+        message: "Por favor, corrija os erros no formulário.",
+        errors: parsed.error.flatten().fieldErrors,
+      };
+    }
+    await addExpense(parsed.data);
+    revalidatePath("/compras-produtos");
+    return { success: true, message: "Despesa parcelada adicionada com sucesso!" };
+  } catch (error) {
+    return {
+      success: false,
+      message: (error as Error)?.message ?? "Erro ao adicionar despesa.",
+      errors: undefined,
+    };
+  }
+}
+
+// Recurring expense schema & action
+
+const recurringExpenseSchema = z.object({
+  description: z.string().min(1, { message: "Descrição obrigatória" }),
+  value: z.string().min(1, { message: "Valor obrigatório" }),
+  date: z.string({ message: "Data inválida" }),
+  type: z.literal("recurring"),
+  source: z.enum(["personal", "store", "product_purchase"]),
+  isPaid: z.boolean().optional(),
+  recurrenceType: z.enum(["weekly", "monthly", "yearly", "custom_days"]),
+  recurrenceInterval: z.coerce.number().optional(),
+  recurrenceEndDate: z.string().optional(),
+});
+
+export async function actionAddRecurringExpense(
+  _prevState: ActionResponse,
+  formData: FormData,
+) {
+  try {
+    const data = Object.fromEntries(formData.entries());
+    const parsed = recurringExpenseSchema.safeParse({
+      ...data,
+      value: data.value,
+      isPaid: data.isPaid === "on",
+      recurrenceInterval: data.recurrenceInterval ? Number(data.recurrenceInterval) : undefined,
+      recurrenceEndDate: data.recurrenceEndDate ?? undefined,
+    });
+    if (!parsed.success) {
+      return {
+        success: false,
+        message: "Por favor, corrija os erros no formulário.",
+        errors: parsed.error.flatten().fieldErrors,
+      };
+    }
+    // Recurring logic
+    const today = new Date();
+    const startDate = new Date(parsed.data.date);
+    const endDate = parsed.data.recurrenceEndDate ? new Date(parsed.data.recurrenceEndDate) : today;
+    const occurrences: Omit<ExpenseInsert, "id">[] = [];
+    const groupId = crypto.randomUUID();
+    const currentDate = new Date(startDate);
+    if (startDate < today) {
+      while (currentDate <= endDate && currentDate <= today) {
+        occurrences.push({
+          ...parsed.data,
+          date: currentDate.toISOString().slice(0, 10),
+          type: "recurring",
+          groupId,
+        });
+        switch (parsed.data.recurrenceType) {
+          case "weekly":
+            currentDate.setDate(currentDate.getDate() + 7);
+            break;
+          case "monthly":
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            break;
+          case "yearly":
+            currentDate.setFullYear(currentDate.getFullYear() + 1);
+            break;
+          case "custom_days":
+            currentDate.setDate(currentDate.getDate() + (parsed.data.recurrenceInterval ?? 1));
+            break;
+          default:
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+      }
+      for (const occ of occurrences) {
+        await addExpense(occ);
+      }
+    } else {
+      await addExpense({ ...parsed.data, type: "recurring", groupId });
+    }
+
+    revalidatePath("/compras-produtos");
+    return { success: true, message: "Despesa recorrente adicionada com sucesso!" };
+  } catch (error) {
+    return {
+      success: false,
+      message: (error as Error)?.message ?? "Erro ao adicionar despesa.",
+      errors: undefined,
+    };
+  }
+}
+
+// Update expense schema & action
+
+const updateExpenseSchema = z.object({
+  id: z.number(),
+  description: z.string().min(1, { message: "Descrição obrigatória" }).optional(),
+  value: z.string().optional(),
+  date: z.string().optional(),
+  type: z.enum(["one_time", "installment", "recurring"]).optional(),
+  source: z.enum(["personal", "store", "product_purchase"]).optional(),
+  isPaid: z.boolean().optional(),
+  parentId: z.number().optional(),
+  recurrenceType: z.enum(["weekly", "monthly", "yearly", "custom_days"]).optional(),
+  recurrenceInterval: z.coerce.number().optional(),
+  recurrenceEndDate: z.string().optional(),
+  installmentNumber: z.number().optional(),
+  totalInstallments: z.number().optional(),
+  groupId: z.string().uuid().optional(),
+  installmentId: z.string().uuid().optional(),
+});
+
 export async function actionUpdateExpense(
   _prevState: ActionResponse,
   formData: FormData,
@@ -137,6 +250,8 @@ export async function actionUpdateExpense(
     };
   }
 }
+
+// Now supports passing an installmentId to link multiple expenses as a group of installments.
 
 // Toggle isPaid for any expense
 export async function actionToggleExpenseIsPaid(id: number, isPaid: boolean) {
