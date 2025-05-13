@@ -92,10 +92,10 @@ export default function ExpensesList({
       )}
       {sortedDates.map((date) => (
         <div key={date}>
-          <div className="text-muted-foreground mt-4 mb-2 text-xs font-semibold uppercase">
+          <div className="text-muted-foreground text-xs font-semibold uppercase">
             {format(parseISO(date), "EEEE, dd 'de' MMMM", { locale: ptBR })}
           </div>
-          <div className="divide-border bg-card divide-y rounded-lg border">
+          <div className="divide-border divide-y">
             {grouped[date]?.map((expense) => (
               <ExpenseListItem
                 key={expense.id}

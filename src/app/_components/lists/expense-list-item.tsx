@@ -43,7 +43,11 @@ export function ExpenseListItem({
         <Checkbox
           className="h-6 w-6 active:bg-slate-500"
           checked={expense.isPaid}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onTogglePaid(expense.id, !expense.isPaid);
+          }}
           onCheckedChange={(checked) => {
             onTogglePaid(expense.id, checked as boolean);
           }}
