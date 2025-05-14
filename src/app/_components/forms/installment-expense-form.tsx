@@ -314,8 +314,11 @@ export function InstallmentExpenseForm({
   }
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
-      <div className="space-y-4">
+    <form
+      className="grid h-full max-h-full grid-rows-[1fr_auto] gap-2"
+      onSubmit={handleSubmit}
+    >
+      <div className="flex flex-col gap-4 overflow-y-auto">
         <div className="space-y-2">
           <Label htmlFor="description">Descrição</Label>
           <Input
@@ -387,76 +390,74 @@ export function InstallmentExpenseForm({
             <FieldError messages={errors?.totalInstallments} />
           </div>
         </div>
-      </div>
-
-      <div className="flex items-start gap-2">
-        <div className="space-y-2">
-          <Label htmlFor="recurrenceType">Tipo de Recorrência</Label>
-          <Select
-            value={recurrenceType}
-            onValueChange={(value) => setRecurrenceType(value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o tipo de recorrência" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="monthly">Mensal</SelectItem>
-              <SelectItem value="weekly">Semanal</SelectItem>
-              <SelectItem value="yearly">Anual</SelectItem>
-              <SelectItem value="custom_days">
-                Intervalo personalizado
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {recurrenceType === "custom_days" && (
+        <div className="flex items-start gap-2">
           <div className="space-y-2">
-            <Label htmlFor="recurrenceInterval">Intervalo</Label>
-            <Input
-              type="number"
-              id="recurrenceInterval"
-              name="recurrenceInterval"
-              min={1}
-              value={recurrenceInterval}
-              onChange={(e) =>
-                setRecurrenceInterval(Math.max(1, Number(e.target.value)))
-              }
-              required
-            />
+            <Label htmlFor="recurrenceType">Tipo de Recorrência</Label>
+            <Select
+              value={recurrenceType}
+              onValueChange={(value) => setRecurrenceType(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o tipo de recorrência" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="monthly">Mensal</SelectItem>
+                <SelectItem value="weekly">Semanal</SelectItem>
+                <SelectItem value="yearly">Anual</SelectItem>
+                <SelectItem value="custom_days">
+                  Intervalo personalizado
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+          {recurrenceType === "custom_days" && (
+            <div className="space-y-2">
+              <Label htmlFor="recurrenceInterval">Intervalo</Label>
+              <Input
+                type="number"
+                id="recurrenceInterval"
+                name="recurrenceInterval"
+                min={1}
+                value={recurrenceInterval}
+                onChange={(e) =>
+                  setRecurrenceInterval(Math.max(1, Number(e.target.value)))
+                }
+                required
+              />
+            </div>
+          )}
+        </div>
+        <div className="mt-4 space-y-4">
+          <Label>Parcelas</Label>
+          {installments.map((installment, index) => (
+            <InstallmentItemForm
+              key={`installment-${index}`}
+              installment={installment}
+              onFieldChange={(field, value) => {
+                handleInstallmentChange(index, field, value);
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-col">
+        <Button type="submit" className="w-full" disabled={pending}>
+          {pending ? "Adicionando..." : "Adicionar"}
+        </Button>
+        {state.message && (
+          <>
+            {state.success === true ? (
+              <p className="mt-2 text-sm text-green-600" aria-live="polite">
+                {state.message}
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-red-500" aria-live="polite">
+                {state.message}
+              </p>
+            )}
+          </>
         )}
       </div>
-      <div className="mt-4 space-y-4">
-        <Label>Parcelas</Label>
-        {installments.map((installment, index) => (
-          <InstallmentItemForm
-            key={`installment-${index}`}
-            installment={installment}
-            onFieldChange={(field, value) => {
-              // Use cast to match our expected types
-              handleInstallmentChange(index, field, value);
-            }}
-          />
-        ))}
-      </div>
-
-      <Button type="submit" className="w-full" disabled={pending}>
-        {pending ? "Adicionando..." : "Adicionar"}
-      </Button>
-      {state.message && (
-        <>
-          {state.success === true ? (
-            <p className="mt-2 text-sm text-green-600" aria-live="polite">
-              {state.message}
-            </p>
-          ) : (
-            <p className="mt-2 text-sm text-red-500" aria-live="polite">
-              {state.message}
-            </p>
-          )}
-        </>
-      )}
     </form>
   );
 }

@@ -1,6 +1,10 @@
 "use server";
 import { z } from "zod";
-import { addExpense, updateExpense, deleteExpense as dbDeleteExpense } from "@/server/queries/expense-queries";
+import {
+  addExpense,
+  deleteExpense as dbDeleteExpense,
+  updateExpense,
+} from "@/server/queries/expense-queries";
 import { revalidatePath } from "next/cache";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 
@@ -75,8 +79,12 @@ export async function actionAddInstallmentExpense(
       ...data,
       value: data.value,
       isPaid: data.isPaid === "on",
-      installmentNumber: data.installmentNumber ? Number(data.installmentNumber) : undefined,
-      totalInstallments: data.totalInstallments ? Number(data.totalInstallments) : undefined,
+      installmentNumber: data.installmentNumber
+        ? Number(data.installmentNumber)
+        : undefined,
+      totalInstallments: data.totalInstallments
+        ? Number(data.totalInstallments)
+        : undefined,
       groupId: data.groupId,
     });
     if (!parsed.success) {
@@ -88,7 +96,10 @@ export async function actionAddInstallmentExpense(
     }
     await addExpense(parsed.data);
     revalidatePath("/compras-produtos");
-    return { success: true, message: "Despesa parcelada adicionada com sucesso!" };
+    return {
+      success: true,
+      message: "Despesa parcelada adicionada com sucesso!",
+    };
   } catch (error) {
     return {
       success: false,
@@ -122,10 +133,13 @@ export async function actionAddRecurringExpense(
       ...data,
       value: data.value,
       isPaid: data.isPaid === "on",
-      recurrenceInterval: data.recurrenceInterval ? Number(data.recurrenceInterval) : undefined,
+      recurrenceInterval: data.recurrenceInterval
+        ? Number(data.recurrenceInterval)
+        : undefined,
       recurrenceEndDate: data.recurrenceEndDate ?? undefined,
     });
     if (!parsed.success) {
+      console.error(parsed.error);
       return {
         success: false,
         message: "Por favor, corrija os erros no formulário.",
@@ -135,7 +149,9 @@ export async function actionAddRecurringExpense(
     // Recurring logic
     const today = new Date();
     const startDate = new Date(parsed.data.date);
-    const endDate = parsed.data.recurrenceEndDate ? new Date(parsed.data.recurrenceEndDate) : today;
+    const endDate = parsed.data.recurrenceEndDate
+      ? new Date(parsed.data.recurrenceEndDate)
+      : today;
     const occurrences: Omit<ExpenseInsert, "id">[] = [];
     const groupId = crypto.randomUUID();
     const currentDate = new Date(startDate);
@@ -158,7 +174,9 @@ export async function actionAddRecurringExpense(
             currentDate.setFullYear(currentDate.getFullYear() + 1);
             break;
           case "custom_days":
-            currentDate.setDate(currentDate.getDate() + (parsed.data.recurrenceInterval ?? 1));
+            currentDate.setDate(
+              currentDate.getDate() + (parsed.data.recurrenceInterval ?? 1),
+            );
             break;
           default:
             currentDate.setDate(currentDate.getDate() + 1);
@@ -172,7 +190,10 @@ export async function actionAddRecurringExpense(
     }
 
     revalidatePath("/compras-produtos");
-    return { success: true, message: "Despesa recorrente adicionada com sucesso!" };
+    return {
+      success: true,
+      message: "Despesa recorrente adicionada com sucesso!",
+    };
   } catch (error) {
     return {
       success: false,
@@ -212,14 +233,16 @@ export async function actionDeleteExpense(
 
 const updateExpenseSchema = z.object({
   id: z.number(),
-  description: z.string().min(1, { message: "Descrição obrigatória" }).optional(),
+  description: z.string().min(1, { message: "Descrição obrigatória" })
+    .optional(),
   value: z.string().optional(),
   date: z.string().optional(),
   type: z.enum(["one_time", "installment", "recurring"]).optional(),
   source: z.enum(["personal", "store", "product_purchase"]).optional(),
   isPaid: z.boolean().optional(),
   parentId: z.number().optional(),
-  recurrenceType: z.enum(["weekly", "monthly", "yearly", "custom_days"]).optional(),
+  recurrenceType: z.enum(["weekly", "monthly", "yearly", "custom_days"])
+    .optional(),
   recurrenceInterval: z.coerce.number().optional(),
   recurrenceEndDate: z.string().optional(),
   installmentNumber: z.number().optional(),

@@ -42,9 +42,7 @@ export default function InstallmentItemForm({
         disabled && "pointer-events-none opacity-70",
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <p className="bg-background absolute -top-2 left-1 px-2 text-xs font-medium">{`${installment.installmentNumber}/${installment.totalInstallments}`}</p>
-      </div>
+      <p className="bg-background text-muted-foreground absolute -top-2 left-1 px-1 text-center text-xs font-medium">{`${installment.installmentNumber}/${installment.totalInstallments}`}</p>
 
       <div className="flex flex-col gap-2">
         <div className="flex w-full flex-col justify-between gap-2 sm:flex-row">
@@ -53,7 +51,7 @@ export default function InstallmentItemForm({
             id="description"
             name="description"
             placeholder="Descrição"
-            className="min-w-32"
+            className="bg-background min-w-32"
             value={installment.description}
             onChange={(e) => onFieldChange("description", e.target.value)}
             required
@@ -61,18 +59,18 @@ export default function InstallmentItemForm({
           />
         </div>
 
-        <DatePicker
-          value={installment.dueDate.toISOString().split("T")[0]}
-          onChange={(date) =>
-            onFieldChange("dueDate", date ? new Date(date) : undefined)
-          }
-          name="dueDate"
-          required
-          shortDate
-          className="w-full sm:w-36"
-        />
+        <div className="flex gap-2">
+          <DatePicker
+            value={installment.dueDate.toISOString().split("T")[0]}
+            onChange={(date) =>
+              onFieldChange("dueDate", date ? new Date(date) : undefined)
+            }
+            name="dueDate"
+            required
+            shortDate
+            className="w-full sm:w-36"
+          />
 
-        <div className="flex items-center gap-2">
           <CurrencyInput
             name="amount"
             initialValue={Number(installment.amount) || 0}
@@ -82,9 +80,12 @@ export default function InstallmentItemForm({
             required
             min={0}
             step={0.01}
-            className="w-full sm:w-36"
+            className="bg-background w-full"
             disabled={disabled}
           />
+        </div>
+
+        <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Checkbox
               id="isPaid"

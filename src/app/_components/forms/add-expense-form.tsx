@@ -26,6 +26,7 @@ const initialState: {
 export default function AddExpenseForm({
   source,
   onSuccess,
+  // Prop here to pass the info to the submit button
 }: {
   source: ExpenseInsert["source"];
   onSuccess?: () => void;
@@ -60,8 +61,8 @@ export default function AddExpenseForm({
   };
 
   return (
-    <div className="mx-auto w-full max-w-screen-sm space-y-4">
-      <Tabs defaultValue={expenseType} className="w-full">
+    <div className="mx-auto h-full w-full max-w-screen-md space-y-4">
+      <Tabs defaultValue={expenseType} className="h-full w-full">
         <TabsList className="mx-auto mb-4">
           <TabsTrigger
             value="one_time"
@@ -82,7 +83,7 @@ export default function AddExpenseForm({
             Recorrente
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="one_time">
+        <TabsContent value="one_time" className="px-4">
           <UniquePaymentForm
             source="product_purchase"
             description={description}
@@ -92,19 +93,17 @@ export default function AddExpenseForm({
             handleAmountChange={handleAmountChange}
           />
         </TabsContent>
-        <TabsContent value="installment">
-          <div className="container mx-auto flex h-full max-w-screen-lg flex-1 flex-col gap-2 px-5">
-            <InstallmentExpenseForm
-              source={source}
-              description={description}
-              amount={amount}
-              onSuccess={handleResetMainForm}
-              handleDescriptionChange={handleDescriptionChange}
-              handleAmountChange={handleAmountChange}
-            />
-          </div>
+        <TabsContent value="installment" className="px-4">
+          <InstallmentExpenseForm
+            source={source}
+            description={description}
+            amount={amount}
+            onSuccess={handleResetMainForm}
+            handleDescriptionChange={handleDescriptionChange}
+            handleAmountChange={handleAmountChange}
+          />
         </TabsContent>
-        <TabsContent value="recurring">
+        <TabsContent value="recurring" className="px-4">
           <RecurringExpenseForm
             source="product_purchase"
             description={description}
@@ -115,9 +114,6 @@ export default function AddExpenseForm({
           />
         </TabsContent>
       </Tabs>
-      <div className="fixed right-5 bottom-12 justify-end">
-        <Button type="submit">Adicionar</Button>
-      </div>
     </div>
   );
 }

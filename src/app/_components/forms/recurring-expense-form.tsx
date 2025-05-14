@@ -22,13 +22,22 @@ const recurrenceOptions = [
 const initialState = {
   success: false,
   message: "",
-  errors: {},
 };
 
 export function RecurringExpenseForm({
   source,
+  description,
+  handleDescriptionChange,
+  handleAmountChange,
+  onSuccess,
+  amount,
 }: {
   source: ExpenseInsert["source"];
+  description: string;
+  amount: number;
+  handleDescriptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleAmountChange: (value: number) => void;
+  onSuccess?: () => void;
 }) {
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionAddRecurringExpense,
@@ -36,13 +45,13 @@ export function RecurringExpenseForm({
   );
 
   useEffect(() => {
-    if (state.success && state.message) toast.success(state.message);
-    else if (!state.success && state.message) toast.error(state.message);
+    if (state.success && state.message) {
+      toast.success(state.message);
+      onSuccess?.();
+    } else if (!state.success && state.message) toast.error(state.message);
   }, [state]);
 
   const errors = state.errors ?? {};
-  const [description, setDescription] = useState("");
-  const [value, setValue] = useState<number>(0);
   const [recurrenceType, setRecurrenceType] = useState("monthly");
   const [recurrenceInterval, setRecurrenceInterval] = useState<number>(1);
   const [startDate, setStartDate] = useState<string | undefined>(() =>
@@ -53,24 +62,25 @@ export function RecurringExpenseForm({
   return (
     <form
       action={formAction}
-      className="container mx-auto flex h-full max-w-screen-lg flex-1 flex-col gap-2 px-5"
+      className="container mx-auto flex h-full max-w-screen-lg flex-1 flex-col gap-2"
       autoComplete="off"
     >
       <input type="hidden" name="source" value={source} />
-      <div className="space-y-2">
-        <Label htmlFor="description">Descrição</Label>
-        <Input
-          type="text"
-          id="description"
-          name="description"
-          value={description}
-          placeholder="Netflix, Assinatura mensal, etc."
-          onChange={(e) => setDescription(e.target.value)}
-          required
-        />
-        <FieldError messages={errors.description} />
-      </div>
-      <div className="flex flex-col gap-2">
+      <input type="hidden" name="type" value="recurring" />
+      <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
+        <div className="space-y-2">
+          <Label htmlFor="description">Descrição</Label>
+          <Input
+            type="text"
+            id="description"
+            name="description"
+            value={description}
+            placeholder="Netflix, Assinatura mensal, etc."
+            onChange={handleDescriptionChange}
+            required
+          />
+          <FieldError messages={errors.description} />
+        </div>
         <div className="space-y-2">
           <Label htmlFor="value">Valor</Label>
           <CurrencyInput
@@ -78,8 +88,8 @@ export function RecurringExpenseForm({
             name="value"
             step="0.01"
             min={0}
-            value={value}
-            onValueChange={(v) => setValue(v ?? 0)}
+            value={amount}
+            onValueChange={(v) => handleAmountChange(v ?? 0)}
             required
           />
           <FieldError messages={errors.value} />
@@ -141,7 +151,7 @@ export function RecurringExpenseForm({
             required
             shortDate
           />
-          <FieldError messages={errors.startDate} />
+          <FieldError messages={errors.date} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="endDate">Fim (opcional)</Label>
@@ -152,25 +162,27 @@ export function RecurringExpenseForm({
             onChange={(d: string | undefined) => setEndDate(d ?? undefined)}
             shortDate
           />
-          <FieldError messages={errors.endDate} />
+          <FieldError messages={errors.recurrenceEndDate} />
         </div>
       </div>
-      <Button type="submit" className="w-full" disabled={pending}>
-        {pending ? "Adicionando..." : "Adicionar"}
-      </Button>
-      {state.message && (
-        <>
-          {state.success === true ? (
-            <p className="mt-2 text-sm text-green-600" aria-live="polite">
-              {state.message}
-            </p>
-          ) : (
-            <p className="mt-2 text-sm text-red-500" aria-live="polite">
-              {state.message}
-            </p>
-          )}
-        </>
-      )}
+      <div className="mt-2 flex flex-col">
+        <Button type="submit" className="w-full" disabled={pending}>
+          {pending ? "Adicionando..." : "Adicionar"}
+        </Button>
+        {state.message && (
+          <>
+            {state.success === true ? (
+              <p className="mt-2 text-sm text-green-600" aria-live="polite">
+                {state.message}
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-red-500" aria-live="polite">
+                {state.message}
+              </p>
+            )}
+          </>
+        )}
+      </div>
     </form>
   );
 }

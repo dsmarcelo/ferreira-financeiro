@@ -1,11 +1,9 @@
-import { Button } from "@/components/ui/button";
 import { getExpensesByPeriod } from "@/server/queries/expense-queries";
 import Header from "../_components/header";
 import { Suspense } from "react";
 import Loading from "@/app/_components/loading/loading";
 import ExpensesList from "@/app/_components/lists/expenses-list";
-import Link from "next/link";
-import AddExpenseSheet from "../_components/sheets/add-expense-sheet";
+import AddProductPurchase from "@/app/_components/dialogs/add/add-product-purchase";
 
 export default async function ComprasProdutosPage({
   searchParams,
@@ -22,10 +20,7 @@ export default async function ComprasProdutosPage({
     <div className="flex min-h-screen flex-col pb-24">
       <Header className="sticky top-0 z-50 flex-none">
         <div className="hidden sm:block">
-          {/* <Link href="/compras-produtos/adicionar">
-            <Button>Adicionar Compra de Produto</Button>
-          </Link> */}
-          <AddExpenseSheet source="product_purchase" />
+          <AddProductPurchase />
         </div>
       </Header>
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5">
@@ -34,11 +29,7 @@ export default async function ComprasProdutosPage({
         </Suspense>
       </main>
       <div className="fixed bottom-24 block w-full px-5 sm:hidden">
-        <Link href="/compras-produtos/adicionar">
-          <Button className="h-12 w-full rounded-full">
-            Adicionar Compra de Produto
-          </Button>
-        </Link>
+        <AddProductPurchase />
       </div>
     </div>
   );

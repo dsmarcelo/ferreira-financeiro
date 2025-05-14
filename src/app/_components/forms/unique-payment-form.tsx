@@ -102,12 +102,12 @@ export function UniquePaymentForm({
 
   return (
     <form
-      className="container mx-auto flex h-full max-w-screen-lg flex-1 flex-col gap-2 px-5"
+      className="container mx-auto grid h-full max-h-full max-w-screen-lg grid-rows-[1fr_auto] gap-2"
       onSubmit={handleSubmit}
     >
       <input type="hidden" name="type" value="one_time" />
       <input type="hidden" name="source" value={source} />
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4 overflow-y-auto">
         <div className="space-y-2">
           <Label htmlFor="description">Descrição</Label>
           <Input
@@ -134,31 +134,33 @@ export function UniquePaymentForm({
           />
         </div>
         <FieldError messages={errors?.value} />
+        <div className="space-y-2">
+          <Label htmlFor="date">Data de vencimento</Label>
+          <DatePicker
+            id="date"
+            name="date"
+            value={date}
+            onChange={(date) => handleDueDateChange(date ?? null)}
+            required
+          />
+          <FieldError messages={errors?.date} />
+        </div>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="isPaid">Pago</Label>
+          <Input
+            type="checkbox"
+            id="isPaid"
+            name="isPaid"
+            checked={isPaid}
+            onChange={handleIsPaidChange}
+          />
+        </div>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="date">Data de vencimento</Label>
-        <DatePicker
-          id="date"
-          name="date"
-          value={date}
-          onChange={(date) => handleDueDateChange(date ?? null)}
-          required
-        />
-        <FieldError messages={errors?.date} />
+      <div className="flex flex-col">
+        <Button type="submit" disabled={pending} className="w-full">
+          {pending ? "Salvando..." : "Adicionar"}
+        </Button>
       </div>
-      <div className="flex items-center gap-2">
-        <Label htmlFor="isPaid">Pago</Label>
-        <Input
-          type="checkbox"
-          id="isPaid"
-          name="isPaid"
-          checked={isPaid}
-          onChange={handleIsPaidChange}
-        />
-      </div>
-      <Button type="submit" disabled={pending} className="mt-4">
-        {pending ? "Salvando..." : "Adicionar"}
-      </Button>
     </form>
   );
 }
