@@ -6,7 +6,6 @@ import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getToday } from "@/lib/utils";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 // FieldError used in the component when needed
@@ -66,6 +65,9 @@ export function InstallmentExpenseForm({
   const [installments, setInstallments] = useState<InstallmentItem[]>([]);
   const [recurrenceType, setRecurrenceType] = useState<string>("monthly");
   const [recurrenceInterval, setRecurrenceInterval] = useState<number>(1);
+  const [firstInstallmentDate, setFirstInstallmentDate] = useState<
+    Date | undefined
+  >(undefined);
 
   useEffect(() => {
     if (state.success === true && state.message) {
@@ -80,12 +82,12 @@ export function InstallmentExpenseForm({
 
   // Format a date as YYYY-MM-DD safely
   const formatDateString = (date: Date | undefined): string => {
-    if (!date) return getToday();
+    if (!date) return ""; // Return empty string if no date, to be caught by validation
     try {
-      return date.toISOString().split("T")[0] ?? getToday();
+      return date.toISOString().split("T")[0] ?? "";
     } catch (error) {
       console.error("Error formatting date:", error);
-      return getToday();
+      return "";
     }
   };
 
@@ -106,89 +108,110 @@ export function InstallmentExpenseForm({
 
   // Calculate due dates based on recurrence type - wrapped in useCallback to avoid dependency issues
   const calculateDueDate = useCallback(
-    (index: number) => {
-      // First installment is always today
-      if (index === 0) {
-        return new Date();
+    (
+      baseDateForCalc: Date,
+      installmentIndex: number, // 0-based index
+      currentRecurrenceType: string,
+      currentRecurrenceIntervalForCustom: number,
+    ) => {
+      // If it's the first installment (index 0), its date is the baseDateForCalc itself
+      if (installmentIndex === 0) {
+        return new Date(baseDateForCalc); // Return a new Date object to avoid mutation
       }
 
-      // For subsequent installments, calculate based on recurrence type
-      const today = new Date();
-      const baseDate = new Date(today);
+      const targetDate = new Date(baseDateForCalc);
 
-      switch (recurrenceType) {
+      switch (currentRecurrenceType) {
         case "weekly":
-          baseDate.setDate(baseDate.getDate() + 7 * index);
+          targetDate.setDate(targetDate.getDate() + 7 * installmentIndex);
           break;
         case "monthly":
-          baseDate.setMonth(baseDate.getMonth() + index);
+          targetDate.setMonth(targetDate.getMonth() + installmentIndex);
           break;
         case "yearly":
-          baseDate.setFullYear(baseDate.getFullYear() + index);
+          targetDate.setFullYear(targetDate.getFullYear() + installmentIndex);
           break;
         case "custom_days":
-          baseDate.setDate(baseDate.getDate() + recurrenceInterval * index);
+          targetDate.setDate(
+            targetDate.getDate() +
+              currentRecurrenceIntervalForCustom * installmentIndex,
+          );
           break;
         default:
-          baseDate.setMonth(baseDate.getMonth() + index);
+          targetDate.setMonth(targetDate.getMonth() + installmentIndex);
       }
-
-      return baseDate;
+      return targetDate;
     },
-    [recurrenceType, recurrenceInterval],
+    [], // No dependencies needed as all params are passed in
   );
 
   // Initialize or update installments when totalInstallments or recurrence settings change
   useEffect(() => {
-    // Create a new array with the correct number of installments
-    // We use a function to avoid closure issues with the installments dependency
     setInstallments((currentInstallments) => {
-      const baseAmount = Math.floor((amount * 100) / totalInstallments) / 100;
+      const newTotalInstallments = Math.max(1, totalInstallments);
+      const installmentValue =
+        amount > 0 && newTotalInstallments > 0
+          ? Math.floor((amount * 100) / newTotalInstallments) / 100
+          : 0;
       const remainder =
-        Math.round((amount - baseAmount * totalInstallments) * 100) / 100;
+        amount > 0 && newTotalInstallments > 0
+          ? Math.round(
+              (amount - installmentValue * newTotalInstallments) * 100,
+            ) / 100
+          : 0;
 
-      const newInstallments: InstallmentItem[] = [];
+      const resolvedFirstDate =
+        firstInstallmentDate ?? currentInstallments[0]?.dueDate ?? new Date();
 
-      for (let i = 0; i < totalInstallments; i++) {
-        const installmentValue = (
-          i === totalInstallments - 1 ? baseAmount + remainder : baseAmount
-        ).toFixed(2);
+      const newInstallments = Array.from(
+        { length: newTotalInstallments },
+        (_, i) => {
+          const currentItem = currentInstallments[i];
+          const valueForThisInstallment = (
+            i === newTotalInstallments - 1
+              ? installmentValue + remainder
+              : installmentValue
+          ).toFixed(2);
 
-        // Calculate due date based on recurrence type and index
-        // First installment is always today, others follow recurrence pattern
-        const dueDate = calculateDueDate(i);
+          const dueDate = calculateDueDate(
+            resolvedFirstDate,
+            i,
+            recurrenceType,
+            recurrenceInterval,
+          );
 
-        // If we already have this installment, preserve its data, otherwise create new
-        const existingInstallment = currentInstallments[i];
-
-        // Create a new fully-typed object with all required properties
-        const installmentDescription =
-          existingInstallment?.description ??
-          (totalInstallments === 1
-            ? description
-            : `${description} | ${i + 1}/${totalInstallments}`);
-
-        const newInstallment: InstallmentItem = {
-          installmentNumber: i + 1,
-          totalInstallments,
-          description: installmentDescription,
-          amount: existingInstallment?.amount ?? installmentValue,
-          dueDate: existingInstallment?.dueDate ?? dueDate,
-          isPaid: existingInstallment?.isPaid ?? false,
-        };
-
-        newInstallments.push(newInstallment);
-      }
-
+          return {
+            installmentNumber: i + 1,
+            totalInstallments: newTotalInstallments,
+            description:
+              currentItem?.description &&
+              currentItem.totalInstallments === newTotalInstallments
+                ? currentItem.description // Preserve description if total installments haven't changed
+                : newTotalInstallments === 1
+                  ? description
+                  : `${description} | ${i + 1}/${newTotalInstallments}`,
+            amount: valueForThisInstallment,
+            dueDate:
+              currentItem?.dueDate &&
+              currentItem.totalInstallments === newTotalInstallments &&
+              i === 0 &&
+              firstInstallmentDate === undefined
+                ? currentItem.dueDate // Preserve first installment's original date if not explicitly changed
+                : dueDate,
+            isPaid: currentItem?.isPaid ?? false,
+          };
+        },
+      );
       return newInstallments;
     });
   }, [
-    totalInstallments,
     amount,
+    totalInstallments,
+    description,
     recurrenceType,
     recurrenceInterval,
-    description,
     calculateDueDate,
+    firstInstallmentDate,
   ]);
 
   // Handle field changes for a specific installment
@@ -203,6 +226,12 @@ export function InstallmentExpenseForm({
         ...updated[index],
         [field]: value,
       };
+
+      // If the due date of the first installment is changed, update subsequent ones
+      if (index === 0 && field === "dueDate" && value instanceof Date) {
+        setFirstInstallmentDate(value); // Trigger main useEffect to recalculate all dates
+        // The main useEffect will handle recalculating all dates based on this new firstInstallmentDate
+      }
       return updated;
     });
   };
@@ -226,11 +255,13 @@ export function InstallmentExpenseForm({
 
     // Check that all installments have valid data
     const invalidInstallments = installments.filter((item) => {
-      return !item.description || !item.amount;
+      return !item.description || !item.amount || !item.dueDate; // Added dueDate check
     });
 
     if (invalidInstallments.length > 0) {
-      toast.error("Todas as parcelas precisam ter uma descrição e valor.");
+      toast.error(
+        "Todas as parcelas precisam ter uma descrição, valor e data de vencimento.",
+      );
       setPending(false);
       return;
     }
@@ -243,7 +274,14 @@ export function InstallmentExpenseForm({
         totalInstallments: item.totalInstallments || totalInstallments,
         description: item.description || "",
         amount: item.amount || "0",
-        dueDate: item.dueDate || calculateDueDate(index),
+        dueDate:
+          item.dueDate ||
+          calculateDueDate(
+            firstInstallmentDate ?? new Date(),
+            index,
+            recurrenceType,
+            recurrenceInterval,
+          ),
         isPaid: item.isPaid || false,
       };
       return updatedItem;
@@ -266,6 +304,14 @@ export function InstallmentExpenseForm({
 
       // Format date safely using our helper function
       const formattedDate = formatDateString(installment.dueDate);
+      if (!formattedDate) {
+        // Check if date formatting returned an empty string (invalid date)
+        toast.error(
+          `Data de vencimento inválida para a parcela ${installment.installmentNumber}.`,
+        );
+        hasError = true;
+        break;
+      }
 
       const installmentNum = String(installment.installmentNumber || 1);
       const totalInstallmentsStr = String(installment.totalInstallments || 1);
