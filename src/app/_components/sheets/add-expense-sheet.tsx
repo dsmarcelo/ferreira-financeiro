@@ -1,6 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import AddExpenseForm from "@/app/_components/forms/add-expense-form";
+import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
+// import {
+//   Sheet,
+//   SheetClose,
+//   SheetContent,
+//   SheetDescription,
+//   SheetFooter,
+//   SheetHeader,
+//   SheetTitle,
+//   SheetTrigger,
+// } from "@/components/ui/sheet";
 import {
   Dialog,
   DialogClose,
@@ -11,19 +24,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import AddExpenseForm from "@/app/_components/forms/add-expense-form";
-import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
-import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 
 export default function AddExpenseSheet({
   source,
@@ -31,45 +31,32 @@ export default function AddExpenseSheet({
   source: ExpenseInsert["source"];
 }) {
   const [open, setOpen] = useState(false);
-  // return (
-  //   <Dialog open={open} onOpenChange={setOpen}>
-  //     <DialogTrigger asChild>
-  //       <Button className="rounded-full">Adicionar compra de produto</Button>
-  //     </DialogTrigger>
-  //     <DialogContent className="flex h-[90dvh] w-[800px] flex-col">
-  //       <DialogHeader className="py-0">
-  //         <DialogTitle>Adicionar Despesa</DialogTitle>
-  //         <DialogDescription className="hidden" aria-hidden="true" />
-  //       </DialogHeader>
-  //       <AddExpenseForm source={source} onSuccess={() => setOpen(false)} />
-  //       <DialogFooter>
-  //         <DialogClose asChild>
-  //           <Button variant="outline">Cancelar</Button>
-  //         </DialogClose>
-  //       </DialogFooter>
-  //       <Button type="submit">Adicionar</Button>
-  //     </DialogContent>
-  //   </Dialog>
-  // );
-
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         <Button className="rounded-full">Adicionar compra de produto</Button>
-      </SheetTrigger>
-      <SheetContent className="flex w-[800px] flex-col">
-        <SheetHeader className="pb-0">
-          <SheetTitle>Adicionar Despesa</SheetTitle>
-          <SheetDescription className="hidden" aria-hidden="true" />
-        </SheetHeader>
-        <AddExpenseForm source={source} onSuccess={() => setOpen(false)} />
-        <SheetFooter>
-          <SheetClose asChild>
+      </DialogTrigger>
+      <DialogContent className="flex max-h-[90dvh] max-w-[90dvw] min-w-[700px] flex-col">
+        <DialogHeader className="pb-0">
+          <DialogTitle>Adicionar Despesa</DialogTitle>
+          <DialogDescription className="hidden" aria-hidden="true" />
+        </DialogHeader>
+        <div className="flex-1 overflow-y-auto">
+          <AddExpenseForm
+            id="add-expense-form"
+            source={source}
+            onSuccess={() => setOpen(false)}
+          />
+        </div>
+        <DialogFooter className="border-t pt-4">
+          <Button type="submit" form="add-expense-form">
+            Adicionar
+          </Button>
+          <DialogClose asChild>
             <Button variant="outline">Cancelar</Button>
-          </SheetClose>
-        </SheetFooter>
-        {/* <Button type="submit">Adicionar</Button> */}
-      </SheetContent>
-    </Sheet>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

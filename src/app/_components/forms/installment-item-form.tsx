@@ -42,9 +42,9 @@ export default function InstallmentItemForm({
         disabled && "pointer-events-none opacity-70",
       )}
     >
-      <p className="bg-background text-muted-foreground absolute -top-2 left-1 px-1 text-center text-xs font-medium">{`${installment.installmentNumber}/${installment.totalInstallments}`}</p>
+      <p className="bg-background absolute -top-2 left-1 px-0 text-center text-[10px] font-medium text-gray-400">{`${installment.installmentNumber}/${installment.totalInstallments}`}</p>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <div className="flex w-full flex-col justify-between gap-2 sm:flex-row">
           <Input
             type="text"
@@ -57,9 +57,6 @@ export default function InstallmentItemForm({
             required
             disabled={disabled}
           />
-        </div>
-
-        <div className="flex gap-2">
           <DatePicker
             value={installment.dueDate.toISOString().split("T")[0]}
             onChange={(date) =>
@@ -68,9 +65,11 @@ export default function InstallmentItemForm({
             name="dueDate"
             required
             shortDate
-            className="w-full sm:w-36"
+            className="w-fit"
           />
+        </div>
 
+        <div className="flex gap-2">
           <CurrencyInput
             name="amount"
             initialValue={Number(installment.amount) || 0}
@@ -83,9 +82,6 @@ export default function InstallmentItemForm({
             className="bg-background w-full"
             disabled={disabled}
           />
-        </div>
-
-        <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Checkbox
               id="isPaid"
@@ -96,7 +92,7 @@ export default function InstallmentItemForm({
               }
               disabled={disabled}
             />
-            <Label htmlFor="description">Pago</Label>
+            <Label htmlFor="isPaid">Pago</Label>
           </div>
         </div>
       </div>

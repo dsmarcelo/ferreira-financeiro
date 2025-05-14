@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { FieldError } from "@/app/_components/forms/field-error";
 import { DatePicker } from "@/components/inputs/date-picker";
 import CurrencyInput from "@/components/inputs/currency-input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const initialState: {
   success: boolean;
@@ -29,6 +30,7 @@ export function UniquePaymentForm({
   onSuccess,
   handleDescriptionChange,
   handleAmountChange,
+  id,
 }: {
   source: ExpenseInsert["source"];
   description: string;
@@ -36,9 +38,9 @@ export function UniquePaymentForm({
   onSuccess?: () => void;
   handleDescriptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleAmountChange: (value: number) => void;
+  id?: string;
 }) {
   const [state, setState] = useState(initialState);
-  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     if (state.success === true && state.message) {
@@ -61,12 +63,10 @@ export function UniquePaymentForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setPending(true);
     setState(initialState);
 
     if (!date) {
       toast.error("A data de vencimento é obrigatória.");
-      setPending(false);
       return;
     }
 
@@ -97,17 +97,17 @@ export function UniquePaymentForm({
       setIsPaid(false);
       onSuccess?.();
     }
-    setPending(false);
   }
 
   return (
     <form
+      id={id}
       className="container mx-auto grid h-full max-h-full max-w-screen-lg grid-rows-[1fr_auto] gap-2"
       onSubmit={handleSubmit}
     >
       <input type="hidden" name="type" value="one_time" />
       <input type="hidden" name="source" value={source} />
-      <div className="flex flex-col gap-4 overflow-y-auto">
+      <div className="flex flex-col gap-2 overflow-y-auto">
         <div className="space-y-2">
           <Label htmlFor="description">Descrição</Label>
           <Input
@@ -121,17 +121,31 @@ export function UniquePaymentForm({
           />
           <FieldError messages={errors?.description} />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="totalAmount">Valor</Label>
-          <CurrencyInput
-            id="totalAmount"
-            name="totalAmount"
-            step="0.01"
-            min={0}
-            value={amount}
-            onValueChange={(v) => handleAmountChange(v ?? 0)}
-            required
-          />
+        <div className="flex items-center gap-2">
+          <div className="w-full space-y-2">
+            <Label htmlFor="totalAmount">Valor</Label>
+            <div className="flex w-full items-center gap-2">
+              <CurrencyInput
+                id="totalAmount"
+                name="totalAmount"
+                step="0.01"
+                min={0}
+                value={amount}
+                className="w-full"
+                onValueChange={(v) => handleAmountChange(v ?? 0)}
+                required
+              />
+              <Checkbox
+                id="isPaid"
+                name="isPaid"
+                checked={isPaid}
+                onCheckedChange={(checked: boolean | "indeterminate") =>
+                  setIsPaid(!!checked)
+                }
+              />
+              <Label htmlFor="isPaid">Pago</Label>
+            </div>
+          </div>
         </div>
         <FieldError messages={errors?.value} />
         <div className="space-y-2">
@@ -145,21 +159,6 @@ export function UniquePaymentForm({
           />
           <FieldError messages={errors?.date} />
         </div>
-        <div className="flex items-center gap-2">
-          <Label htmlFor="isPaid">Pago</Label>
-          <Input
-            type="checkbox"
-            id="isPaid"
-            name="isPaid"
-            checked={isPaid}
-            onChange={handleIsPaidChange}
-          />
-        </div>
-      </div>
-      <div className="flex flex-col">
-        <Button type="submit" disabled={pending} className="w-full">
-          {pending ? "Salvando..." : "Adicionar"}
-        </Button>
       </div>
     </form>
   );

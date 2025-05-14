@@ -33,6 +33,7 @@ interface InstallmentExpenseFormProps {
   onSuccess?: () => void;
   handleDescriptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleAmountChange: (value: number) => void;
+  id?: string;
 }
 
 // Using the InstallmentItem and InstallmentField types imported from installment-item-form.tsx
@@ -57,6 +58,7 @@ export function InstallmentExpenseForm({
   onSuccess,
   handleDescriptionChange,
   handleAmountChange,
+  id,
 }: InstallmentExpenseFormProps) {
   const [state, setState] = useState(initialState);
   const [pending, setPending] = useState(false);
@@ -315,10 +317,11 @@ export function InstallmentExpenseForm({
 
   return (
     <form
-      className="grid h-full max-h-full grid-rows-[1fr_auto] gap-2"
+      id={id}
       onSubmit={handleSubmit}
+      className="flex h-full max-h-full flex-col gap-2"
     >
-      <div className="flex flex-col gap-4 overflow-y-auto">
+      <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
         <div className="space-y-2">
           <Label htmlFor="description">Descrição</Label>
           <Input
@@ -332,8 +335,8 @@ export function InstallmentExpenseForm({
           />
           <FieldError messages={errors?.description} />
         </div>
-        <div className="flex items-start gap-2">
-          <div>
+        <div className="flex w-full flex-row gap-2">
+          <div className="w-full">
             <div className="space-y-2">
               <Label htmlFor="totalAmount">Valor</Label>
               <CurrencyInput
@@ -342,6 +345,7 @@ export function InstallmentExpenseForm({
                 step="0.01"
                 min={0}
                 value={amount}
+                className="w-full"
                 onValueChange={(v) => handleAmountChange(v ?? 0)}
                 required
               />
@@ -390,7 +394,8 @@ export function InstallmentExpenseForm({
             <FieldError messages={errors?.totalInstallments} />
           </div>
         </div>
-        <div className="flex items-start gap-2">
+
+        <div className="flex w-full flex-row gap-2">
           <div className="space-y-2">
             <Label htmlFor="recurrenceType">Tipo de Recorrência</Label>
             <Select
@@ -404,14 +409,12 @@ export function InstallmentExpenseForm({
                 <SelectItem value="monthly">Mensal</SelectItem>
                 <SelectItem value="weekly">Semanal</SelectItem>
                 <SelectItem value="yearly">Anual</SelectItem>
-                <SelectItem value="custom_days">
-                  Intervalo personalizado
-                </SelectItem>
+                <SelectItem value="custom_days">Personalizado</SelectItem>
               </SelectContent>
             </Select>
           </div>
           {recurrenceType === "custom_days" && (
-            <div className="space-y-2">
+            <div className="w-full space-y-2">
               <Label htmlFor="recurrenceInterval">Intervalo</Label>
               <Input
                 type="number"
@@ -427,23 +430,22 @@ export function InstallmentExpenseForm({
             </div>
           )}
         </div>
-        <div className="mt-4 space-y-4">
-          <Label>Parcelas</Label>
-          {installments.map((installment, index) => (
-            <InstallmentItemForm
-              key={`installment-${index}`}
-              installment={installment}
-              onFieldChange={(field, value) => {
-                handleInstallmentChange(index, field, value);
-              }}
-            />
-          ))}
+        <div className="border-t pt-2">
+          <Label className="mb-2">Parcelas</Label>
+          <div className="space-y-6">
+            {installments.map((installment, index) => (
+              <InstallmentItemForm
+                key={`installment-${index}`}
+                installment={installment}
+                onFieldChange={(field, value) => {
+                  handleInstallmentChange(index, field, value);
+                }}
+              />
+            ))}
+          </div>
         </div>
       </div>
       <div className="flex flex-col">
-        <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Adicionando..." : "Adicionar"}
-        </Button>
         {state.message && (
           <>
             {state.success === true ? (

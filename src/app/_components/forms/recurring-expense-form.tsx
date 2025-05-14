@@ -31,6 +31,7 @@ export function RecurringExpenseForm({
   handleAmountChange,
   onSuccess,
   amount,
+  id,
 }: {
   source: ExpenseInsert["source"];
   description: string;
@@ -38,6 +39,7 @@ export function RecurringExpenseForm({
   handleDescriptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleAmountChange: (value: number) => void;
   onSuccess?: () => void;
+  id?: string;
 }) {
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionAddRecurringExpense,
@@ -49,7 +51,7 @@ export function RecurringExpenseForm({
       toast.success(state.message);
       onSuccess?.();
     } else if (!state.success && state.message) toast.error(state.message);
-  }, [state]);
+  }, [state, onSuccess]);
 
   const errors = state.errors ?? {};
   const [recurrenceType, setRecurrenceType] = useState("monthly");
@@ -61,6 +63,7 @@ export function RecurringExpenseForm({
 
   return (
     <form
+      id={id}
       action={formAction}
       className="container mx-auto flex h-full max-w-screen-lg flex-1 flex-col gap-2"
       autoComplete="off"
@@ -166,9 +169,6 @@ export function RecurringExpenseForm({
         </div>
       </div>
       <div className="mt-2 flex flex-col">
-        <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? "Adicionando..." : "Adicionar"}
-        </Button>
         {state.message && (
           <>
             {state.success === true ? (

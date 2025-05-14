@@ -3,16 +3,13 @@
 import { useEffect, useState } from "react";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 
-import { Input } from "@/components/ui/input";
-import CurrencyInput from "@/components/inputs/currency-input";
 import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
-import { FieldError } from "@/app/_components/forms/field-error";
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { UniquePaymentForm } from "./unique-payment-form";
 import { RecurringExpenseForm } from "./recurring-expense-form";
 import { InstallmentExpenseForm } from "./installment-expense-form";
-import { Button } from "@/components/ui/button";
+
 const initialState: {
   success: boolean;
   message: string;
@@ -26,10 +23,11 @@ const initialState: {
 export default function AddExpenseForm({
   source,
   onSuccess,
-  // Prop here to pass the info to the submit button
+  id,
 }: {
   source: ExpenseInsert["source"];
   onSuccess?: () => void;
+  id?: string;
 }) {
   const [state, setState] = useState(initialState);
   const [expenseType, setExpenseType] =
@@ -61,9 +59,9 @@ export default function AddExpenseForm({
   };
 
   return (
-    <div className="mx-auto h-full w-full max-w-screen-md space-y-4">
-      <Tabs defaultValue={expenseType} className="h-full w-full">
-        <TabsList className="mx-auto mb-4">
+    <div className="mx-auto max-w-screen-md">
+      <Tabs defaultValue={expenseType} className="w-full px-4">
+        <TabsList className="mx-auto w-full">
           <TabsTrigger
             value="one_time"
             onClick={() => setExpenseType("one_time")}
@@ -83,8 +81,9 @@ export default function AddExpenseForm({
             Recorrente
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="one_time" className="px-4">
+        <TabsContent value="one_time">
           <UniquePaymentForm
+            id={id}
             source="product_purchase"
             description={description}
             amount={amount}
@@ -93,8 +92,9 @@ export default function AddExpenseForm({
             handleAmountChange={handleAmountChange}
           />
         </TabsContent>
-        <TabsContent value="installment" className="px-4">
+        <TabsContent value="installment">
           <InstallmentExpenseForm
+            id={id}
             source={source}
             description={description}
             amount={amount}
@@ -103,8 +103,9 @@ export default function AddExpenseForm({
             handleAmountChange={handleAmountChange}
           />
         </TabsContent>
-        <TabsContent value="recurring" className="px-4">
+        <TabsContent value="recurring">
           <RecurringExpenseForm
+            id={id}
             source="product_purchase"
             description={description}
             amount={amount}
