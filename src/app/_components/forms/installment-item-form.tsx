@@ -1,16 +1,29 @@
-import type { ProductPurchaseInstallmentInsert } from "@/server/db/schema/product-purchase";
+// No need to import ExpenseInsert as we're defining our own types
 import React from "react";
 import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/inputs/date-picker";
 import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
-// Accept both full and partial (insert) types for flexibility
+// Define a type for installment items
+export type InstallmentItem = {
+  description: string;
+  amount: string; // Using 'amount' instead of 'value' for UI consistency
+  dueDate: Date; // Using 'dueDate' instead of 'date' for UI clarity
+  installmentNumber: number;
+  totalInstallments: number;
+  isPaid: boolean;
+};
+
+// Field names that can be changed in an installment
+export type InstallmentField = "description" | "amount" | "dueDate" | "isPaid";
+
 interface InstallmentItemFormProps {
-  installment: ProductPurchaseInstallmentInsert;
+  installment: InstallmentItem;
   onFieldChange: (
-    field: keyof ProductPurchaseInstallmentInsert,
+    field: InstallmentField,
     value: string | number | boolean | Date | undefined,
   ) => void;
   disabled?: boolean;
@@ -25,55 +38,66 @@ export default function InstallmentItemForm({
   return (
     <div
       className={cn(
-        "bg-muted/40 flex flex-row gap-2 rounded border p-2",
+        "bg-muted/40 relative flex flex-col rounded-md border p-2",
         disabled && "pointer-events-none opacity-70",
       )}
     >
-      <div className="flex flex-col items-center justify-center gap-2 sm:flex-row">
-        <p className="w-10 text-center font-medium">{`${installment.installmentNumber ?? 1}/${installment.totalInstallments ?? 1}`}</p>
-        <Checkbox
-          id="isPaid"
-          name="isPaid"
-          checked={!!installment.isPaid}
-          onCheckedChange={(checked: boolean | "indeterminate") =>
-            onFieldChange("isPaid", !!checked)
-          }
-          disabled={disabled}
-          className="h-8 w-8"
-        />
+      <div className="flex items-center justify-between gap-2">
+        <p className="bg-background absolute -top-2 left-1 px-2 text-xs font-medium">{`${installment.installmentNumber}/${installment.totalInstallments}`}</p>
       </div>
-      <div className="flex w-full flex-col justify-between gap-2 sm:flex-row">
-        <Input
-          type="text"
-          id="description"
-          name="description"
-          placeholder="Descrição"
-          className="min-w-32"
-          value={installment.description ?? ""}
-          onChange={(e) => onFieldChange("description", e.target.value)}
-          required
-          disabled={disabled}
-        />
+
+      <div className="flex flex-col gap-2">
+        <div className="flex w-full flex-col justify-between gap-2 sm:flex-row">
+          <Input
+            type="text"
+            id="description"
+            name="description"
+            placeholder="Descrição"
+            className="min-w-32"
+            value={installment.description}
+            onChange={(e) => onFieldChange("description", e.target.value)}
+            required
+            disabled={disabled}
+          />
+        </div>
+
         <DatePicker
-          value={installment.dueDate}
-          onChange={(date) => onFieldChange("dueDate", date)}
+          value={installment.dueDate.toISOString().split("T")[0]}
+          onChange={(date) =>
+            onFieldChange("dueDate", date ? new Date(date) : undefined)
+          }
           name="dueDate"
           required
           shortDate
           className="w-full sm:w-36"
         />
-        <CurrencyInput
-          name="amount"
-          initialValue={installment.amount ? Number(installment.amount) : 0}
-          onValueChange={(value) =>
-            onFieldChange("amount", value?.toString() ?? "")
-          }
-          required
-          min={0}
-          step={0.01}
-          className="w-full sm:w-36"
-          disabled={disabled}
-        />
+
+        <div className="flex items-center gap-2">
+          <CurrencyInput
+            name="amount"
+            initialValue={Number(installment.amount) || 0}
+            onValueChange={(value) =>
+              onFieldChange("amount", value?.toString() ?? "0")
+            }
+            required
+            min={0}
+            step={0.01}
+            className="w-full sm:w-36"
+            disabled={disabled}
+          />
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="isPaid"
+              name="isPaid"
+              checked={installment.isPaid}
+              onCheckedChange={(checked: boolean | "indeterminate") =>
+                onFieldChange("isPaid", !!checked)
+              }
+              disabled={disabled}
+            />
+            <Label htmlFor="description">Pago</Label>
+          </div>
+        </div>
       </div>
     </div>
   );

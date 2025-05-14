@@ -54,6 +54,11 @@ export async function getExpenseById(id: number): Promise<Expense | undefined> {
   return db.query.expense.findFirst({ where: eq(expense.id, id) });
 }
 
+// Delete an expense by ID
+export async function deleteExpense(id: number): Promise<void> {
+  await db.delete(expense).where(eq(expense.id, id));
+}
+
 export async function sumExpensesByPeriod({
   start,
   end,

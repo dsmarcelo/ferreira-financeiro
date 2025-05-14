@@ -4,13 +4,13 @@ import { useState, useEffect } from "react";
 import { actionAddOneTimeExpense } from "@/actions/expense-actions";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 import { Input } from "@/components/ui/input";
-import CurrencyInput from "@/components/inputs/currency-input";
 import { Button } from "@/components/ui/button";
 import { getToday } from "@/lib/utils";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { FieldError } from "@/app/_components/forms/field-error";
 import { DatePicker } from "@/components/inputs/date-picker";
+import CurrencyInput from "@/components/inputs/currency-input";
 
 const initialState: {
   success: boolean;
@@ -24,8 +24,18 @@ const initialState: {
 
 export function UniquePaymentForm({
   source,
+  description,
+  amount,
+  onSuccess,
+  handleDescriptionChange,
+  handleAmountChange,
 }: {
   source: ExpenseInsert["source"];
+  description: string;
+  amount: number;
+  onSuccess?: () => void;
+  handleDescriptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleAmountChange: (value: number) => void;
 }) {
   const [state, setState] = useState(initialState);
   const [pending, setPending] = useState(false);
@@ -39,17 +49,9 @@ export function UniquePaymentForm({
   }, [state]);
 
   const errors = state.errors ?? {};
-  const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState<number>(0);
-  const [dueDate, setDueDate] = useState<string>(() => getToday());
+  const [date, setDueDate] = useState<string>(() => getToday());
   const [isPaid, setIsPaid] = useState(false);
 
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDescription(e.target.value);
-  };
-  const handleAmountChange = (value: number) => {
-    setAmount(value);
-  };
   const handleDueDateChange = (date: string | null) => {
     if (date) setDueDate(date);
   };
@@ -62,18 +64,18 @@ export function UniquePaymentForm({
     setPending(true);
     setState(initialState);
 
-    if (!dueDate) {
+    if (!date) {
       toast.error("A data de vencimento é obrigatória.");
       setPending(false);
       return;
     }
 
     const formData = new FormData();
-    formData.append("description", description);
-    formData.append("value", amount.toString());
-    formData.append("date", dueDate);
+    formData.append("date", date);
     formData.append("type", "one_time");
     formData.append("source", source);
+    formData.append("description", description);
+    formData.append("value", amount.toString());
     if (isPaid) formData.append("isPaid", "on");
 
     const res = await actionAddOneTimeExpense(initialState, formData);
@@ -91,10 +93,9 @@ export function UniquePaymentForm({
         errors: {},
       });
       toast.success("Despesa adicionada com sucesso!");
-      setDescription("");
-      setAmount(0);
       setDueDate(getToday());
       setIsPaid(false);
+      onSuccess?.();
     }
     setPending(false);
   }
@@ -105,38 +106,41 @@ export function UniquePaymentForm({
       onSubmit={handleSubmit}
     >
       <input type="hidden" name="type" value="one_time" />
-      <div className="space-y-2">
-        <Label htmlFor="description">Descrição</Label>
-        <Input
-          type="text"
-          id="description"
-          name="description"
-          value={description}
-          placeholder="Ex: Compra/Boleto não parcelado"
-          onChange={handleDescriptionChange}
-          required
-        />
-        <FieldError messages={errors?.description} />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="amount">Valor</Label>
-        <CurrencyInput
-          id="amount"
-          name="amount"
-          step="0.01"
-          min={0}
-          value={amount}
-          onValueChange={(v) => handleAmountChange(v ?? 0)}
-          required
-        />
+      <input type="hidden" name="source" value={source} />
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="description">Descrição</Label>
+          <Input
+            type="text"
+            id="description"
+            name="description"
+            value={description}
+            placeholder="Ex: Compra/Boleto parcelado"
+            onChange={handleDescriptionChange}
+            required
+          />
+          <FieldError messages={errors?.description} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="totalAmount">Valor</Label>
+          <CurrencyInput
+            id="totalAmount"
+            name="totalAmount"
+            step="0.01"
+            min={0}
+            value={amount}
+            onValueChange={(v) => handleAmountChange(v ?? 0)}
+            required
+          />
+        </div>
         <FieldError messages={errors?.value} />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="dueDate">Data de vencimento</Label>
+        <Label htmlFor="date">Data de vencimento</Label>
         <DatePicker
-          id="dueDate"
-          name="dueDate"
-          value={dueDate}
+          id="date"
+          name="date"
+          value={date}
           onChange={(date) => handleDueDateChange(date ?? null)}
           required
         />
