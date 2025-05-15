@@ -22,6 +22,8 @@ function groupByDate(expenses: Expense[]) {
 }
 
 import { actionToggleExpenseIsPaid } from "@/actions/expense-actions";
+import DownloadButton from "../buttons/download-button";
+import ShareButton from "../buttons/share-button";
 
 export default function ExpensesList({
   expensesPromise,
@@ -73,18 +75,47 @@ export default function ExpensesList({
     .filter((expense) => expense.isPaid)
     .reduce((acc, expense) => acc + Number(expense.value), 0);
 
+  const totalUnpaid = total - totalPaid;
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        {/* <DownloadButton isPending={isPending} onClick={handleDownload} />
-        <ShareButton isPending={isPending} onClick={handleShare} /> */}
-        <span className="ml-auto font-bold">
-          Total: {formatCurrency(total)}
-        </span>
-        <span className="font-bold text-green-600">
-          Pago: {formatCurrency(totalPaid)}
-        </span>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div className="sm:border-r sm:pr-2">
+            <p>Total do mês</p>
+            <p className="text-2xl font-bold">{formatCurrency(total)}</p>
+          </div>
+          <div className="flex divide-x">
+            <div className="pr-2">
+              <div className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full bg-green-400" />
+                <p className="text-sm">Total pago</p>
+              </div>
+              <p className="text-lg font-bold">{formatCurrency(totalPaid)}</p>
+            </div>
+            <div className="pl-2">
+              <div className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full bg-red-400" />
+                <p className="text-sm">Total pendente</p>
+              </div>
+              <p className="text-lg font-bold">{formatCurrency(totalUnpaid)}</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <DownloadButton
+            aria-label="Baixar PDF das despesas pessoais"
+            // onClick={handleDownload}
+            // disabled={isPending}
+          />
+          <ShareButton
+            aria-label="Compartilhar PDF das despesas pessoais"
+            // onClick={handleShare}
+            // disabled={isPending}
+          />
+        </div>
       </div>
+
       {sortedDates.length === 0 && (
         <div className="text-muted-foreground py-8 text-center">
           Nenhuma despesa encontrada.

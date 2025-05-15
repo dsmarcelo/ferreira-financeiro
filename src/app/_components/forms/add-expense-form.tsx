@@ -84,7 +84,7 @@ export default function AddExpenseForm({
         <TabsContent value="one_time">
           <UniquePaymentForm
             id={id}
-            source="product_purchase"
+            source={source}
             description={description}
             amount={amount}
             onSuccess={handleResetMainForm}
@@ -106,7 +106,7 @@ export default function AddExpenseForm({
         <TabsContent value="recurring">
           <RecurringExpenseForm
             id={id}
-            source="product_purchase"
+            source={source}
             description={description}
             amount={amount}
             onSuccess={handleResetMainForm}

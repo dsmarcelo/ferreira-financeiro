@@ -17,24 +17,36 @@ export async function getExpensesByPeriod({
   end,
   source,
 }: {
-  start: string;
-  end: string;
+  start?: string;
+  end?: string;
   source?: ExpenseSource;
 }): Promise<Expense[]> {
-  // Optionally filter by source (personal, store, product_purchase)
-  if (start && end) {
-    return db
-      .select()
-      .from(expense)
-      .where(
-        and(
-          gte(expense.date, start),
-          lte(expense.date, end),
-          source ? eq(expense.source, source) : undefined,
-        ),
-      );
+  const conditions = [];
+
+  if (source) {
+    conditions.push(eq(expense.source, source));
   }
-  return [];
+  if (start) {
+    conditions.push(gte(expense.date, start));
+  }
+  if (end) {
+    conditions.push(lte(expense.date, end));
+  }
+
+  // Filter out any undefined/null values that might have been pushed if logic changes
+  const validConditions = conditions.filter(Boolean);
+
+  if (validConditions.length === 0) {
+    // If no filters are specified, return all expenses.
+    // Consider pagination or default date range in the future for performance.
+    return db.select().from(expense);
+  }
+
+  return db
+    .select()
+    .from(expense)
+    // Use spread operator for conditions array with drizzle's 'and' helper
+    .where(and(...validConditions));
 }
 
 // Update a unified expense by ID

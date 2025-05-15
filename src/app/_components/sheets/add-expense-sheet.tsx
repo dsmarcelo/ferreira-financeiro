@@ -27,16 +27,18 @@ import {
 
 export default function AddExpenseSheet({
   source,
+  buttonLabel,
 }: {
   source: ExpenseInsert["source"];
+  buttonLabel: string;
 }) {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="rounded-full">Adicionar compra de produto</Button>
+        <Button className="rounded-full">{buttonLabel}</Button>
       </DialogTrigger>
-      <DialogContent className="flex max-h-[90dvh] max-w-[90dvw] min-w-[700px] flex-col">
+      <DialogContent className="flex h-[90dvh] max-h-[600px] max-w-[90dvw] min-w-[700px] flex-col">
         <DialogHeader className="pb-0">
           <DialogTitle>Adicionar Despesa</DialogTitle>
           <DialogDescription className="hidden" aria-hidden="true" />
