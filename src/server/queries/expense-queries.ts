@@ -6,17 +6,7 @@ import {
   type ExpenseInsert,
   type ExpenseSource,
 } from "../db/schema/expense-schema";
-import {
-  and,
-  eq,
-  gte,
-  lte,
-  or,
-  sum,
-  ne,
-  isNull,
-  type SQL,
-} from "drizzle-orm";
+import { and, eq, gte, isNull, lte, ne, or, type SQL, sum } from "drizzle-orm";
 import {
   addDays,
   addMonths,
@@ -56,37 +46,46 @@ export async function getExpensesByPeriod({
         and(
           ne(expense.type, "recurring"),
           gte(expense.date, queryStartDateString),
-          lte(expense.date, queryEndDateString)
+          lte(expense.date, queryEndDateString),
         ),
         and(
           eq(expense.type, "recurring"),
           lte(expense.date, queryEndDateString), // Series starts on or before query period ends
           or(
             isNull(expense.recurrenceEndDate),
-            gte(expense.recurrenceEndDate, queryStartDateString) // Series ends on or after query period starts
-          )
-        )
-      )
+            gte(expense.recurrenceEndDate, queryStartDateString), // Series ends on or after query period starts
+          ),
+        ),
+      ),
     );
   } else if (queryStartDateString) {
     baseConditions.push(
       or(
-        and(ne(expense.type, "recurring"), gte(expense.date, queryStartDateString)),
+        and(
+          ne(expense.type, "recurring"),
+          gte(expense.date, queryStartDateString),
+        ),
         and(
           eq(expense.type, "recurring"),
           or(
             isNull(expense.recurrenceEndDate),
-            gte(expense.recurrenceEndDate, queryStartDateString)
-          )
-        )
-      )
+            gte(expense.recurrenceEndDate, queryStartDateString),
+          ),
+        ),
+      ),
     );
   } else if (queryEndDateString) {
     baseConditions.push(
       or(
-        and(ne(expense.type, "recurring"), lte(expense.date, queryEndDateString)),
-        and(eq(expense.type, "recurring"), lte(expense.date, queryEndDateString))
-      )
+        and(
+          ne(expense.type, "recurring"),
+          lte(expense.date, queryEndDateString),
+        ),
+        and(
+          eq(expense.type, "recurring"),
+          lte(expense.date, queryEndDateString),
+        ),
+      ),
     );
   }
 
@@ -95,7 +94,7 @@ export async function getExpensesByPeriod({
 
     if (baseConditions.length > 0) {
       const validBaseConditions = baseConditions.filter(
-        (condition): condition is SQL<unknown> => !!condition
+        (condition): condition is SQL<unknown> => !!condition,
       );
       if (validBaseConditions.length > 0) {
         return currentBaseSelect.where(and(...validBaseConditions));
@@ -107,8 +106,64 @@ export async function getExpensesByPeriod({
 
   const processedExpenses: Expense[] = [];
 
-  const queryStartDate = queryStartDateString ? parseISO(queryStartDateString) : null;
+  const queryStartDate = queryStartDateString
+    ? parseISO(queryStartDateString)
+    : null;
   const queryEndDate = queryEndDateString ? parseISO(queryEndDateString) : null;
+
+  function getRecurringExpenses(
+    ex: Expense,
+    queryStartDate: Date,
+    queryEndDate: Date,
+  ): Expense[] {
+    const processed: Expense[] = [];
+    let currentRecurrenceDate = parseISO(ex.date);
+    const seriesActualEndDate = ex.recurrenceEndDate
+      ? minDate([queryEndDate, parseISO(ex.recurrenceEndDate)])
+      : queryEndDate;
+
+    while (!isAfter(currentRecurrenceDate, seriesActualEndDate)) {
+      if (!isBefore(currentRecurrenceDate, queryStartDate)) {
+        processed.push({
+          ...ex,
+          date: formatDateFn(currentRecurrenceDate, "yyyy-MM-dd"),
+        });
+      }
+      let nextDateAdvanced = false;
+      switch (ex.recurrenceType) {
+        case "weekly":
+          currentRecurrenceDate = addWeeks(currentRecurrenceDate, 1);
+          nextDateAdvanced = true;
+          break;
+        case "monthly":
+          currentRecurrenceDate = addMonths(currentRecurrenceDate, 1);
+          nextDateAdvanced = true;
+          break;
+        case "yearly":
+          currentRecurrenceDate = addYears(currentRecurrenceDate, 1);
+          nextDateAdvanced = true;
+          break;
+        case "custom_days":
+          if (ex.recurrenceInterval && ex.recurrenceInterval > 0) {
+            currentRecurrenceDate = addDays(
+              currentRecurrenceDate,
+              ex.recurrenceInterval,
+            );
+            nextDateAdvanced = true;
+          } else {
+            console.error(
+              `Invalid recurrenceInterval for custom_days expense ID: ${ex.id}`,
+            );
+          }
+          break;
+        default:
+          console.error(`Unknown recurrenceType for expense ID: ${ex.id}`);
+          break;
+      }
+      if (!nextDateAdvanced) break;
+    }
+    return processed;
+  }
 
   for (const ex of initialExpenses) {
     if (
@@ -117,47 +172,9 @@ export async function getExpensesByPeriod({
       queryStartDate &&
       queryEndDate
     ) {
-      let currentRecurrenceDate = parseISO(ex.date);
-      const seriesActualEndDate = ex.recurrenceEndDate
-        ? minDate([queryEndDate, parseISO(ex.recurrenceEndDate)])
-        : queryEndDate;
-
-      while (!isAfter(currentRecurrenceDate, seriesActualEndDate)) {
-        if (!isBefore(currentRecurrenceDate, queryStartDate)) {
-          processedExpenses.push({
-            ...ex,
-            date: formatDateFn(currentRecurrenceDate, "yyyy-MM-dd"),
-          });
-        }
-
-        let nextDateAdvanced = false;
-        switch (ex.recurrenceType) {
-          case "weekly":
-            currentRecurrenceDate = addWeeks(currentRecurrenceDate, 1);
-            nextDateAdvanced = true;
-            break;
-          case "monthly":
-            currentRecurrenceDate = addMonths(currentRecurrenceDate, 1);
-            nextDateAdvanced = true;
-            break;
-          case "yearly":
-            currentRecurrenceDate = addYears(currentRecurrenceDate, 1);
-            nextDateAdvanced = true;
-            break;
-          case "custom_days":
-            if (ex.recurrenceInterval && ex.recurrenceInterval > 0) {
-              currentRecurrenceDate = addDays(currentRecurrenceDate, ex.recurrenceInterval);
-              nextDateAdvanced = true;
-            } else {
-              console.error(`Invalid recurrenceInterval for custom_days expense ID: ${ex.id}`);
-            }
-            break;
-          default:
-            console.error(`Unknown recurrenceType for expense ID: ${ex.id}`);
-            break;
-        }
-        if (!nextDateAdvanced) break;
-      }
+      processedExpenses.push(
+        ...getRecurringExpenses(ex, queryStartDate, queryEndDate),
+      );
     } else {
       processedExpenses.push(ex);
     }
