@@ -2,7 +2,7 @@
 import { ptBR } from "date-fns/locale";
 import { format, parseISO } from "date-fns";
 import { startTransition, use } from "react";
-import { formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { ExpenseListItem } from "./expense-list-item";
 import { useOptimistic } from "react";
 import type { Expense } from "@/server/db/schema/expense-schema";
@@ -21,9 +21,14 @@ function groupByDate(expenses: Expense[]) {
     }, {});
 }
 
+function sumExpensesByDate(expenses: Expense[]): number {
+  return expenses.reduce((sum, expense) => sum + Number(expense.value), 0);
+}
+
 import { actionToggleExpenseIsPaid } from "@/actions/expense-actions";
 import DownloadButton from "../buttons/download-button";
 import ShareButton from "../buttons/share-button";
+import { Dot } from "lucide-react";
 
 export default function ExpensesList({
   expensesPromise,
@@ -77,6 +82,10 @@ export default function ExpensesList({
 
   const totalUnpaid = total - totalPaid;
 
+  function hasUnpaidExpenses(expenses: Expense[]) {
+    return expenses.some((expense) => !expense.isPaid);
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -121,22 +130,38 @@ export default function ExpensesList({
           Nenhuma despesa encontrada.
         </div>
       )}
-      {sortedDates.map((date) => (
-        <div key={date}>
-          <div className="text-muted-foreground text-xs font-semibold uppercase">
-            {format(parseISO(date), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+      <div className="divide-y">
+        {sortedDates.map((date) => (
+          <div key={date}>
+            <div className="text-muted-foreground flex items-center text-xs">
+              <div
+                className={cn(
+                  "font-semibold uppercase",
+                  new Date(date) < new Date() &&
+                    hasUnpaidExpenses(grouped[date] ?? [])
+                    ? "text-red-500"
+                    : "text-primary",
+                )}
+              >
+                {format(parseISO(date), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+              </div>
+              <Dot />
+              <p className="">
+                {formatCurrency(sumExpensesByDate(grouped[date] ?? []))}
+              </p>
+            </div>
+            <div className="divide-border divide-y">
+              {grouped[date]?.map((expense) => (
+                <ExpenseListItem
+                  key={expense.id}
+                  expense={expense}
+                  onTogglePaid={handleTogglePaid}
+                />
+              ))}
+            </div>
           </div>
-          <div className="divide-border divide-y">
-            {grouped[date]?.map((expense) => (
-              <ExpenseListItem
-                key={expense.id}
-                expense={expense}
-                onTogglePaid={handleTogglePaid}
-              />
-            ))}
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
