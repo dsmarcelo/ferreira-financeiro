@@ -4,7 +4,9 @@ import {
   addExpense,
   deleteExpense as dbDeleteExpense,
   updateExpense,
+  getExpenseById,
 } from "@/server/queries/expense-queries";
+// Remove unused import
 import { revalidatePath } from "next/cache";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 
@@ -305,7 +307,58 @@ export async function actionUpdateExpense(
 // Toggle isPaid for any expense
 export async function actionToggleExpenseIsPaid(id: number, isPaid: boolean) {
   try {
-    await updateExpense(id, { isPaid });
+    // First, get the expense to check if it's a recurring expense
+    const expense = await getExpenseById(id);
+    
+    if (!expense) {
+      return {
+        success: false,
+        message: "Despesa não encontrada.",
+      };
+    }
+
+    if (expense.type === 'recurring' && isPaid) {
+      // For recurring expenses, create a new one-time expense for the paid occurrence
+      const { 
+        // Remove the id to get a new one and ignore other unused fields
+        id: undefined,
+        ...expenseData 
+      } = expense;
+      
+      // Create a new one-time expense with the same details
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Ensure required fields are present and properly typed
+      const description = expenseData.description ? String(expenseData.description) : 'Recurring payment';
+      // Convert value to string safely
+      const value = expenseData.value ? String(expenseData.value) : '0';
+      const source = expenseData.source || 'personal';
+      
+      // Create a new expense with properly typed fields
+      const paidExpense: ExpenseInsert = {
+        description,
+        value,
+        date: today,
+        type: 'one_time',
+        source: source as 'personal' | 'store' | 'product_purchase',
+        isPaid: true,
+        originalRecurringExpenseId: expense.id,
+        // Copy other fields that might be needed
+        ...(expenseData.installmentNumber !== undefined && { 
+          installmentNumber: Number(expenseData.installmentNumber) || 0
+        }),
+        ...(expenseData.totalInstallments !== undefined && { 
+          totalInstallments: Number(expenseData.totalInstallments) || 0
+        }),
+        ...(expenseData.groupId && { groupId: String(expenseData.groupId) }),
+      };
+      
+      await addExpense(paidExpense);
+    } else {
+      // For non-recurring expenses or marking as unpaid, update as before
+      await updateExpense(id, { isPaid });
+    }
+    
     revalidatePath("/compras-produtos");
     return { success: true };
   } catch (error) {

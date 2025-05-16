@@ -10,7 +10,7 @@ import Link from "next/link";
 
 export interface ExpenseListItemProps {
   expense: Expense;
-  onTogglePaid: (id: number, checked: boolean) => void;
+  onTogglePaid: (id: number, checked: boolean, date: string) => void;
   children?: React.ReactNode;
 }
 
@@ -46,10 +46,10 @@ export function ExpenseListItem({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            onTogglePaid(expense.id, !expense.isPaid);
+            onTogglePaid(expense.id, !expense.isPaid, expense.date);
           }}
           onCheckedChange={(checked) => {
-            onTogglePaid(expense.id, checked as boolean);
+            onTogglePaid(expense.id, checked as boolean, expense.date);
           }}
         />
         <p className="flex-1 break-words">{expense.description}</p>

@@ -52,6 +52,7 @@ export const expense = createTable("expense", {
   recurrenceType: recurrenceTypeEnum("recurrence_type"), // weekly, monthly, yearly, custom_days
   recurrenceInterval: integer("recurrence_interval"), // Number of days between repetitions if custom_days, otherwise null
   recurrenceEndDate: date("recurrence_end_date"), // Optional end date for recurrence
+  originalRecurringExpenseId: integer("original_recurring_expense_id").$type<number | null>(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
