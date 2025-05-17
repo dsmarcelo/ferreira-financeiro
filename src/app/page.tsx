@@ -52,20 +52,20 @@ export default async function HomePage({
         {/* Buttons to add new entries for each type of financial record */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <AddCashRegister>
-            <Button className="h-14 rounded-xl">Adicionar Caixa</Button>
+            <Button className="h-14 rounded-xl w-full">Adicionar Caixa</Button>
           </AddCashRegister>
           <AddPersonalExpense>
-            <Button className="h-14 rounded-xl">
+            <Button className="h-14 rounded-xl w-full">
               Adicionar Despesa Pessoal
             </Button>
           </AddPersonalExpense>
           <AddStoreExpense>
-            <Button className="h-14 rounded-xl">
+            <Button className="h-14 rounded-xl w-full">
               Adicionar Despesa de Loja
             </Button>
           </AddStoreExpense>
           <AddProductPurchase>
-            <Button className="h-14 rounded-xl">
+            <Button className="h-14 rounded-xl w-full">
               Adicionar Compra de produto
             </Button>
           </AddProductPurchase>
