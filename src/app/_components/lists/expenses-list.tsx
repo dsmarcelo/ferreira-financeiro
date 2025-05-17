@@ -130,11 +130,11 @@ export default function ExpensesList({
           Nenhuma despesa encontrada.
         </div>
       )}
-      <div className="divide-y">
+      <div className="space-y-4">
         {sortedDates.map((date) => (
           <div key={date}>
             <div className="text-muted-foreground flex items-center text-xs">
-              <div
+              <p
                 className={cn(
                   "font-semibold uppercase",
                   new Date(date) < new Date() &&
@@ -143,14 +143,14 @@ export default function ExpensesList({
                     : "text-primary",
                 )}
               >
-                {format(parseISO(date), "EEEE, dd 'de' MMMM", { locale: ptBR })}
-              </div>
+                {format(parseISO(date), "dd 'de' MMMM, EEE", { locale: ptBR })}
+              </p>
               <Dot />
-              <p className="">
+              <p>
                 {formatCurrency(sumExpensesByDate(grouped[date] ?? []))}
               </p>
             </div>
-            <div className="divide-border divide-y">
+            <div className="flex flex-col gap-2">
               {grouped[date]?.map((expense) => (
                 <ExpenseListItem
                   key={expense.id}

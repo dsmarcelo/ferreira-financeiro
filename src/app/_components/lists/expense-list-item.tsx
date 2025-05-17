@@ -35,8 +35,9 @@ export function ExpenseListItem({
   const itemContent = (
     <div
       className={cn(
-        "hover:bg-background-secondary active:bg-accent flex w-full items-center gap-2 py-2 sm:px-2",
-        expense.isPaid && "",
+        "hover:bg-background-secondary active:bg-accent flex w-full items-center gap-2 p-2 rounded-lg",
+        expense.isPaid && "border-green-500 border",
+        !expense.isPaid && expense.date < new Date().toISOString() && "border-red-400 border",
       )}
     >
       <div className="flex w-full items-center gap-2">
@@ -58,7 +59,6 @@ export function ExpenseListItem({
         <p
           className={cn(
             "w-fit text-right whitespace-nowrap",
-            expense.isPaid && "line-through-gray",
           )}
         >
           {formatCurrency(Number(expense.value) ?? 0)}

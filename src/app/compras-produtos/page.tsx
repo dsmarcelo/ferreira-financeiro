@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import Loading from "@/app/_components/loading/loading";
 import ExpensesList from "@/app/_components/lists/expenses-list";
 import AddProductPurchase from "@/app/_components/dialogs/add/add-product-purchase";
+import { Button } from "@/components/ui/button";
 
 export default async function ComprasProdutosPage({
   searchParams,
@@ -29,7 +30,11 @@ export default async function ComprasProdutosPage({
         </Suspense>
       </main>
       <div className="fixed bottom-24 block w-full px-5 sm:hidden">
-        <AddProductPurchase />
+        <AddProductPurchase>
+          <Button className="h-12 w-full rounded-full">
+            Adicionar Compra de Produtos
+          </Button>
+        </AddProductPurchase>
       </div>
     </div>
   );
