@@ -2,9 +2,9 @@
 
 import { db } from "@/server/db";
 import { cashRegister } from "@/server/db/schema/cash-register";
-import { and, eq, gte, lte, sum } from "drizzle-orm";
+import { and, gte, lte, sum } from "drizzle-orm";
 import { getExpensesByPeriod } from "./expense-queries";
-import { expense, type ExpenseSource } from "../db/schema/expense-schema";
+import { type ExpenseSource } from "../db/schema/expense-schema";
 
 export async function sumCashRegisterByDateRange(
   startDate: string,
@@ -35,20 +35,16 @@ export async function sumExpensesByDateRangeWithSource({
   endDate: string;
   source: ExpenseSource;
 }): Promise<number> {
-  const result = await db
-    .select({ sum: sum(expense.value) })
-    .from(expense)
-    .where(
-      and(
-        gte(expense.date, startDate),
-        lte(expense.date, endDate),
-        eq(expense.source, source),
-      ),
-    );
-  return Number(result?.[0]?.sum ?? 0);
+  const result = await getExpensesByPeriod({
+    start: startDate,
+    end: endDate,
+    source,
+  });
+  const sum = result.reduce((acc, item) => acc + Number(item.value), 0);
+  return sum;
 }
 
-// Calculate profit with margin
+// Calculate profit with margin (28% of cash register - personal expenses + store expenses)
 export async function getProfit(startDate: string, endDate: string) {
   const cashRegisterSum = await sumCashRegisterByDateRange(startDate, endDate);
   const personalExpensesSum = await sumExpensesByDateRangeWithSource({
