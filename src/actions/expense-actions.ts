@@ -23,7 +23,7 @@ const oneTimeExpenseSchema = z.object({
 export interface ActionResponse {
   success: boolean;
   message: string;
-  errors?: Partial<Record<keyof ExpenseInsert, string[]>>;
+  errors?: Record<string, string[] | undefined>;
 }
 
 export async function actionAddOneTimeExpense(
@@ -297,7 +297,72 @@ export async function actionUpdateExpense(
       return {
         success: false,
         message: "Por favor, corrija os erros no formulário.",
-        errors: parsed.error?.flatten().fieldErrors,
+        errors: parsed.error.flatten().fieldErrors,
+      };
+    }
+
+    // Custom validation for recurrenceEndDate
+    if (parsed.data.type === "recurring" && parsed.data.recurrenceEndDate && parsed.data.date) {
+      const expenseDate = new Date(parsed.data.date);
+      const recurrenceEndDateValue = new Date(parsed.data.recurrenceEndDate);
+      const minEndDate = new Date(expenseDate);
+      let errorMessage: string | undefined = undefined;
+
+      switch (parsed.data.recurrenceType) {
+        case "custom_days":
+          if (parsed.data.recurrenceInterval && parsed.data.recurrenceInterval > 0) {
+            minEndDate.setDate(expenseDate.getDate() + parsed.data.recurrenceInterval);
+            if (recurrenceEndDateValue < minEndDate) {
+              errorMessage = "A data final da recorrência deve ser no mínimo igual à data da despesa somada ao intervalo de dias.";
+            }
+          } else {
+            // If custom_days is selected but interval is invalid or missing, Zod should have caught it.
+            // Or, if interval is not required when recurrenceType is custom_days (e.g. only end date makes it recur)
+            // For now, assume interval is required for this check if type is custom_days
+          }
+          break;
+        case "weekly":
+          minEndDate.setDate(expenseDate.getDate() + 7);
+          if (recurrenceEndDateValue < minEndDate) {
+            errorMessage = "A data final da recorrência semanal deve ser no mínimo 7 dias após a data da despesa.";
+          }
+          break;
+        case "monthly":
+          minEndDate.setMonth(expenseDate.getMonth() + 1);
+          if (recurrenceEndDateValue < minEndDate) {
+            errorMessage = "A data final da recorrência mensal deve ser no mínimo 1 mês após a data da despesa.";
+          }
+          break;
+        case "yearly":
+          minEndDate.setFullYear(expenseDate.getFullYear() + 1);
+          if (recurrenceEndDateValue < minEndDate) {
+            errorMessage = "A data final da recorrência anual deve ser no mínimo 1 ano após a data da despesa.";
+          }
+          break;
+      }
+
+      if (errorMessage) {
+        return {
+          success: false,
+          message: "Erro na data final da recorrência.",
+          errors: { recurrenceEndDate: [errorMessage] },
+        };
+      }
+    }
+
+    // Prevent changing type or source during an update
+    const existingExpense = await getExpenseById(parsed.data.id);
+    if (!existingExpense) {
+      return {
+        success: false,
+        message: "Despesa não encontrada.",
+      };
+    }
+
+    if (existingExpense.type !== parsed.data.type || existingExpense.source !== parsed.data.source) {
+      return {
+        success: false,
+        message: "Não é possível alterar o tipo ou fonte de uma despesa existente.",
       };
     }
 
