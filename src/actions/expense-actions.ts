@@ -6,7 +6,6 @@ import {
   updateExpense,
   getExpenseById,
 } from "@/server/queries/expense-queries";
-// Remove unused import
 import { revalidatePath } from "next/cache";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 
@@ -222,6 +221,8 @@ export async function actionDeleteExpense(
     await dbDeleteExpense(id);
     revalidatePath("/compras-produtos");
     revalidatePath("/despesas-pessoais");
+    revalidatePath("/despesas-loja");
+
     return { success: true, message: "Despesa excluída com sucesso!" };
   } catch (error) {
     return {
@@ -305,7 +306,11 @@ export async function actionUpdateExpense(
 // Now supports passing an installmentId to link multiple expenses as a group of installments.
 
 // Toggle isPaid for any expense
-export async function actionToggleExpenseIsPaid(id: number, isPaid: boolean) {
+export async function actionToggleExpenseIsPaid(
+  id: number,
+  isPaid: boolean,
+  date: string,
+) {
   try {
     // First, get the expense to check if it's a recurring expense
     const expense = await getExpenseById(id);
@@ -317,49 +322,72 @@ export async function actionToggleExpenseIsPaid(id: number, isPaid: boolean) {
       };
     }
 
-    if (expense.type === 'recurring' && isPaid) {
-      // For recurring expenses, create a new one-time expense for the paid occurrence
-      const { 
-        // Remove the id to get a new one and ignore other unused fields
-        id: undefined,
-        ...expenseData 
-      } = expense;
-      
-      // Create a new one-time expense with the same details
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Ensure required fields are present and properly typed
-      const description = expenseData.description ? String(expenseData.description) : 'Recurring payment';
-      // Convert value to string safely
-      const value = expenseData.value ? String(expenseData.value) : '0';
-      const source = expenseData.source || 'personal';
-      
-      // Create a new expense with properly typed fields
-      const paidExpense: ExpenseInsert = {
-        description,
-        value,
-        date: today,
-        type: 'one_time',
-        source: source as 'personal' | 'store' | 'product_purchase',
-        isPaid: true,
-        originalRecurringExpenseId: expense.id,
-        // Copy other fields that might be needed
-        ...(expenseData.installmentNumber !== undefined && { 
-          installmentNumber: Number(expenseData.installmentNumber) || 0
-        }),
-        ...(expenseData.totalInstallments !== undefined && { 
-          totalInstallments: Number(expenseData.totalInstallments) || 0
-        }),
-        ...(expenseData.groupId && { groupId: String(expenseData.groupId) }),
-      };
-      
-      await addExpense(paidExpense);
-    } else {
-      // For non-recurring expenses or marking as unpaid, update as before
+    console.log('expense type: ', expense.type);
+    console.log("expense isPaid: ", expense.isPaid);
+    console.log("expense originalRecurringExpenseId: ", expense.originalRecurringExpenseId);
+    console.log("expense date: ", expense.date);
+
+    if (expense.type === 'recurring') {
+      if (isPaid) {
+        // For recurring expenses being marked as PAID, create a new one-time expense for the paid occurrence
+        const { 
+          id: _id, 
+          ...expenseData 
+        } = expense;
+        
+        const paidDate = date ?? new Date().toISOString().split('T')[0];
+        
+        const description = expenseData.description ? String(expenseData.description) : 'Recurring payment';
+        const value = expenseData.value ? String(expenseData.value) : '0';
+        const source = expenseData.source ?? 'personal';
+        
+        const paidExpense: ExpenseInsert = {
+          description,
+          value,
+          date: paidDate,
+          type: 'one_time',
+          source: source,
+          isPaid: true,
+          originalRecurringExpenseId: expense.id,
+          ...(expenseData.installmentNumber !== undefined && { 
+            installmentNumber: Number(expenseData.installmentNumber) || 0
+          }),
+          ...(expenseData.totalInstallments !== undefined && { 
+            totalInstallments: Number(expenseData.totalInstallments) || 0
+          }),
+          ...(expenseData.groupId && { groupId: String(expenseData.groupId) }),
+        };
+        
+        await addExpense(paidExpense);
+      }
+    }
+
+    if (expense.type === 'one_time' && expense.originalRecurringExpenseId !== undefined && isPaid === false) {
+        // For recurring expenses being marked as UNPAID, find and delete the corresponding one-time record
+        if (date) { // Date is crucial to find the specific instance
+          if (id) { 
+            await dbDeleteExpense(id);
+          } else {
+            console.warn(`One-time occurrence not found for recurring expense ${expense.id} on date ${date} to delete, or it has no ID.`);
+          }
+        } else {
+          console.error(`Date not provided for unchecking recurring expense ${expense.id}. Cannot delete specific occurrence.`);
+          // Potentially return an error to the client or just don't do anything
+          return {
+            success: false,
+            message: "Data da ocorrência não fornecida para desmarcar despesa recorrente.",
+          };
+        }
+    }
+
+    if (expense.type !== 'recurring') {
       await updateExpense(id, { isPaid });
     }
-    
+
     revalidatePath("/compras-produtos");
+    revalidatePath("/despesas-pessoais");
+    revalidatePath("/despesas-loja");
+
     return { success: true };
   } catch (error) {
     return {

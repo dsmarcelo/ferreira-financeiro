@@ -170,7 +170,8 @@ export async function getExpensesByPeriod({
       // For each recurrence, show paid one-time expense if exists, otherwise the recurring occurrence
       const paidOccurrences = initialExpenses.filter(e =>
         e.type === "one_time" &&
-        e.originalRecurringExpenseId === ex.id
+        e.originalRecurringExpenseId === ex.id &&
+        e.isPaid // Ensure we only consider paid one-time entries as replacements
       );
       const occurrences = getRecurringExpenses(ex, queryStartDate, queryEndDate);
       for (const occurrence of occurrences) {
@@ -234,4 +235,22 @@ export async function sumExpensesByPeriod({
       ),
     );
   return Number(result?.[0]?.sum ?? 0);
+}
+
+export async function getOneTimeExpenseByRecurringOriginAndDate(
+  originalRecurringExpenseId: number,
+  occurrenceDate: string,
+): Promise<Expense | undefined> {
+  const result = await db
+    .select()
+    .from(expense)
+    .where(
+      and(
+        eq(expense.type, "one_time"),
+        eq(expense.originalRecurringExpenseId, originalRecurringExpenseId),
+        eq(expense.date, occurrenceDate),
+      ),
+    )
+    .limit(1);
+  return result[0];
 }

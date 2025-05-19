@@ -10,14 +10,18 @@ import Link from "next/link";
 
 export interface ExpenseListItemProps {
   expense: Expense;
-  onTogglePaid: (id: number, checked: boolean, date: string) => void;
+  onTogglePaid: (id: number, checked: boolean, date: string, index: number) => void;
   children?: React.ReactNode;
+  index: number;
+  date: string;
 }
 
 export function ExpenseListItem({
   expense,
   onTogglePaid,
   children,
+  index,
+  date,
 }: ExpenseListItemProps) {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const editLinkMap: Record<string, string> = {
@@ -47,10 +51,10 @@ export function ExpenseListItem({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            onTogglePaid(expense.id, !expense.isPaid, expense.date);
+            onTogglePaid(expense.id, !expense.isPaid, date, index);
           }}
           onCheckedChange={(checked) => {
-            onTogglePaid(expense.id, checked as boolean, expense.date);
+            onTogglePaid(expense.id, checked as boolean, date, index);
           }}
         />
         <p className="flex-1 break-words">{expense.description}</p>

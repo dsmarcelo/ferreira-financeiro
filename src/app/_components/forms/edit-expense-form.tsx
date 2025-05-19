@@ -33,7 +33,7 @@ export default function EditExpenseForm({
   onSuccess,
 }: EditExpenseFormProps) {
   const router = useRouter();
-  const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
+  const [state, formAction, _pending] = useActionState<ActionResponse, FormData>(
     actionUpdateExpense,
     initialState,
   );

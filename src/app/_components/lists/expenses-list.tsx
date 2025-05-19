@@ -38,12 +38,23 @@ export default function ExpensesList({
   const allExpenses = use(expensesPromise);
   const [optimisticExpenses, setOptimisticExpenses] = useOptimistic(
     allExpenses,
-    (state: Expense[], update: { id: number; checked: boolean }) =>
-      state.map((expense) =>
-        expense.id === update.id
-          ? { ...expense, isPaid: update.checked }
-          : expense,
-      ),
+    (
+      state: Expense[],
+      update: { id: number; checked: boolean; date: string; index: number }
+    ) => {
+      // Find the nth occurrence of the expense with the given date and index within its date group
+      let occurrence = 0;
+      return state.map((expense) => {
+        if (expense.date === update.date) {
+          if (occurrence === update.index) {
+            occurrence++;
+            return { ...expense, isPaid: update.checked };
+          }
+          occurrence++;
+        }
+        return expense;
+      });
+    },
   );
 
   if (!allExpenses) return <div>Nenhuma despesa encontrada</div>;
@@ -57,12 +68,12 @@ export default function ExpensesList({
   //   return;
   // }; // TODO
 
-  const handleTogglePaid = async (id: number, checked: boolean) => {
+  const handleTogglePaid = async (id: number, checked: boolean, date: string, index: number) => {
     startTransition(() => {
-      setOptimisticExpenses({ id, checked });
+      setOptimisticExpenses({ id, checked, date, index });
     });
     try {
-      await actionToggleExpenseIsPaid(id, checked);
+      await actionToggleExpenseIsPaid(id, checked, date);
     } catch {
       // Optionally show a toast or revert optimistic update
     }
@@ -151,11 +162,13 @@ export default function ExpensesList({
               </p>
             </div>
             <div className="flex flex-col gap-2">
-              {grouped[date]?.map((expense) => (
+              {grouped[date]?.map((expense, index) => (
                 <ExpenseListItem
-                  key={expense.id}
+                  key={`${expense.id}-${index}`}
                   expense={expense}
-                  onTogglePaid={handleTogglePaid}
+                  onTogglePaid={(id, checked) => handleTogglePaid(id, checked, date, index)}
+                  index={index}
+                  date={date}
                 />
               ))}
             </div>
