@@ -7,7 +7,7 @@ import {
   getExpenseById,
 } from "@/server/queries/expense-queries";
 import { revalidatePath } from "next/cache";
-import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
+import { expenseSourceEnum, type ExpenseInsert } from "@/server/db/schema/expense-schema";
 
 // One-time expense schema & action
 
@@ -116,7 +116,7 @@ const recurringExpenseSchema = z.object({
   description: z.string().min(1, { message: "Descrição obrigatória" }),
   value: z.string().min(1, { message: "Valor obrigatório" }),
   date: z.string({ message: "Data inválida" }),
-  type: z.literal("recurring"),
+  type: z.enum(["recurring", "recurring_occurrence"]),
   source: z.enum(["personal", "store", "product_purchase"]),
   isPaid: z.boolean().optional(),
   recurrenceType: z.enum(["weekly", "monthly", "yearly", "custom_days"]),
@@ -240,7 +240,7 @@ const updateExpenseSchema = z.object({
     .optional(),
   value: z.string().optional(),
   date: z.string().optional(),
-  type: z.enum(["one_time", "installment", "recurring"]).optional(),
+  type: z.enum(["one_time", "installment", "recurring", "recurring_occurrence"]).optional(),
   source: z.enum(["personal", "store", "product_purchase"]).optional(),
   isPaid: z.boolean().optional(),
   parentId: z.number().optional(),
@@ -252,6 +252,7 @@ const updateExpenseSchema = z.object({
   totalInstallments: z.number().optional(),
   groupId: z.string().uuid().optional(),
   installmentId: z.string().uuid().optional(),
+  originalRecurringExpenseId: z.number().optional(),
 });
 
 export async function actionUpdateExpense(
@@ -289,6 +290,7 @@ export async function actionUpdateExpense(
       parentId: parentId,
       recurrenceEndDate: recurrenceEndDateValue,
       recurrenceInterval: recurrenceIntervalValue, 
+      originalRecurringExpenseId: Number(rawData.originalRecurringExpenseId),
     });
 
     if (parsed.error) {
