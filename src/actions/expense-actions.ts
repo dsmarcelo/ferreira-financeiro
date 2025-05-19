@@ -252,7 +252,7 @@ const updateExpenseSchema = z.object({
   totalInstallments: z.number().optional(),
   groupId: z.string().uuid().optional(),
   installmentId: z.string().uuid().optional(),
-  originalRecurringExpenseId: z.number().optional(),
+  originalRecurringExpenseId: z.number().optional().nullable(),
 });
 
 export async function actionUpdateExpense(
@@ -290,7 +290,7 @@ export async function actionUpdateExpense(
       parentId: parentId,
       recurrenceEndDate: recurrenceEndDateValue,
       recurrenceInterval: recurrenceIntervalValue, 
-      originalRecurringExpenseId: Number(rawData.originalRecurringExpenseId),
+      originalRecurringExpenseId: rawData.originalRecurringExpenseId ? Number(rawData.originalRecurringExpenseId) : null,
     });
 
     if (parsed.error) {
