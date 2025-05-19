@@ -18,6 +18,13 @@ import { getInstallmentsByGroupId } from "@/server/queries/expense-queries";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { TrashIcon } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const initialState: ActionResponse = {
   success: false,
@@ -124,8 +131,15 @@ export default function EditExpenseForm({
 
   const [isDeletingTransition, startDeleteTransition] = useTransition();
 
+  // State for dynamic visibility of recurrenceInterval input
+  const [currentRecurrenceType, setCurrentRecurrenceType] = useState(expense.recurrenceType ?? "");
+
   const [relatedInstallments, setRelatedInstallments] = useState<Expense[]>([]);
   const [isLoadingInstallments, setIsLoadingInstallments] = useState(false);
+
+  useEffect(() => {
+    setCurrentRecurrenceType(expense.recurrenceType ?? "");
+  }, [expense.recurrenceType]);
 
   useEffect(() => {
     if (expense.type === "installment" && expense.groupId) {
@@ -247,7 +261,55 @@ export default function EditExpenseForm({
           />
           <Label htmlFor="isPaid">Pago?</Label>
         </div>
-        {state.errors?.isPaid && <FieldError messages={state.errors.isPaid} />} 
+        {state.errors?.isPaid && <FieldError messages={state.errors.isPaid} />}
+
+        {/* Recurrence Fields - only for recurring expenses */}
+        {expense.type === "recurring" && (
+          <>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="recurrenceType">Frequência da Recorrência</Label>
+              <Select 
+                name="recurrenceType" 
+                defaultValue={expense.recurrenceType ?? undefined} 
+                onValueChange={setCurrentRecurrenceType}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a frequência" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="weekly">Semanal</SelectItem>
+                  <SelectItem value="monthly">Mensal</SelectItem>
+                  <SelectItem value="yearly">Anual</SelectItem>
+                  <SelectItem value="custom_days">Dias Personalizados</SelectItem>
+                </SelectContent>
+              </Select>
+              {state.errors?.recurrenceType && <FieldError messages={state.errors.recurrenceType} />}
+            </div>
+
+            {currentRecurrenceType === "custom_days" && (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="recurrenceInterval">Intervalo de Dias (Recorrência)</Label>
+                <Input 
+                  id="recurrenceInterval"
+                  name="recurrenceInterval" 
+                  type="number"
+                  defaultValue={expense.recurrenceInterval ?? undefined}
+                  placeholder="Ex: 7 (para a cada 7 dias)"
+                />
+                {state.errors?.recurrenceInterval && <FieldError messages={state.errors.recurrenceInterval} />}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="recurrenceEndDate">Data Final da Recorrência (Opcional)</Label>
+              <DatePicker 
+                name="recurrenceEndDate" 
+                defaultValue={expense.recurrenceEndDate ?? undefined}
+              />
+              {state.errors?.recurrenceEndDate && <FieldError messages={state.errors.recurrenceEndDate} />}
+            </div>
+          </>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-2 pt-2">
           <Button 

@@ -259,16 +259,41 @@ export async function actionUpdateExpense(
   formData: FormData,
 ) {
   try {
-    const data = Object.fromEntries(formData.entries());
+    const rawData = Object.fromEntries(formData.entries());
+
+    // Prepare values for safeParse, converting empty strings or non-strings from optional date/number inputs to undefined
+    const id = Number(rawData.id);
+    const isPaid = rawData.isPaid === "on";
+    const parentId = rawData.parentId && typeof rawData.parentId === 'string' ? Number(rawData.parentId) : undefined;
+    
+    const mainDateRaw = rawData.date;
+    const mainDate = typeof mainDateRaw === 'string' && mainDateRaw !== "" ? mainDateRaw : undefined;
+
+    const recurrenceEndDateRaw = rawData.recurrenceEndDate;
+    const recurrenceEndDateValue = typeof recurrenceEndDateRaw === 'string' && recurrenceEndDateRaw !== "" ? recurrenceEndDateRaw : undefined;
+    
+    const recurrenceIntervalRaw = rawData.recurrenceInterval;
+    let recurrenceIntervalValue: string | undefined;
+    if (rawData.recurrenceType !== "custom_days" || typeof recurrenceIntervalRaw !== 'string' || recurrenceIntervalRaw === "") {
+      recurrenceIntervalValue = undefined;
+    } else {
+      recurrenceIntervalValue = recurrenceIntervalRaw; // It's a non-empty string
+    }
+    // recurrenceIntervalValue is now string | undefined. Zod's .coerce.number() will handle conversion from string.
+
     const parsed = updateExpenseSchema.safeParse({
-      ...data,
-      id: Number(data.id),
-      date: data.date,
-      isPaid: data.isPaid === "on",
-      parentId: data.parentId ? Number(data.parentId) : undefined,
+      ...rawData, // Spread rawData to include all other fields from form (description, value, type, source, recurrenceType etc.)
+      id: id,    // Override with processed/typed values
+      date: mainDate,
+      isPaid: isPaid,
+      parentId: parentId,
+      recurrenceEndDate: recurrenceEndDateValue,
+      recurrenceInterval: recurrenceIntervalValue, 
     });
-    console.log(parsed.error);
-    if (!parsed.success) {
+
+    if (parsed.error) {
+      // Log the detailed Zod error for server-side debugging
+      console.error("Zod validation error in actionUpdateExpense:", parsed.error.flatten().fieldErrors);
       return {
         success: false,
         message: "Por favor, corrija os erros no formulário.",
