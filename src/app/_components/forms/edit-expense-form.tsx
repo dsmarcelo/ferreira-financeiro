@@ -59,7 +59,7 @@ function SingleInstallmentEditForm({ installment, onSuccess, onClose }: {
         Parcela {installment.installmentNumber}/{installment.totalInstallments}
       </p>
       
-      <div className="mb-2">
+      <div className="mb-2 flex flex-col gap-2">
         <Label htmlFor={`description-${installment.id}`}>Descrição</Label>
         <Input 
           id={`description-${installment.id}`}
@@ -70,7 +70,7 @@ function SingleInstallmentEditForm({ installment, onSuccess, onClose }: {
         {state.errors?.description && <FieldError messages={state.errors.description} />} 
       </div>
 
-      <div className="mb-2">
+      <div className="mb-2 flex flex-col gap-2">
         <Label htmlFor={`value-${installment.id}`}>Valor</Label>
         <CurrencyInput 
           name="value" 
@@ -80,7 +80,7 @@ function SingleInstallmentEditForm({ installment, onSuccess, onClose }: {
         {state.errors?.value && <FieldError messages={state.errors.value} />} 
       </div>
 
-      <div className="mb-2">
+      <div className="mb-2 flex flex-col gap-2">
         <Label htmlFor={`date-${installment.id}`}>Data</Label>
         <DatePicker 
           name="date" 
@@ -198,7 +198,6 @@ export default function EditExpenseForm({
   return (
     <div className="space-y-6">
       <form action={formAction} className="space-y-4 p-4 border rounded-lg shadow-sm bg-white">
-        <h2 className="text-xl font-semibold mb-3">Editar Despesa Principal</h2>
         <input type="hidden" name="id" value={expense.id} />
         <input type="hidden" name="type" value={expense.type} />
         {expense.source && <input type="hidden" name="source" value={expense.source} />}
@@ -209,7 +208,7 @@ export default function EditExpenseForm({
           </p>
         )}
 
-        <div>
+        <div className="flex flex-col gap-2">
           <Label htmlFor="description">Descrição</Label>
           <Input 
             id="description"
@@ -220,7 +219,7 @@ export default function EditExpenseForm({
           {state.errors?.description && <FieldError messages={state.errors.description} />} 
         </div>
 
-        <div>
+        <div className="flex flex-col gap-2">
           <Label htmlFor="value">Valor</Label>
           <CurrencyInput 
             name="value" 
@@ -230,7 +229,7 @@ export default function EditExpenseForm({
           {state.errors?.value && <FieldError messages={state.errors.value} />} 
         </div>
 
-        <div>
+        <div className="flex flex-col gap-2">
           <Label htmlFor="date">Data</Label>
           <DatePicker 
             name="date" 
