@@ -201,9 +201,28 @@ export async function updateExpense(
   id: number,
   data: Partial<ExpenseInsert>,
 ): Promise<Expense | undefined> {
+  const dataForUpdate: Partial<ExpenseInsert> = { ...data };
+
+  // Explicitly set undefined optional fields to null for database update
+  if (dataForUpdate.recurrenceEndDate === undefined) {
+    dataForUpdate.recurrenceEndDate = null;
+  }
+  if (dataForUpdate.recurrenceInterval === undefined) {
+    dataForUpdate.recurrenceInterval = null;
+  }
+  if (dataForUpdate.recurrenceType === undefined) {
+    dataForUpdate.recurrenceType = null;
+  }
+  // Corrected to use originalRecurringExpenseId as per schema
+  if (dataForUpdate.originalRecurringExpenseId === undefined) {
+    dataForUpdate.originalRecurringExpenseId = null;
+  }
+  // Note: groupId and installmentId are UUIDs and usually either present or not part of the update (not cleared to null)
+  // If clearing them is a use case, add similar checks.
+
   const [updated] = await db
     .update(expense)
-    .set(data)
+    .set(dataForUpdate) // Use the modified data
     .where(eq(expense.id, id))
     .returning();
   return updated;
