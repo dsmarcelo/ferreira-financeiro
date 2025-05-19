@@ -40,7 +40,7 @@ export default function EditExpenseSheet({
           <SheetDescription aria-hidden />
         </SheetHeader>
         <div className="overflow-y-auto p-4 pt-0">
-          <EditExpenseForm expense={expense} onSuccess={() => setOpen(false)} />
+          <EditExpenseForm expense={expense} onSuccess={() => setOpen(false)} onClose={() => setOpen(false)} />
         </div>
         <SheetClose ref={closeRef} className="sr-only">
           Fechar

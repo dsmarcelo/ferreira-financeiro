@@ -27,11 +27,13 @@ const initialState: ActionResponse = {
 type EditExpenseFormProps = {
   expense: Expense;
   onSuccess?: () => void;
+  onClose?: () => void;
 };
 
-function SingleInstallmentEditForm({ installment, onSuccess }: {
+function SingleInstallmentEditForm({ installment, onSuccess, onClose }: {
   installment: Expense;
   onSuccess?: () => void;
+  onClose?: () => void;
 }) {
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionUpdateExpense,
@@ -42,10 +44,11 @@ function SingleInstallmentEditForm({ installment, onSuccess }: {
     if (state.success) {
       toast.success(state.message);
       if (onSuccess) onSuccess();
+      if (onClose) onClose();
     } else if (state.message && !state.success && state.errors) {
       toast.error(state.message);
     }
-  }, [state, onSuccess]);
+  }, [state, onSuccess, onClose]);
 
   return (
     <form action={formAction} className="mt-2 p-3 border rounded-md bg-slate-50">
@@ -107,6 +110,7 @@ function SingleInstallmentEditForm({ installment, onSuccess }: {
 export default function EditExpenseForm({
   expense,
   onSuccess,
+  onClose,
 }: EditExpenseFormProps) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
@@ -144,6 +148,9 @@ export default function EditExpenseForm({
     if (state.success) {
       toast.success(state.message);
       if (onSuccess) onSuccess();
+      if (onClose) onClose();
+
+      // If the main expense was updated and it's an installment, refresh related installments
       if (expense.type === "installment" && expense.groupId) {
         setIsLoadingInstallments(true);
         getInstallmentsByGroupId(expense.groupId)
@@ -161,17 +168,21 @@ export default function EditExpenseForm({
     } else if (state.message && !state.success && state.errors) {
       toast.error(state.message);
     }
-  }, [state, onSuccess, expense.id, expense.type, expense.groupId]);
+  }, [state, onSuccess, onClose, expense.id, expense.type, expense.groupId]);
 
   useEffect(() => {
     if (_deleteState.success) {
       toast.success(_deleteState.message);
       if (onSuccess) onSuccess();
-      router.back(); 
-    } else if (_deleteState.message && !_deleteState.success) { 
+      if (onClose) {
+        onClose();
+      } else {
+        router.back(); // Fallback to router.back if not in a sheet context
+      }
+    } else if (_deleteState.message && !_deleteState.success) { // Check for message to avoid toast on initial state
       toast.error(_deleteState.message ?? "Erro ao deletar despesa.");
     }
-  }, [_deleteState, onSuccess, router]);
+  }, [_deleteState, onSuccess, router, onClose]); // Added onClose to dependencies
 
   const handleDelete = async () => {
     if (!expense.id) return;
@@ -250,7 +261,30 @@ export default function EditExpenseForm({
             <TrashIcon className="h-4 w-4" />
           </Button>
 
-          <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => {
+              if (onClose) {
+                onClose();
+              } else {
+                let targetUrl = "/"; // Default fallback
+                switch (expense.source) {
+                  case "product_purchase":
+                    targetUrl = "/compras-produtos";
+                    break;
+                  case "personal":
+                    targetUrl = "/despesas-pessoais";
+                    break;
+                  case "store":
+                    targetUrl = "/despesas-loja";
+                    break;
+                }
+                router.push(targetUrl);
+              }
+            }} 
+            className="w-full sm:w-auto"
+          >
             Cancelar
           </Button>
 
@@ -288,6 +322,7 @@ export default function EditExpenseForm({
                       });
                   }
                 }}
+                onClose={onClose} // Pass onClose to sub-component
               />
             ))}
           </div>
