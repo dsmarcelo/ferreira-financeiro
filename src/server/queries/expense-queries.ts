@@ -254,3 +254,13 @@ export async function getOneTimeExpenseByRecurringOriginAndDate(
     .limit(1);
   return result[0];
 }
+
+export async function getInstallmentsByGroupId(
+  groupId: string,
+): Promise<Expense[]> {
+  return db
+    .select()
+    .from(expense)
+    .where(and(eq(expense.groupId, groupId), eq(expense.type, "installment")))
+    .orderBy(expense.installmentNumber);
+}
