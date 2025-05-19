@@ -169,9 +169,9 @@ export async function getExpensesByPeriod({
     if (ex.type === "recurring" && ex.recurrenceType && queryStartDate && queryEndDate) {
       // For each recurrence, show paid one-time expense if exists, otherwise the recurring occurrence
       const paidOccurrences = initialExpenses.filter(e =>
-        e.type === "one_time" &&
+        e.type === "recurring_occurrence" &&
         e.originalRecurringExpenseId === ex.id &&
-        e.isPaid // Ensure we only consider paid one-time entries as replacements
+        e.isPaid // Ensure we only consider paid recurring_occurrence entries as replacements
       );
       const occurrences = getRecurringExpenses(ex, queryStartDate, queryEndDate);
       for (const occurrence of occurrences) {
@@ -182,8 +182,8 @@ export async function getExpensesByPeriod({
           processedExpenses.push(occurrence);
         }
       }
-    } else if (ex.type === "one_time" && ex.originalRecurringExpenseId != null) {
-      // Skip paid one-time entries for recurring occurrences (already processed)
+    } else if (ex.type === "recurring_occurrence" && ex.originalRecurringExpenseId != null) {
+      // Skip paid recurring_occurrence entries for recurring occurrences (already processed)
       continue;
     } else {
       processedExpenses.push(ex);

@@ -345,7 +345,7 @@ export async function actionToggleExpenseIsPaid(
           description,
           value,
           date: paidDate,
-          type: 'one_time',
+          type: 'recurring_occurrence',
           source: source,
           isPaid: true,
           originalRecurringExpenseId: expense.id,
@@ -362,7 +362,7 @@ export async function actionToggleExpenseIsPaid(
       }
     }
 
-    if (expense.type === 'one_time' && expense.originalRecurringExpenseId !== undefined && isPaid === false) {
+    if (expense.type === 'recurring_occurrence' && expense.originalRecurringExpenseId !== undefined && isPaid === false) {
         // For recurring expenses being marked as UNPAID, find and delete the corresponding one-time record
         if (date) { // Date is crucial to find the specific instance
           if (id) { 

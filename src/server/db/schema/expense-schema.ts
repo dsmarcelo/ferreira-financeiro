@@ -19,6 +19,7 @@ export const expenseTypeEnum = pgEnum("expense_type", [
   "one_time",
   "installment",
   "recurring",
+  "recurring_occurrence",
 ]);
 
 // Expense source: personal, store, product_purchase
