@@ -47,14 +47,14 @@ function SingleInstallmentEditForm({ installment, onSuccess, onClose }: {
     initialState,
   );
 
+  // Modified to avoid duplicate toasts - only call callbacks without showing toasts
   useEffect(() => {
     if (state.success) {
-      toast.success(state.message);
+      // Only call callbacks, don't show toast (parent form will handle that)
       if (onSuccess) onSuccess();
       if (onClose) onClose();
-    } else if (state.message && !state.success && state.errors) {
-      toast.error(state.message);
     }
+    // No error toast either - errors will be displayed inline in the form
   }, [state, onSuccess, onClose]);
 
   return (

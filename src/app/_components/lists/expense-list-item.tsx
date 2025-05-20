@@ -24,13 +24,7 @@ export function ExpenseListItem({
   date,
 }: ExpenseListItemProps) {
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const editLinkMap: Record<string, string> = {
-    personal: `/despesas-pessoais/${expense.id}/editar`,
-    store: `/despesas-loja/${expense.id}/editar`,
-    product_purchase: `/compras-produtos/${expense.id}/editar`,
-  };
-  const editLink =
-    editLinkMap[expense.source] ?? `/compras-produtos/${expense.id}/editar`;
+  const editLink = `/editar-despesa/${expense.id}`;
 
   // Only the checkbox toggles paid, the rest opens the sheet
   // Use EditExpenseSheet with custom trigger
