@@ -18,10 +18,12 @@ export default function Header({
   children,
   showBackButton = false,
   className,
+  showDatePicker = true,
 }: {
   children?: React.ReactNode;
   showBackButton?: boolean;
   className?: string;
+  showDatePicker?: boolean;
 }) {
   const router = useRouter();
 
@@ -62,7 +64,7 @@ export default function Header({
   return (
     <header
       className={cn(
-        "bg-background/90 sticky top-0 z-50 w-full border-b border-b-gray-100 filter backdrop-blur",
+        "bg-background/90 sticky top-0 z-50 w-full border-b border-b-gray-100 px-5 filter backdrop-blur",
         className,
       )}
     >
@@ -105,9 +107,11 @@ export default function Header({
             Voltar
           </Button>
         )}
-        <div className="w-full sm:w-fit">
-          <DateRangePicker />
-        </div>
+        {showDatePicker && (
+          <div className="w-full sm:w-fit">
+            <DateRangePicker />
+          </div>
+        )}
         {children}
       </div>
     </header>

@@ -7,14 +7,14 @@ import {
   downloadPDF,
   type TableData,
 } from "./pdf-tools";
-import type { ProductPurchase } from "@/server/db/schema/product-purchase";
+import type { Expense } from "@/server/db/schema/expense-schema";
 import { formatInTimeZone } from "date-fns-tz";
 
 /**
  * Converts a list of ProductPurchase entries to TableData for PDF generation.
  */
 export function productPurchasesToTableData(
-  productPurchases: ProductPurchase[],
+  productPurchases: Expense[],
 ): TableData {
   const rows = productPurchases.map((item) => ({
     description: item.description,
@@ -53,7 +53,7 @@ export function productPurchasesToTableData(
  * Generates and returns a PDF document for the product purchases list.
  */
 export function generateProductPurchasesPDF(
-  productPurchases: ProductPurchase[],
+  productPurchases: Expense[],
   title: string,
 ) {
   const tableData = productPurchasesToTableData(productPurchases);
@@ -64,7 +64,7 @@ export function generateProductPurchasesPDF(
  * Downloads the product purchases list as a PDF.
  */
 export function downloadProductPurchasesPDF(
-  productPurchases: ProductPurchase[],
+  productPurchases: Expense[],
   title: string,
 ) {
   const doc = generateProductPurchasesPDF(productPurchases, title);
@@ -75,7 +75,7 @@ export function downloadProductPurchasesPDF(
  * Shares the product purchases list as a PDF.
  */
 export function shareProductPurchasesPDF(
-  productPurchases: ProductPurchase[],
+  productPurchases: Expense[],
   title: string,
 ) {
   const doc = generateProductPurchasesPDF(productPurchases, title);

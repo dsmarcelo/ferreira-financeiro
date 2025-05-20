@@ -1,11 +1,10 @@
 "use server";
 
 import { db } from "@/server/db";
-import { personalExpense } from "@/server/db/schema/personal-expense";
-import { storeExpense } from "@/server/db/schema/store-expense";
-import { productPurchase } from "@/server/db/schema/product-purchase";
 import { cashRegister } from "@/server/db/schema/cash-register";
 import { and, gte, lte, sum } from "drizzle-orm";
+import { getExpensesByPeriod } from "./expense-queries";
+import { type ExpenseSource } from "../db/schema/expense-schema";
 
 export async function sumCashRegisterByDateRange(
   startDate: string,
@@ -27,76 +26,39 @@ export async function sumCashRegisterByDateRange(
   return cashRegisterSum;
 }
 
-export async function sumPersonalExpenseByDateRange(
-  startDate: string,
-  endDate: string,
-) {
-  const personalExpensesSum = Number(
-    (
-      await db
-        .select({ sum: sum(personalExpense.value) })
-        .from(personalExpense)
-        .where(
-          and(
-            gte(personalExpense.dueDate, startDate),
-            lte(personalExpense.dueDate, endDate),
-          ),
-        )
-    )[0]?.sum ?? 0,
-  );
-  return personalExpensesSum;
+export async function sumExpensesByDateRangeWithSource({
+  startDate,
+  endDate,
+  source,
+}: {
+  startDate: string;
+  endDate: string;
+  source: ExpenseSource;
+}): Promise<number> {
+  const result = await getExpensesByPeriod({
+    start: startDate,
+    end: endDate,
+    source,
+  });
+  const sum = result.reduce((acc, item) => acc + Number(item.value), 0);
+  return sum;
 }
 
-export async function sumStoreExpenseByDateRange(
-  startDate: string,
-  endDate: string,
-) {
-  const storeExpensesSum = Number(
-    (
-      await db
-        .select({ sum: sum(storeExpense.value) })
-        .from(storeExpense)
-        .where(
-          and(
-            gte(storeExpense.dueDate, startDate),
-            lte(storeExpense.dueDate, endDate),
-          ),
-        )
-    )[0]?.sum ?? 0,
-  );
-  return storeExpensesSum;
-}
-
-export async function sumProductPurchaseByDateRange(
-  startDate: string,
-  endDate: string,
-) {
-  const productPurchasesSum = Number(
-    (
-      await db
-        .select({ sum: sum(productPurchase.value) })
-        .from(productPurchase)
-        .where(
-          and(
-            gte(productPurchase.dueDate, startDate),
-            lte(productPurchase.dueDate, endDate),
-          ),
-        )
-    )[0]?.sum ?? 0,
-  );
-  return productPurchasesSum;
-}
-
-// Calculate profit with margin
+// Calculate profit with margin (28% of cash register - personal expenses + store expenses)
 export async function getProfit(startDate: string, endDate: string) {
   const cashRegisterSum = await sumCashRegisterByDateRange(startDate, endDate);
-  const personalExpensesSum = await sumPersonalExpenseByDateRange(
+  const personalExpensesSum = await sumExpensesByDateRangeWithSource({
     startDate,
     endDate,
-  );
-  const storeExpensesSum = await sumStoreExpenseByDateRange(startDate, endDate);
-  const profit =
-    cashRegisterSum * 0.28 - (personalExpensesSum + storeExpensesSum);
+    source: "personal",
+  });
+  const storeExpensesSum = await sumExpensesByDateRangeWithSource({
+    startDate,
+    endDate,
+    source: "store",
+  });
+  const profit = cashRegisterSum * 0.28 -
+    (personalExpensesSum + storeExpensesSum);
   return profit;
 }
 
@@ -115,55 +77,16 @@ export async function listExpensesAndPurchasesByDateRange(
   startDate: string,
   endDate: string,
 ): Promise<ExpenseSummary[]> {
-  const personal = await db
-    .select({
-      dueDate: personalExpense.dueDate,
-      description: personalExpense.description,
-      value: personalExpense.value,
-      isPaid: personalExpense.isPaid,
-    })
-    .from(personalExpense)
-    .where(
-      and(
-        gte(personalExpense.dueDate, startDate),
-        lte(personalExpense.dueDate, endDate),
-      ),
-    );
+  const expenses = await getExpensesByPeriod({
+    start: startDate,
+    end: endDate,
+  });
 
-  const store = await db
-    .select({
-      dueDate: storeExpense.dueDate,
-      description: storeExpense.description,
-      value: storeExpense.value,
-      isPaid: storeExpense.isPaid,
-    })
-    .from(storeExpense)
-    .where(
-      and(
-        gte(storeExpense.dueDate, startDate),
-        lte(storeExpense.dueDate, endDate),
-      ),
-    );
-
-  const purchases = await db
-    .select({
-      dueDate: productPurchase.dueDate,
-      description: productPurchase.description,
-      value: productPurchase.value,
-      isPaid: productPurchase.isPaid,
-    })
-    .from(productPurchase)
-    .where(
-      and(
-        gte(productPurchase.dueDate, startDate),
-        lte(productPurchase.dueDate, endDate),
-      ),
-    );
-
-  return [...personal, ...store, ...purchases]
+  return expenses
     .map((item) => ({
       ...item,
       value: Number(item.value),
+      dueDate: item.date,
     }))
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 }

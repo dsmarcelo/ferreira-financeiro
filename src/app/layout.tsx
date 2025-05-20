@@ -22,8 +22,8 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${geist.variable}`}>
       <body>
-        <main className="mx-auto pb-12">{children}</main>
-        <Toaster richColors />
+        <main className="mx-auto pb-32">{children}</main>
+        <Toaster richColors position="top-center" />
         <BottomNav />
       </body>
     </html>

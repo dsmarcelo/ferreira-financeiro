@@ -7,9 +7,7 @@ import { downloadPDF } from "@/lib/pdf/pdf-tools";
 import { listExpensesAndPurchasesByDateRange } from "@/server/queries/summary-queries";
 import { formatMonth } from "@/lib/utils";
 import { sumCashRegisterByDateRange } from "@/server/queries/summary-queries";
-import { sumPersonalExpenseByDateRange } from "@/server/queries/summary-queries";
-import { sumStoreExpenseByDateRange } from "@/server/queries/summary-queries";
-import { sumProductPurchaseByDateRange } from "@/server/queries/summary-queries";
+import { sumExpensesByDateRangeWithSource } from "@/server/queries/summary-queries";
 import { getProfit } from "@/server/queries/summary-queries";
 
 interface SummaryPDFButtonProps {
@@ -25,15 +23,21 @@ export function SummaryPDFButton({ from, to }: SummaryPDFButtonProps) {
     try {
       const data = await listExpensesAndPurchasesByDateRange(from, to);
       const totalCashRegister = await sumCashRegisterByDateRange(from, to);
-      const totalPersonalExpenses = await sumPersonalExpenseByDateRange(
-        from,
-        to,
-      );
-      const totalStoreExpenses = await sumStoreExpenseByDateRange(from, to);
-      const totalProductPurchases = await sumProductPurchaseByDateRange(
-        from,
-        to,
-      );
+      const totalPersonalExpenses = await sumExpensesByDateRangeWithSource({
+        startDate: from,
+        endDate: to,
+        source: "personal",
+      });
+      const totalStoreExpenses = await sumExpensesByDateRangeWithSource({
+        startDate: from,
+        endDate: to,
+        source: "store",
+      });
+      const totalProductPurchases = await sumExpensesByDateRangeWithSource({
+        startDate: from,
+        endDate: to,
+        source: "product_purchase",
+      });
       const totalExpenses = totalPersonalExpenses + totalStoreExpenses;
       const totalProfit = await getProfit(from, to);
       const doc = generateSummaryPDF(

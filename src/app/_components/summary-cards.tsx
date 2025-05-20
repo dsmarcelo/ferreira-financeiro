@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { sumCashRegisterByDateRange } from "@/server/queries/cash-register-queries";
-import { sumPersonalExpenseByDateRange } from "@/server/queries/personal-expense-queries";
-import { sumStoreExpenseByDateRange } from "@/server/queries/store-expense-queries";
-import { sumProductPurchaseByDateRange } from "@/server/queries/product-purchase-queries";
+import { sumExpensesByDateRangeWithSource } from "@/server/queries/summary-queries";
 import { formatCurrency } from "@/lib/utils";
 
 // Props for the SummaryCards component
@@ -17,9 +15,21 @@ export default async function SummaryCards({ from, to }: SummaryCardsProps) {
   const [cashRegister, personalExpenses, storeExpenses, productPurchases] =
     await Promise.all([
       sumCashRegisterByDateRange(from, to),
-      sumPersonalExpenseByDateRange(from, to),
-      sumStoreExpenseByDateRange(from, to),
-      sumProductPurchaseByDateRange(from, to),
+      sumExpensesByDateRangeWithSource({
+        startDate: from,
+        endDate: to,
+        source: "personal",
+      }),
+      sumExpensesByDateRangeWithSource({
+        startDate: from,
+        endDate: to,
+        source: "store",
+      }),
+      sumExpensesByDateRangeWithSource({
+        startDate: from,
+        endDate: to,
+        source: "product_purchase",
+      }),
     ]);
 
   return (

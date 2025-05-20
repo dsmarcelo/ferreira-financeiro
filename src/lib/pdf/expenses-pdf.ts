@@ -8,20 +8,19 @@ import {
   downloadPDF,
   type TableData,
 } from "./pdf-tools";
-import type { PersonalExpense } from "@/server/db/schema/personal-expense";
-import type { StoreExpense } from "@/server/db/schema/store-expense";
+import type { Expense } from "@/server/db/schema/expense-schema";
 import { formatInTimeZone } from "date-fns-tz";
 
 /**
- * Converts a list of PersonalExpense entries to TableData for PDF generation.
+ * Converts a list of Expense entries to TableData for PDF generation.
  */
 export function personalExpensesToTableData(
-  personalExpenses: PersonalExpense[],
+  personalExpenses: Expense[],
 ): TableData {
   const rows = personalExpenses.map((item) => ({
     description: item.description,
-    dueDate: item.dueDate
-      ? formatInTimeZone(item.dueDate, "America/Sao_Paulo", "dd/MM/yyyy")
+    dueDate: item.date
+      ? formatInTimeZone(item.date, "America/Sao_Paulo", "dd/MM/yyyy")
       : "-",
     isPaid: item.isPaid ? "Sim" : "Não",
     value: formatCurrency(item.value),
@@ -55,15 +54,15 @@ export function personalExpensesToTableData(
 }
 
 /**
- * Converts a list of StoreExpense entries to TableData for PDF generation.
+ * Converts a list of Expense entries to TableData for PDF generation.
  */
 export function storeExpensesToTableData(
-  storeExpenses: StoreExpense[],
+  storeExpenses: Expense[],
 ): TableData {
   const rows = storeExpenses.map((item) => ({
     description: item.description,
-    dueDate: item.dueDate
-      ? formatInTimeZone(item.dueDate, "America/Sao_Paulo", "dd/MM/yyyy")
+    dueDate: item.date
+      ? formatInTimeZone(item.date, "America/Sao_Paulo", "dd/MM/yyyy")
       : "-",
     isPaid: item.isPaid ? "Sim" : "Não",
     value: formatCurrency(item.value),
@@ -100,7 +99,7 @@ export function storeExpensesToTableData(
  * Generates and returns a PDF document for the personal expenses list.
  */
 export function generatePersonalExpensesPDF(
-  personalExpenses: PersonalExpense[],
+  personalExpenses: Expense[],
   title: string,
 ) {
   const tableData = personalExpensesToTableData(personalExpenses);
@@ -111,7 +110,7 @@ export function generatePersonalExpensesPDF(
  * Generates and returns a PDF document for the store expenses list.
  */
 export function generateStoreExpensesPDF(
-  storeExpenses: StoreExpense[],
+  storeExpenses: Expense[],
   title: string,
 ) {
   const tableData = storeExpensesToTableData(storeExpenses);
@@ -122,7 +121,7 @@ export function generateStoreExpensesPDF(
  * Downloads the personal expenses list as a PDF.
  */
 export function downloadPersonalExpensesPDF(
-  personalExpenses: PersonalExpense[],
+  personalExpenses: Expense[],
   title: string,
 ) {
   const doc = generatePersonalExpensesPDF(personalExpenses, title);
@@ -133,7 +132,7 @@ export function downloadPersonalExpensesPDF(
  * Downloads the store expenses list as a PDF.
  */
 export function downloadStoreExpensesPDF(
-  storeExpenses: StoreExpense[],
+  storeExpenses: Expense[],
   title: string,
 ) {
   const doc = generateStoreExpensesPDF(storeExpenses, title);
@@ -144,7 +143,7 @@ export function downloadStoreExpensesPDF(
  * Shares the personal expenses list as a PDF.
  */
 export function sharePersonalExpensesPDF(
-  personalExpenses: PersonalExpense[],
+  personalExpenses: Expense[],
   title: string,
 ) {
   const doc = generatePersonalExpensesPDF(personalExpenses, title);
@@ -155,7 +154,7 @@ export function sharePersonalExpensesPDF(
  * Shares the store expenses list as a PDF.
  */
 export function shareStoreExpensesPDF(
-  storeExpenses: StoreExpense[],
+  storeExpenses: Expense[],
   title: string,
 ) {
   const doc = generateStoreExpensesPDF(storeExpenses, title);
