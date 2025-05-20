@@ -64,14 +64,9 @@ export default function AddExpenseForm({
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDescription(e.target.value);
   };
+
   const handleAmountChange = (value: number) => {
     setAmount(value);
-  };
-
-  const handleResetMainForm = () => {
-    setDescription("");
-    setAmount(0);
-    setState(initialState);
   };
 
   return (
@@ -104,7 +99,7 @@ export default function AddExpenseForm({
             source={source}
             description={description}
             amount={amount}
-            onSuccess={handleResetMainForm}
+            onSuccess={onSuccess}
             handleDescriptionChange={handleDescriptionChange}
             handleAmountChange={handleAmountChange}
           />
@@ -115,7 +110,7 @@ export default function AddExpenseForm({
             source={source}
             description={description}
             amount={amount}
-            onSuccess={handleResetMainForm}
+            onSuccess={onSuccess}
             handleDescriptionChange={handleDescriptionChange}
             handleAmountChange={handleAmountChange}
           />
@@ -126,7 +121,7 @@ export default function AddExpenseForm({
             source={source}
             description={description}
             amount={amount}
-            onSuccess={handleResetMainForm}
+            onSuccess={onSuccess}
             handleDescriptionChange={handleDescriptionChange}
             handleAmountChange={handleAmountChange}
           />
