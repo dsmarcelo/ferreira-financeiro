@@ -1,19 +1,19 @@
-import { Button } from "@/components/ui/button";
+"use client";
 import AddExpenseForm from "../../_components/forms/add-expense-form";
 import SubPageHeader from "@/app/_components/sub-page-header";
+import BottomButton from "@/app/_components/buttons/bottom-button";
 
-export default async function AddProductPurchasePage() {
+export default function AddProductPurchasePage() {
   return (
     <>
       <SubPageHeader prevURL="/compras-produtos" />
       <AddExpenseForm source="product_purchase" id="add-expense-form-product-purchase" />
-      <Button
+      <BottomButton
         type="submit"
         form="add-expense-form-product-purchase"
-        className="rounded-full fixed bottom-24 block w-full px-5"
       >
         Adicionar
-      </Button>
+      </BottomButton>
     </>
   );
 }

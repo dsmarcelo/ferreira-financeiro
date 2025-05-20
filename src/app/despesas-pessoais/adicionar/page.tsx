@@ -1,5 +1,4 @@
 "use client";
-import { Button } from "@/components/ui/button";
 import AddExpenseForm from "../../_components/forms/add-expense-form";
 import SubPageHeader from "@/app/_components/sub-page-header";
 import BottomButton from "@/app/_components/buttons/bottom-button";

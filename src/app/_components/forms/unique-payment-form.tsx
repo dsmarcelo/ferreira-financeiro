@@ -114,6 +114,7 @@ export function UniquePaymentForm({
             placeholder="Ex: Compra/Boleto parcelado"
             onChange={handleDescriptionChange}
             required
+            autoFocus
           />
           <FieldError messages={errors?.description} />
         </div>
