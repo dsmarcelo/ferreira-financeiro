@@ -155,7 +155,7 @@ export async function actionAddRecurringExpense(
       : today;
     const occurrences: Omit<ExpenseInsert, "id">[] = [];
     const groupId = crypto.randomUUID();
-    const currentDate = new Date(startDate);
+    const currentDate = new Date(startDate);    
     if (startDate < today) {
       while (currentDate <= endDate && currentDate <= today) {
         occurrences.push({
@@ -191,6 +191,9 @@ export async function actionAddRecurringExpense(
     }
 
     revalidatePath("/compras-produtos");
+    revalidatePath("/despesas-pessoais");
+    revalidatePath("/despesas-loja");
+    revalidatePath("/");
     return {
       success: true,
       message: "Despesa recorrente adicionada com sucesso!",
@@ -222,7 +225,7 @@ export async function actionDeleteExpense(
     revalidatePath("/compras-produtos");
     revalidatePath("/despesas-pessoais");
     revalidatePath("/despesas-loja");
-
+    revalidatePath("/");
     return { success: true, message: "Despesa excluída com sucesso!" };
   } catch (error) {
     return {

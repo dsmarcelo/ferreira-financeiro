@@ -14,7 +14,7 @@ import CurrencyInput from "@/components/inputs/currency-input";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
 import { useRouter } from "next/navigation";
-import { getInstallmentsByGroupId } from "@/server/queries/expense-queries";
+import { getInstallmentsByGroupId, getExpenseById } from "@/server/queries/expense-queries";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { TrashIcon } from "lucide-react";
@@ -154,6 +154,7 @@ export default function EditExpenseForm({
 
   // State for dynamic visibility of recurrenceInterval input
   const [currentRecurrenceType, setCurrentRecurrenceType] = useState(expense.recurrenceType ?? "");
+  const [formDate, setFormDate] = useState<string>(expense.date);
 
   const [relatedInstallments, setRelatedInstallments] = useState<Expense[]>([]);
   const [isLoadingInstallments, setIsLoadingInstallments] = useState(false);
@@ -161,6 +162,42 @@ export default function EditExpenseForm({
   useEffect(() => {
     setCurrentRecurrenceType(expense.recurrenceType ?? "");
   }, [expense.recurrenceType]);
+
+  useEffect(() => {
+    const currentInstanceDate = expense.date; // The date of the 'expense' prop item
+
+    const setFormDateToOriginalSeriesStart = (seriesParentExpense: Expense | undefined) => {
+      if (seriesParentExpense?.date) {
+        setFormDate(seriesParentExpense.date);
+      } else {
+        // Fallback to the current item's date if parent/original info is missing
+        setFormDate(currentInstanceDate);
+      }
+    };
+
+    const handleErrorFetchingOriginalDate = () => {
+      console.error("Failed to fetch original recurring expense details.");
+      toast.error("Falha ao buscar data original da despesa recorrente.");
+      setFormDate(currentInstanceDate); // Fallback to current item's date
+    };
+
+    if (expense.type === "recurring_occurrence" && expense.originalRecurringExpenseId) {
+      // This is a paid, materialized occurrence. Fetch its original parent series.
+      getExpenseById(expense.originalRecurringExpenseId)
+        .then(setFormDateToOriginalSeriesStart)
+        .catch(handleErrorFetchingOriginalDate);
+    } else if (expense.type === "recurring" && expense.id != null) {
+      // This is either the parent recurring definition itself or an unpaid generated instance.
+      // In both cases, expense.id refers to the parent recurring series definition.
+      // Fetching by expense.id gives us the definitive series record, and its 'date' is the series start date.
+      getExpenseById(expense.id)
+        .then(setFormDateToOriginalSeriesStart)
+        .catch(handleErrorFetchingOriginalDate);
+    } else {
+      // For one_time, installment, or other types, use their own date.
+      setFormDate(currentInstanceDate);
+    }
+  }, [expense.type, expense.id, expense.originalRecurringExpenseId, expense.date]);
 
   // Use a ref to track if we've already fetched installments to prevent infinite loops
   const hasLoadedInstallments = useRef<boolean>(false);
@@ -287,7 +324,7 @@ export default function EditExpenseForm({
           <Label htmlFor="date">Data</Label>
           <DatePicker 
             name="date" 
-            defaultValue={expense.date} 
+            defaultValue={formDate} 
             required 
           />
           {state.errors?.date && <FieldError messages={state.errors.date} />} 

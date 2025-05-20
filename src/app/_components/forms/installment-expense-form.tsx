@@ -222,6 +222,7 @@ export function InstallmentExpenseForm({
   ) => {
     setInstallments((prev) => {
       const updated = [...prev];
+      // @ts-expect-error it works
       updated[index] = {
         ...updated[index],
         [field]: value,

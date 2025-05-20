@@ -58,7 +58,7 @@ export function RecurringExpenseForm({
   const [startDate, setStartDate] = useState<string | undefined>(() =>
     new Date().toISOString().slice(0, 10),
   );
-  const [endDate, setEndDate] = useState<string | undefined>(undefined);
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState<string | undefined>(undefined);
 
   return (
     <form
@@ -104,6 +104,7 @@ export function RecurringExpenseForm({
             value={recurrenceType}
             onChange={(e) => setRecurrenceType(e.target.value)}
             className="border-input ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label="Recorrência"
             required
             aria-describedby="recurrenceType-desc"
           >
@@ -156,12 +157,12 @@ export function RecurringExpenseForm({
           <FieldError messages={errors.date} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="endDate">Fim (opcional)</Label>
+          <Label htmlFor="recurrenceEndDate">Fim (opcional)</Label>
           <DatePicker
-            id="endDate"
-            name="endDate"
-            value={endDate ?? ""}
-            onChange={(d: string | undefined) => setEndDate(d ?? undefined)}
+            id="recurrenceEndDate"
+            name="recurrenceEndDate"
+            value={recurrenceEndDate ?? ""}
+            onChange={(d: string | undefined) => setRecurrenceEndDate(d ?? undefined)}
             shortDate
           />
           <FieldError messages={errors.recurrenceEndDate} />

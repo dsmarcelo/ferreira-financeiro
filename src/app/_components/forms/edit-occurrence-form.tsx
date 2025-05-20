@@ -91,16 +91,6 @@ export default function EditOccurrenceForm({
           {state.errors?.value && <FieldError messages={state.errors.value} />}
         </div>
 
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="date">Data</Label>
-          <DatePicker 
-            name="date" 
-            defaultValue={occurrenceExpense.date} 
-            required 
-          />
-          {state.errors?.date && <FieldError messages={state.errors.date} />}
-        </div>
-
         <div className="flex items-center space-x-2">
           <Checkbox 
             id="isPaid"
