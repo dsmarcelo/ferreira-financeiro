@@ -27,7 +27,7 @@ export default async function DespesasLojaPage({
           </AddStoreExpense>
         </div>
       </Header>
-      <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5">
+      <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-3">
         <section>
           <Suspense fallback={<Loading />}>
             <ExpensesList expensesPromise={expensesPromise} />
