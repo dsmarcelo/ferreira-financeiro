@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition, useRef, useCallback } from "react";
 import {
   actionUpdateExpense,
   type ActionResponse,
@@ -42,23 +42,44 @@ function SingleInstallmentEditForm({ installment, onSuccess, onClose }: {
   onSuccess?: () => void;
   onClose?: () => void;
 }) {
+  // Use a local state to track if this form has been submitted successfully
+  // This prevents multiple submissions and callbacks
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionUpdateExpense,
     initialState,
   );
+  
+  // Custom form action wrapper to prevent multiple submissions
+  const handleFormAction = useCallback(
+    (formData: FormData) => {
+      if (hasSubmitted) {
+        // If already submitted, don't submit again
+        return;
+      }
+      // Return the original formAction call
+      return formAction(formData);
+    },
+    [formAction, hasSubmitted]
+  );
 
-  // Modified to avoid duplicate toasts - only call callbacks without showing toasts
+  // Modified to avoid duplicate toasts and prevent infinite loops
   useEffect(() => {
-    if (state.success) {
-      // Only call callbacks, don't show toast (parent form will handle that)
+    if (state.success && !hasSubmitted) {
+      // Show a toast only for this specific installment
+      toast.success(`Parcela ${installment.installmentNumber}/${installment.totalInstallments} atualizada`);
+      // Mark as submitted before calling callbacks to prevent loops
+      setHasSubmitted(true);
+      // Only call callbacks once
       if (onSuccess) onSuccess();
       if (onClose) onClose();
+    } else if (state.message && !state.success && state.errors) {
+      // Show error inline only, no toast
     }
-    // No error toast either - errors will be displayed inline in the form
-  }, [state, onSuccess, onClose]);
+  }, [state, onSuccess, onClose, hasSubmitted, installment.installmentNumber, installment.totalInstallments]);
 
   return (
-    <form action={formAction} className="mt-2 p-3 border rounded-md bg-slate-50">
+    <form action={handleFormAction} className="mt-2 p-3 border rounded-md bg-slate-50">
       <input type="hidden" name="id" value={installment.id} />
       <input type="hidden" name="type" value={installment.type} />
       {installment.source && <input type="hidden" name="source" value={installment.source} />}
@@ -141,8 +162,13 @@ export default function EditExpenseForm({
     setCurrentRecurrenceType(expense.recurrenceType ?? "");
   }, [expense.recurrenceType]);
 
+  // Use a ref to track if we've already fetched installments to prevent infinite loops
+  const hasLoadedInstallments = useRef<boolean>(false);
+
   useEffect(() => {
-    if (expense.type === "installment" && expense.groupId) {
+    // Only fetch installments once per component mount
+    if (expense.type === "installment" && expense.groupId && !hasLoadedInstallments.current) {
+      hasLoadedInstallments.current = true;
       setIsLoadingInstallments(true);
       getInstallmentsByGroupId(expense.groupId)
         .then((installments) => {
@@ -158,16 +184,29 @@ export default function EditExpenseForm({
     }
   }, [expense.id, expense.type, expense.groupId]);
 
+  // Track if we've already handled a successful update to prevent multiple callbacks
+  const hasHandledSuccess = useRef<boolean>(false);
+
   useEffect(() => {
-    if (state.success) {
+    // Skip if we've already handled this success
+    if (state.success && !hasHandledSuccess.current) {
+      // Mark as handled to prevent multiple callbacks
+      hasHandledSuccess.current = true;
+      
+      // Show success toast
       toast.success(state.message);
+      
+      // Call callbacks
       if (onSuccess) onSuccess();
       if (onClose) onClose();
 
       // If the main expense was updated and it's an installment, refresh related installments
-      if (expense.type === "installment" && expense.groupId) {
+      // But only do this if we're in a modal/sheet context (onClose exists)
+      // This prevents infinite loops in the standalone edit page
+      if (expense.type === "installment" && expense.groupId && onClose) {
         setIsLoadingInstallments(true);
-        getInstallmentsByGroupId(expense.groupId)
+        // Use void to properly handle the promise
+        void getInstallmentsByGroupId(expense.groupId)
           .then((installments) => {
             setRelatedInstallments(installments.filter(inst => inst.id !== expense.id));
           })
@@ -328,7 +367,7 @@ export default function EditExpenseForm({
             onClick={() => {
               if (onClose) {
                 onClose();
-              } else {
+              } else { // TODO: go back in the router history or this \/
                 let targetUrl = "/"; // Default fallback
                 switch (expense.source) {
                   case "product_purchase":

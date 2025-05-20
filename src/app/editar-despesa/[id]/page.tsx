@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getExpenseById } from "@/server/queries/expense-queries";
 import EditExpenseForm from "@/app/_components/forms/edit-expense-form";
@@ -14,6 +14,9 @@ export default function EditExpensePage({ params }: { params: { id: string } }) 
   const [expense, setExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(true);
   const [originalExpense, setOriginalExpense] = useState<Expense | null>(null);
+  // Add a ref to track if we've already handled a successful update
+  // This prevents multiple redirects and infinite loops
+  const hasHandledSuccess = useRef<boolean>(false);
 
   useEffect(() => {
     const fetchExpense = async () => {
@@ -62,22 +65,35 @@ export default function EditExpensePage({ params }: { params: { id: string } }) 
   };
 
   const handleSuccess = () => {
-    if (!expense) return;
+    if (!expense || hasHandledSuccess.current) return;
     
-    // Redirect based on expense source
-    switch (expense.source) {
-      case "personal":
-        router.push("/despesas-pessoais");
-        break;
-      case "store":
-        router.push("/despesas-loja");
-        break;
-      case "product_purchase":
-        router.push("/compras-produtos");
-        break;
-      default:
-        router.push("/");
+    // Mark as handled to prevent multiple success handlers
+    hasHandledSuccess.current = true;
+    
+    // Show success message without redirecting
+    toast.success("Despesa atualizada com sucesso!");
+    
+    // For installment expenses, NEVER redirect to prevent infinite loops
+    if (expense.type === "installment") {
+      return;
     }
+    
+    // For other expense types, redirect after a short delay to ensure state updates complete
+    setTimeout(() => {
+      switch (expense.source) {
+        case "personal":
+          router.push("/despesas-pessoais");
+          break;
+        case "store":
+          router.push("/despesas-loja");
+          break;
+        case "product_purchase":
+          router.push("/compras-produtos");
+          break;
+        default:
+          router.push("/");
+      }
+    }, 500); // Short delay to ensure all state updates complete
   };
 
   const renderContent = () => {
