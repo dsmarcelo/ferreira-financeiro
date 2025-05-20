@@ -275,6 +275,7 @@ export default function EditExpenseForm({
         <div className="flex flex-col gap-2">
           <Label htmlFor="value">Valor</Label>
           <CurrencyInput 
+            id="value"
             name="value" 
             initialValue={Number(expense.value)} 
             required 
@@ -415,6 +416,7 @@ export default function EditExpenseForm({
                     getInstallmentsByGroupId(expense.groupId)
                       .then((installments) => {
                         setRelatedInstallments(installments.filter(ins => ins.id !== expense.id));
+                        if (onSuccess) onSuccess();
                       })
                       .catch((err) => {
                         console.error("Failed to re-fetch related installments after sub-edit:", err);

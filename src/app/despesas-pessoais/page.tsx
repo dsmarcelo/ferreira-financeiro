@@ -19,7 +19,7 @@ export default async function DespesasPessoaisPage({
       <Header className="sticky top-0 z-50 flex-none">
         <div className="hidden sm:block">
           <AddPersonalExpense>
-            <Button className="rounded-full">Adicionar Despesa Pessoal</Button>
+            <Button className="rounded-full">Adicionar</Button>
           </AddPersonalExpense>
         </div>
       </Header>

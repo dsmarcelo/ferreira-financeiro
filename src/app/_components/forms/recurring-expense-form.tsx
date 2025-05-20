@@ -5,7 +5,6 @@ import { actionAddRecurringExpense } from "@/actions/expense-actions";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/inputs/date-picker";
 import CurrencyInput from "@/components/inputs/currency-input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { FieldError } from "@/app/_components/forms/field-error";

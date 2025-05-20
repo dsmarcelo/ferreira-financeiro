@@ -45,6 +45,22 @@ export default function AddExpenseForm({
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<number>(0);
 
+  let title = "";
+  switch (source) {
+    case "personal":
+      title = "Adicionar Despesa Pessoal";
+      break;
+    case "store":
+      title = "Adicionar Despesa da Loja";
+      break;
+    case "product_purchase":
+      title = "Adicionar Compra de Produto";
+      break;
+    default:
+      title = "Adicionar Despesa";
+      break;
+  }
+
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDescription(e.target.value);
   };
@@ -60,6 +76,7 @@ export default function AddExpenseForm({
 
   return (
     <div className="mx-auto max-w-screen-md">
+      <p className="text-center mb-4 text-xl font-bold">{title}</p>
       <Tabs defaultValue={expenseType} className="w-full px-4">
         <TabsList className="mx-auto w-full">
           <TabsTrigger

@@ -18,10 +18,12 @@ export default function Header({
   children,
   showBackButton = false,
   className,
+  showDatePicker = true,
 }: {
   children?: React.ReactNode;
   showBackButton?: boolean;
   className?: string;
+  showDatePicker?: boolean;
 }) {
   const router = useRouter();
 
@@ -105,9 +107,11 @@ export default function Header({
             Voltar
           </Button>
         )}
-        <div className="w-full sm:w-fit">
-          <DateRangePicker />
-        </div>
+        {showDatePicker && (
+          <div className="w-full sm:w-fit">
+            <DateRangePicker />
+          </div>
+        )}
         {children}
       </div>
     </header>

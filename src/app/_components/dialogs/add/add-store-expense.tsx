@@ -18,6 +18,11 @@ export default function AddStoreExpense({
       )}
     </Link>
   ) : (
-    <AddExpenseSheet source="store" buttonLabel="Adicionar Despesa da Loja" />
+    <AddExpenseSheet
+      source="store"
+      buttonLabel="Adicionar Despesa da Loja"
+    >
+      {children}
+    </AddExpenseSheet>
   );
 }

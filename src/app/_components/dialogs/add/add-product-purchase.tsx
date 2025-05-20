@@ -18,6 +18,11 @@ export default function AddProductPurchase({
       )}
     </Link>
   ) : (
-    <AddExpenseSheet source="product_purchase" buttonLabel="Adicionar Compra de Produto" />
+    <AddExpenseSheet
+      source="product_purchase"
+      buttonLabel="Adicionar Compra de Produto"
+    >
+      {children}
+    </AddExpenseSheet>
   );
 }

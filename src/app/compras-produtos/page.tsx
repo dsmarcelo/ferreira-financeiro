@@ -21,7 +21,9 @@ export default async function ComprasProdutosPage({
     <div className="flex min-h-screen flex-col pb-24">
       <Header className="sticky top-0 z-50 flex-none">
         <div className="hidden sm:block">
-          <AddProductPurchase />
+          <AddProductPurchase>
+            <Button className="rounded-full">Adicionar</Button>
+          </AddProductPurchase>
         </div>
       </Header>
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5">
@@ -32,7 +34,7 @@ export default async function ComprasProdutosPage({
       <div className="fixed bottom-24 block w-full px-5 sm:hidden">
         <AddProductPurchase>
           <Button className="h-12 w-full rounded-full">
-            Adicionar Compra de Produtos
+            Adicionar Compra de Produto
           </Button>
         </AddProductPurchase>
       </div>

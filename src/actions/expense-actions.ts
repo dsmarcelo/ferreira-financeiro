@@ -7,7 +7,7 @@ import {
   getExpenseById,
 } from "@/server/queries/expense-queries";
 import { revalidatePath } from "next/cache";
-import { expenseSourceEnum, type ExpenseInsert } from "@/server/db/schema/expense-schema";
+import { type ExpenseInsert } from "@/server/db/schema/expense-schema";
 
 // One-time expense schema & action
 

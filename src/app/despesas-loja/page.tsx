@@ -23,7 +23,7 @@ export default async function DespesasLojaPage({
       <Header className="sticky top-0 z-50 flex-none">
         <div className="hidden sm:block">
           <AddStoreExpense>
-            <Button className="rounded-full">Adicionar Despesa da Loja</Button>
+            <Button className="rounded-full">Adicionar</Button>
           </AddStoreExpense>
         </div>
       </Header>

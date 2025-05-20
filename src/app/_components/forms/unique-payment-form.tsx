@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { actionAddOneTimeExpense } from "@/actions/expense-actions";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { getToday } from "@/lib/utils";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
@@ -56,9 +55,6 @@ export function UniquePaymentForm({
 
   const handleDueDateChange = (date: string | null) => {
     if (date) setDueDate(date);
-  };
-  const handleIsPaidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsPaid(e.target.checked);
   };
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

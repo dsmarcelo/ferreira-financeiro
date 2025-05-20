@@ -8,11 +8,14 @@ import EditOccurrenceForm from "@/app/_components/forms/edit-occurrence-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import type { Expense } from "@/server/db/schema/expense-schema";
+import SubPageHeader from "@/app/_components/sub-page-header";
+import Header from "@/app/_components/header";
 
-export default function EditExpensePage({ params }: { params: { id: string } }) {
+export default function EditExpensePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [expense, setExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(true);
+  const [expenseURL, setExpenseURL] = useState<string>("");
   const [originalExpense, setOriginalExpense] = useState<Expense | null>(null);
   // Add a ref to track if we've already handled a successful update
   // This prevents multiple redirects and infinite loops
@@ -22,7 +25,7 @@ export default function EditExpensePage({ params }: { params: { id: string } }) 
     const fetchExpense = async () => {
       try {
         setLoading(true);
-        const id = parseInt(params.id, 10);
+        const id = parseInt((await params).id, 10);
         if (isNaN(id)) {
           toast.error("ID de despesa inválido");
           router.push("/");
@@ -36,6 +39,20 @@ export default function EditExpensePage({ params }: { params: { id: string } }) 
           return;
         }
 
+        switch (expenseData.source) {
+          case "personal":
+            setExpenseURL("/despesas-pessoais");
+            break;
+          case "store":
+            setExpenseURL("/despesas-loja");
+            break;
+          case "product_purchase":
+            setExpenseURL("/compras-produtos");
+            break;
+          default:
+            setExpenseURL("/");
+          }
+
         setExpense(expenseData);
       } catch (error) {
         console.error("Error fetching expense:", error);
@@ -48,7 +65,7 @@ export default function EditExpensePage({ params }: { params: { id: string } }) 
 
     // Handle the promise properly
     void fetchExpense();
-  }, [params.id, router]);
+  }, [params, router]);
 
   const handleEditOriginal = async (originalId: number) => {
     try {
@@ -73,26 +90,13 @@ export default function EditExpensePage({ params }: { params: { id: string } }) 
     // Show success message without redirecting
     toast.success("Despesa atualizada com sucesso!");
     
-    // For installment expenses, NEVER redirect to prevent infinite loops
-    if (expense.type === "installment") {
-      return;
-    }
-    
     // For other expense types, redirect after a short delay to ensure state updates complete
     setTimeout(() => {
-      switch (expense.source) {
-        case "personal":
-          router.push("/despesas-pessoais");
-          break;
-        case "store":
-          router.push("/despesas-loja");
-          break;
-        case "product_purchase":
-          router.push("/compras-produtos");
-          break;
-        default:
-          router.push("/");
-      }
+    //   if (router.back) {
+    //     router.back();
+    //     return;
+    //   }
+      router.push(expenseURL);
     }, 500); // Short delay to ensure all state updates complete
   };
 
@@ -164,9 +168,10 @@ export default function EditExpensePage({ params }: { params: { id: string } }) 
   };
 
   return (
-    <div className="container max-w-2xl py-6">
-      <h1 className="text-2xl font-bold mb-4">{getPageTitle()}</h1>
-      <div className="mt-6">
+    <div className="">
+      <Header showBackButton={false} showDatePicker={false} />
+      <SubPageHeader prevURL={expenseURL} title={getPageTitle()} />
+      <div className="mx-auto mt-4 container px-4">
         {renderContent()}
       </div>
     </div>

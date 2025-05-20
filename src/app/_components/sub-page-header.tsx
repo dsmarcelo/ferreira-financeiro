@@ -8,7 +8,7 @@ export default function SubPageHeader({
   prevURL,
   className,
 }: {
-  title: string;
+  title?: string;
   prevURL?: string;
   className?: string;
 }) {
@@ -19,17 +19,16 @@ export default function SubPageHeader({
         className,
       )}
     >
-      <div className="mx-auto my-auto flex h-12 w-full max-w-screen-lg items-center justify-between gap-4 sm:px-0 md:h-16">
-        {prevURL ? (
+      <div className="mx-auto my-auto flex h-12 w-full max-w-screen-lg items-center gap-4 sm:px-0 md:h-16">
+        {prevURL && (
           <Link href={prevURL} className="flex items-center gap-2">
             <Button variant="ghost">
               <ArrowLeft className="h-4 w-4" />
               Voltar
             </Button>
           </Link>
-        ) : (
-          <h1 className="text-xl font-bold">{title}</h1>
         )}
+        <h1 className="text-xl font-bold">{title}</h1>
       </div>
     </header>
   );

@@ -21,6 +21,8 @@ export default function AddPersonalExpense({
     <AddExpenseSheet
       source="personal"
       buttonLabel="Adicionar Despesa Pessoal"
-    />
+    >
+      {children}
+    </AddExpenseSheet>
   );
 }

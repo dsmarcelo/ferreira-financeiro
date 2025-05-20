@@ -28,15 +28,17 @@ import {
 export default function AddExpenseSheet({
   source,
   buttonLabel,
+  children,
 }: {
   source: ExpenseInsert["source"];
   buttonLabel: string;
+  children?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="rounded-full">{buttonLabel}</Button>
+        {children ?? <Button className="rounded-full">{buttonLabel}</Button>}
       </DialogTrigger>
       <DialogContent className="flex h-[90dvh] max-h-[600px] max-w-[90dvw] min-w-[700px] flex-col">
         <DialogHeader className="pb-0">
