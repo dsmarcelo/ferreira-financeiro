@@ -53,7 +53,7 @@ export default function BottomNav() {
       aria-label="Navegação inferior"
     >
       {navItems.map(({ href, icon: Icon, testId }) => {
-        const isActive = pathname === href;
+        const isActive = pathname.includes(href);
         return (
           <Link
             key={href}
