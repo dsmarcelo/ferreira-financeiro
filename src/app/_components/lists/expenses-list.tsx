@@ -29,6 +29,7 @@ import { actionToggleExpenseIsPaid } from "@/actions/expense-actions";
 import DownloadButton from "../buttons/download-button";
 import ShareButton from "../buttons/share-button";
 import { Dot } from "lucide-react";
+import { downloadExpensesPDF, shareExpensesPDF } from "@/lib/pdf/expenses-pdf";
 
 export default function ExpensesList({
   expensesPromise,
@@ -36,6 +37,7 @@ export default function ExpensesList({
   expensesPromise: Promise<Expense[]>;
 }) {
   const allExpenses = use(expensesPromise);
+  const source = allExpenses[0]?.source;
   const [optimisticExpenses, setOptimisticExpenses] = useOptimistic(
     allExpenses,
     (
@@ -58,15 +60,6 @@ export default function ExpensesList({
   );
 
   if (!allExpenses) return <div>Nenhuma despesa encontrada</div>;
-
-  // TODO: PDF actions (placeholder, adapt for product purchases if needed)
-  // const [isPending, startTransition] = useTransition();
-  // const handleDownload = () => {
-  //   return;
-  // }; // TODO
-  // const handleShare = () => {
-  //   return;
-  // }; // TODO
 
   const handleTogglePaid = async (id: number, checked: boolean, date: string, index: number) => {
     startTransition(() => {
@@ -125,12 +118,12 @@ export default function ExpensesList({
         <div className="flex gap-2">
           <DownloadButton
             aria-label="Baixar PDF das despesas pessoais"
-            // onClick={handleDownload}
+            onClick={() => downloadExpensesPDF(allExpenses, source)}
             // disabled={isPending}
           />
           <ShareButton
             aria-label="Compartilhar PDF das despesas pessoais"
-            // onClick={handleShare}
+            onClick={() => shareExpensesPDF(allExpenses, source)}
             // disabled={isPending}
           />
         </div>

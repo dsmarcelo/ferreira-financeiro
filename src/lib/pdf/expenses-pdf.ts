@@ -8,29 +8,47 @@ import {
   downloadPDF,
   type TableData,
 } from "./pdf-tools";
-import type { Expense } from "@/server/db/schema/expense-schema";
+import type { Expense, ExpenseSource } from "@/server/db/schema/expense-schema";
 import { formatInTimeZone } from "date-fns-tz";
+import { getMonthFromDate } from "@/lib/utils";
+
+function generateTitle(source: ExpenseSource, date: string) {
+  const month = getMonthFromDate(date);
+  switch (source) {
+    case "personal":
+      return "Despesas Pessoais - " + month;
+    case "store":
+      return "Despesas da Loja - " + month;
+    case "product_purchase":
+      return "Compras de Produtos - " + month;
+    default:
+      return "Despesas - " + month;
+  }
+}
 
 /**
  * Converts a list of Expense entries to TableData for PDF generation.
  */
-export function personalExpensesToTableData(
-  personalExpenses: Expense[],
-): TableData {
-  const rows = personalExpenses.map((item) => ({
+export function expensesToTableData(expenses: Expense[], source?: ExpenseSource): TableData {
+
+  const sortedExpenses = [...expenses].sort((a, b) => {
+    if (a.date && b.date) {
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    }
+    return 0;
+  });
+
+  const rows = sortedExpenses.map((item) => ({
     description: item.description,
     dueDate: item.date
       ? formatInTimeZone(item.date, "America/Sao_Paulo", "dd/MM/yyyy")
       : "-",
-    isPaid: item.isPaid ? "Sim" : "Não",
+    isPaid: item.isPaid ? "PAGO" : "",
     value: formatCurrency(item.value),
   }));
-  const total = personalExpenses.reduce(
-    (acc, item) => acc + Number(item.value),
-    0,
-  );
+  const total = expenses.reduce((acc, item) => acc + Number(item.value), 0);
   rows.push({
-    description: "TOTAL DE DESPESAS PESSOAIS",
+    description: "Total",
     dueDate: "",
     isPaid: "",
     value: formatCurrency(total),
@@ -40,7 +58,7 @@ export function personalExpensesToTableData(
     columns: [
       { header: "DESCRIÇÃO", accessorKey: "description" },
       { header: "VENCIMENTO", accessorKey: "dueDate" },
-      { header: "PAGO", accessorKey: "isPaid" },
+      { header: "SITUAÇÃO", accessorKey: "isPaid" },
       { header: "VALOR", accessorKey: "value" },
     ],
     rows: rows.map((row) => ({
@@ -54,109 +72,31 @@ export function personalExpensesToTableData(
 }
 
 /**
- * Converts a list of Expense entries to TableData for PDF generation.
+ * Generates and returns a PDF document for the expenses list.
  */
-export function storeExpensesToTableData(
-  storeExpenses: Expense[],
-): TableData {
-  const rows = storeExpenses.map((item) => ({
-    description: item.description,
-    dueDate: item.date
-      ? formatInTimeZone(item.date, "America/Sao_Paulo", "dd/MM/yyyy")
-      : "-",
-    isPaid: item.isPaid ? "Sim" : "Não",
-    value: formatCurrency(item.value),
-  }));
-  const total = storeExpenses.reduce(
-    (acc, item) => acc + Number(item.value),
-    0,
-  );
-  rows.push({
-    description: "TOTAL DE DESPESAS PESSOAIS",
-    dueDate: "",
-    isPaid: "",
-    value: formatCurrency(total),
-    _isTotal: true,
-  });
-  return {
-    columns: [
-      { header: "DESCRIÇÃO", accessorKey: "description" },
-      { header: "VENCIMENTO", accessorKey: "dueDate" },
-      { header: "PAGO", accessorKey: "isPaid" },
-      { header: "VALOR", accessorKey: "value" },
-    ],
-    rows: rows.map((row) => ({
-      description: row.description,
-      dueDate: row.dueDate,
-      isPaid: row.isPaid,
-      value: row.value,
-      _isTotal: row._isTotal,
-    })),
-  };
-}
-
-/**
- * Generates and returns a PDF document for the personal expenses list.
- */
-export function generatePersonalExpensesPDF(
-  personalExpenses: Expense[],
-  title: string,
+export function generateExpensesPDF(
+  expenses: Expense[],
 ) {
-  const tableData = personalExpensesToTableData(personalExpenses);
+  const title = generateTitle(expenses[0].source, expenses[0].date);
+
+  const tableData = expensesToTableData(expenses);
   return generatePDF(tableData, title, true);
 }
-
 /**
- * Generates and returns a PDF document for the store expenses list.
+ * Downloads the expenses list as a PDF.
  */
-export function generateStoreExpensesPDF(
-  storeExpenses: Expense[],
-  title: string,
-) {
-  const tableData = storeExpensesToTableData(storeExpenses);
-  return generatePDF(tableData, title, true);
-}
-
-/**
- * Downloads the personal expenses list as a PDF.
- */
-export function downloadPersonalExpensesPDF(
-  personalExpenses: Expense[],
-  title: string,
-) {
-  const doc = generatePersonalExpensesPDF(personalExpenses, title);
+export function downloadExpensesPDF(expenses: Expense[]) {
+  const title = generateTitle(expenses[0].source, expenses[0].date);
+  const doc = generateExpensesPDF(expenses);
   downloadPDF(doc, title);
 }
 
 /**
- * Downloads the store expenses list as a PDF.
+ * Shares the expenses list as a PDF.
  */
-export function downloadStoreExpensesPDF(
-  storeExpenses: Expense[],
-  title: string,
-) {
-  const doc = generateStoreExpensesPDF(storeExpenses, title);
-  downloadPDF(doc, title);
-}
-
-/**
- * Shares the personal expenses list as a PDF.
- */
-export function sharePersonalExpensesPDF(
-  personalExpenses: Expense[],
-  title: string,
-) {
-  const doc = generatePersonalExpensesPDF(personalExpenses, title);
+export function shareExpensesPDF(expenses: Expense[]) {
+  const title = generateTitle(expenses[0].source, expenses[0].date);
+  const doc = generateExpensesPDF(expenses);
   sharePDF(doc, title);
 }
 
-/**
- * Shares the store expenses list as a PDF.
- */
-export function shareStoreExpensesPDF(
-  storeExpenses: Expense[],
-  title: string,
-) {
-  const doc = generateStoreExpensesPDF(storeExpenses, title);
-  sharePDF(doc, title);
-}

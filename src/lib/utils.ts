@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { format, parseISO } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
+import { ptBR } from "date-fns/locale";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -33,6 +34,11 @@ export function getSelectedMonth() {
   const month = localStorage.getItem("month");
   if (month) return month;
   return "";
+}
+
+export function getMonthFromDate(date: Date | string) {
+  const dateObject = typeof date === "string" ? stringToDate(date) : date;
+  return format(dateObject, "MMMM 'de' yyyy", { locale: ptBR });
 }
 
 export function formatMonth(date: Date | string) {
