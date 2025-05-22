@@ -117,13 +117,13 @@ export default function ExpensesList({
         </div>
         <div className="flex gap-2">
           <DownloadButton
-            aria-label="Baixar PDF das despesas pessoais"
-            onClick={() => downloadExpensesPDF(allExpenses, source)}
+            aria-label="Baixar PDF das despesas"
+            onClick={() => downloadExpensesPDF(allExpenses)}
             // disabled={isPending}
           />
           <ShareButton
-            aria-label="Compartilhar PDF das despesas pessoais"
-            onClick={() => shareExpensesPDF(allExpenses, source)}
+            aria-label="Compartilhar PDF das despesas"
+            onClick={() => shareExpensesPDF(allExpenses)}
             // disabled={isPending}
           />
         </div>
