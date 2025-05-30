@@ -33,6 +33,9 @@ export function generateCashRegisterPDF(
   const tableData = cashRegistersToTableData(cashRegisters);
   const doc = new jsPDF();
 
+  // Calculate total value (convert string values to numbers)
+  const total = cashRegisters.reduce((sum, item) => sum + Number(item.value), 0);
+
   // Add title
   doc.setFontSize(20);
   doc.text(title, 14, 20);
@@ -50,8 +53,15 @@ export function generateCashRegisterPDF(
           : "";
       }),
     ),
-    theme: "striped",
-    headStyles: {
+    foot: [["TOTAL", formatCurrency(total)]],
+    theme: "striped",    headStyles: {
+      fillColor: [0, 0, 0],
+      textColor: 255,
+      fontStyle: "bold",
+      cellPadding: 2,
+      valign: "middle",
+    },
+    footStyles: {
       fillColor: [0, 0, 0],
       textColor: 255,
       fontStyle: "bold",
@@ -62,11 +72,22 @@ export function generateCashRegisterPDF(
       fontSize: 10,
       cellPadding: 1,
       valign: "middle",
-    },
-    columnStyles: {
+    },    columnStyles: {
+      0: {
+        halign: "left",
+      },
       1: {
         halign: "right",
       },
+    },    didParseCell: function (data) {
+      // Ensure header and footer cells follow column alignment
+      if (data.section === 'head' || data.section === 'foot') {
+        if (data.column.index === 0) {
+          data.cell.styles.halign = 'left';
+        } else if (data.column.index === 1) {
+          data.cell.styles.halign = 'right';
+        }
+      }
     },
   });
 
