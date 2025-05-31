@@ -33,12 +33,12 @@ export function ExpenseListItem({
   const itemContent = (
     <div
       className={cn(
-        "hover:bg-background-secondary active:bg-accent flex w-full items-center gap-2 p-2 rounded-lg",
+        "relative hover:bg-background-secondary active:bg-accent flex w-full items-center gap-2 px-2 rounded-lg",
         expense.isPaid && "border-green-500 border",
         !expense.isPaid && expense.date < new Date().toISOString() && "border-red-400 border",
       )}
     >
-      <div className="flex w-full items-center gap-2">
+      <div className="flex w-full items-center gap-2 py-2">
         <Checkbox
           className="h-6 w-6 active:bg-slate-500"
           checked={expense.isPaid}
@@ -53,7 +53,10 @@ export function ExpenseListItem({
         />
         <p className="flex-1 break-words">{expense.description}</p>
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex flex-col items-end -space-y-1">
+        {expense.isPaid && (
+          <span className="text-green-600 font-light text-xs">Pago</span>
+        )}
         <p
           className={cn(
             "w-fit text-right whitespace-nowrap",
