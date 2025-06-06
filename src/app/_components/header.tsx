@@ -20,11 +20,13 @@ export default function Header({
   showBackButton = false,
   className,
   showDatePicker = true,
+  showLogoutButton = false,
 }: {
   children?: React.ReactNode;
   showBackButton?: boolean;
   className?: string;
   showDatePicker?: boolean;
+  showLogoutButton?: boolean;
 }) {
   const router = useRouter();
 
@@ -115,7 +117,7 @@ export default function Header({
             <DateRangePicker />
           </div>
         )}
-        <LogoutButton />
+        {showLogoutButton && <LogoutButton />}
         {children}
       </div>
     </header>
