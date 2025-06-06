@@ -1,29 +1,105 @@
-# Create T3 App
+# Prime Financeiro
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+A financial management dashboard built with Next.js 15, TypeScript, and Supabase authentication.
 
-## What's next? How do I make an app with this?
+## Features
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- 📊 Financial dashboard with expense tracking
+- 🔐 Secure authentication with Supabase
+- 💰 Cash register management
+- 📝 Personal and store expense tracking
+- 🛍️ Product purchase management
+- 📄 PDF report generation
+- 🎨 Modern UI with Shadcn/UI and Tailwind CSS
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Tech Stack
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+- [Next.js 15](https://nextjs.org) (App Router)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Supabase](https://supabase.com/) for authentication
+- [Drizzle ORM](https://orm.drizzle.team) with PostgreSQL
+- [Shadcn/UI](https://ui.shadcn.com/) components
+- [Tailwind CSS](https://tailwindcss.com) for styling
 
-## Learn More
+## Getting Started
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+### 1. Clone and Install
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+```bash
+git clone <repository-url>
+cd prime-financeiro
+pnpm install
+```
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+### 2. Set up Supabase Authentication
 
-## How do I deploy this?
+1. Create a new project at [Supabase](https://supabase.com/)
+2. Go to Settings > API to get your project URL and anon key
+3. Copy `.env.local.template` to `.env.local`:
+   ```bash
+   cp .env.local.template .env.local
+   ```
+4. Fill in your Supabase credentials in `.env.local`:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL="your_supabase_project_url"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="your_supabase_anon_key"
+   ```
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+### 3. Set up Database
+
+```bash
+# Set up your PostgreSQL database
+pnpm db:push
+```
+
+### 4. Run the Development Server
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to see the application.
+
+## Authentication
+
+The application uses Supabase for authentication with the following features:
+
+- **Login Page**: `/login` - Users can sign in with email and password
+- **Admin Page**: `/admin/create-account` - Protected page to create new user accounts
+- **Protected Routes**: All main application routes require authentication
+- **Auto-redirect**: Unauthenticated users are automatically redirected to login
+
+### Creating User Accounts
+
+1. Visit `/admin/create-account`
+2. Enter the admin password: `0000`
+3. Fill in the new user's email and password
+4. The new user can then login at `/login`
+
+> **Security Note**: In production, change the admin password and store it securely using environment variables.
+
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── login/             # Authentication pages
+│   ├── admin/             # Admin functionality
+│   ├── auth/              # Auth confirmation handlers
+│   └── _components/       # Shared components
+├── components/ui/         # Shadcn/UI components
+├── utils/supabase/        # Supabase client utilities
+├── server/                # Server-side queries and actions
+└── styles/                # Global styles
+```
+
+## Deployment
+
+The application can be deployed on Vercel with minimal configuration:
+
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Add your environment variables in Vercel dashboard
+4. Deploy!
+
+Make sure to set up your production Supabase project and update the environment variables accordingly.

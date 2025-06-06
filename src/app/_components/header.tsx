@@ -6,6 +6,7 @@ import DateRangePicker from "./date-range-picker";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import LogoutButton from "./logout-button";
 import {
   ArrowLeft,
   House,
@@ -109,12 +110,12 @@ export default function Header({
             <ArrowLeft />
             Voltar
           </Button>
-        )}
-        {showDatePicker && (
+        )}        {showDatePicker && (
           <div className="w-full sm:w-fit">
             <DateRangePicker />
           </div>
         )}
+        <LogoutButton />
         {children}
       </div>
     </header>
