@@ -65,13 +65,13 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 The application uses Supabase for authentication with the following features:
 
 - **Login Page**: `/login` - Users can sign in with email and password
-- **Admin Page**: `/admin/create-account` - Protected page to create new user accounts
+- **Admin Page**: `/admin/criar-conta` - Protected page to create new user accounts
 - **Protected Routes**: All main application routes require authentication
 - **Auto-redirect**: Unauthenticated users are automatically redirected to login
 
 ### Creating User Accounts
 
-1. Visit `/admin/create-account`
+1. Visit `/admin/criar-conta`
 2. Enter the admin password: `0000`
 3. Fill in the new user's email and password
 4. The new user can then login at `/login`

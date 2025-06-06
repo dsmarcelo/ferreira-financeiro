@@ -54,7 +54,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Precisa criar uma conta?{' '}
-              <Link href="/admin/create-account" className="text-primary hover:underline">
+              <Link href="/admin/criar-conta" className="text-primary hover:underline">
                 Página do administrador
               </Link>
             </p>

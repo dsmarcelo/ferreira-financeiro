@@ -33,7 +33,7 @@ export default function ErrorPage() {
               </Link>
             </Button>
             <Button asChild variant="outline" className="w-full">
-              <Link href="/admin/create-account">
+              <Link href="/admin/criar-conta">
                 Criar nova conta
               </Link>
             </Button>
