@@ -10,7 +10,10 @@ export async function createAccount(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  const envAdminPassword = env.ADMIN_PASSWORD as string
+  const envAdminPassword = env.ADMIN_PASSWORD
+  if (!envAdminPassword) {
+    console.error('Admin password is not set in environment variables.')
+    {}
   if (!envAdminPassword) {
     console.error('Admin password is not set in environment variables.')
     redirect('/admin/criar-conta?error=missing_admin_password')
@@ -36,4 +39,5 @@ export async function createAccount(formData: FormData) {
 
   revalidatePath('/admin/criar-conta')
   redirect('/admin/criar-conta?success=true')
+}
 }
