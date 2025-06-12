@@ -9,7 +9,7 @@ export interface ActionResponse {
   errors?: Record<string, string[]>
 }
 
-export async function changePassword(formData: FormData): Promise<ActionResponse> {
+export async function changePassword(prevState: ActionResponse | null, formData: FormData): Promise<ActionResponse> {
   const currentPassword = formData.get('currentPassword') as string
   const newPassword = formData.get('newPassword') as string
   const confirmPassword = formData.get('confirmPassword') as string
