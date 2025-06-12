@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { KeyRound } from 'lucide-react'
+import { KeyRound, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
@@ -64,6 +64,7 @@ export default function ChangePasswordForm({ userEmail }: ChangePasswordFormProp
               placeholder="Digite sua senha atual"
               required
               min={6}
+              disabled={pending}
             />
             {errors.currentPassword && (
               <p className="text-sm text-red-500" aria-live="polite">
@@ -81,6 +82,7 @@ export default function ChangePasswordForm({ userEmail }: ChangePasswordFormProp
               placeholder="Digite sua nova senha"
               required
               min={6}
+              disabled={pending}
             />
             {errors.newPassword && (
               <p className="text-sm text-red-500" aria-live="polite">
@@ -98,6 +100,7 @@ export default function ChangePasswordForm({ userEmail }: ChangePasswordFormProp
               placeholder="Confirme sua nova senha"
               required
               min={6}
+              disabled={pending}
             />
             {errors.confirmPassword && (
               <p className="text-sm text-red-500" aria-live="polite">
@@ -107,7 +110,14 @@ export default function ChangePasswordForm({ userEmail }: ChangePasswordFormProp
           </div>
 
           <Button type="submit" className="w-full" size="lg" disabled={pending}>
-            {pending ? 'Alterando...' : 'Alterar Senha'}
+            {pending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Alterando...
+              </>
+            ) : (
+              'Alterar Senha'
+            )}
           </Button>
         </form>
 
