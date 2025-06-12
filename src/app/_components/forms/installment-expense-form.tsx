@@ -60,7 +60,6 @@ export function InstallmentExpenseForm({
   id,
 }: InstallmentExpenseFormProps) {
   const [state, setState] = useState(initialState);
-  const [pending, setPending] = useState(false);
   const [totalInstallments, setTotalInstallments] = useState(1);
   const [installments, setInstallments] = useState<InstallmentItem[]>([]);
   const [recurrenceType, setRecurrenceType] = useState<string>("monthly");
@@ -239,7 +238,6 @@ export function InstallmentExpenseForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setPending(true);
     setState(initialState);
 
     // Validation
@@ -250,7 +248,6 @@ export function InstallmentExpenseForm({
       installments.length === 0
     ) {
       toast.error("Preencha todos os campos obrigatórios.");
-      setPending(false);
       return;
     }
 
@@ -263,7 +260,6 @@ export function InstallmentExpenseForm({
       toast.error(
         "Todas as parcelas precisam ter uma descrição, valor e data de vencimento.",
       );
-      setPending(false);
       return;
     }
 
@@ -347,7 +343,6 @@ export function InstallmentExpenseForm({
       }
     }
 
-    setPending(false);
     if (!hasError) {
       setTotalInstallments(1);
       setState({

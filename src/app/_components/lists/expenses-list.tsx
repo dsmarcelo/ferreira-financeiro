@@ -37,7 +37,6 @@ export default function ExpensesList({
   expensesPromise: Promise<Expense[]>;
 }) {
   const allExpenses = use(expensesPromise);
-  const source = allExpenses[0]?.source;
   const [optimisticExpenses, setOptimisticExpenses] = useOptimistic(
     allExpenses,
     (

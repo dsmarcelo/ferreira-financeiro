@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { DatePicker } from "@/components/inputs/date-picker";
 import CurrencyInput from "@/components/inputs/currency-input";
 import { FieldError } from "../forms/field-error";
 
@@ -60,42 +59,42 @@ export default function EditOccurrenceForm({
     <div className="space-y-6 p-1">
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="id" value={occurrenceExpense.id} />
-        {/* Type and source should not be changed for an occurrence, send them to satisfy action */} 
-        <input type="hidden" name="type" value={occurrenceExpense.type} /> 
-        {occurrenceExpense.source && <input type="hidden" name="source" value={occurrenceExpense.source} />} 
+        {/* Type and source should not be changed for an occurrence, send them to satisfy action */}
+        <input type="hidden" name="type" value={occurrenceExpense.type} />
+        {occurrenceExpense.source && <input type="hidden" name="source" value={occurrenceExpense.source} />}
 <input type="hidden" name="originalRecurringExpenseId" value={occurrenceExpense.originalRecurringExpenseId} />
 
         <p className="text-sm text-gray-600">
-          Você está editando uma ocorrência específica de uma despesa recorrente. 
+          Você está editando uma ocorrência específica de uma despesa recorrente.
           As alterações aqui afetarão apenas esta ocorrência.
         </p>
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="description">Descrição</Label>
-          <Input 
+          <Input
             id="description"
-            name="description" 
-            defaultValue={occurrenceExpense.description} 
-            required 
+            name="description"
+            defaultValue={occurrenceExpense.description}
+            required
           />
           {state.errors?.description && <FieldError messages={state.errors.description} />}
         </div>
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="value">Valor</Label>
-          <CurrencyInput 
-            name="value" 
-            initialValue={Number(occurrenceExpense.value)} 
-            required 
+          <CurrencyInput
+            name="value"
+            initialValue={Number(occurrenceExpense.value)}
+            required
           />
           {state.errors?.value && <FieldError messages={state.errors.value} />}
         </div>
 
         <div className="flex items-center space-x-2">
-          <Checkbox 
+          <Checkbox
             id="isPaid"
-            name="isPaid" 
-            defaultChecked={occurrenceExpense.isPaid} 
+            name="isPaid"
+            defaultChecked={occurrenceExpense.isPaid}
           />
           <Label htmlFor="isPaid">Pago?</Label>
         </div>
@@ -105,10 +104,10 @@ export default function EditOccurrenceForm({
           <Button type="submit" disabled={pending} className="w-full sm:w-auto">
             {pending ? "Salvando Ocorrência..." : "Salvar Ocorrência"}
           </Button>
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onClose} 
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
             className="w-full sm:w-auto"
             disabled={pending}
           >
@@ -118,9 +117,9 @@ export default function EditOccurrenceForm({
       </form>
 
       <div className="pt-4 border-t">
-        <Button 
+        <Button
           variant="secondary"
-          onClick={() => onEditOriginal(occurrenceExpense.originalRecurringExpenseId!)} 
+          onClick={() => onEditOriginal(occurrenceExpense.originalRecurringExpenseId!)}
           className="w-full"
         >
           Editar Despesa Recorrente Original

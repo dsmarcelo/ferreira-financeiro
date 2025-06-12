@@ -6,6 +6,7 @@ import DateRangePicker from "./date-range-picker";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import UserMenu from "./user-menu";
 import {
   ArrowLeft,
   House,
@@ -19,11 +20,13 @@ export default function Header({
   showBackButton = false,
   className,
   showDatePicker = true,
+  showUserMenu = false,
 }: {
   children?: React.ReactNode;
   showBackButton?: boolean;
   className?: string;
   showDatePicker?: boolean;
+  showUserMenu?: boolean;
 }) {
   const router = useRouter();
 
@@ -109,12 +112,12 @@ export default function Header({
             <ArrowLeft />
             Voltar
           </Button>
-        )}
-        {showDatePicker && (
+        )}        {showDatePicker && (
           <div className="w-full sm:w-fit">
             <DateRangePicker />
           </div>
         )}
+        {showUserMenu && <UserMenu />}
         {children}
       </div>
     </header>
