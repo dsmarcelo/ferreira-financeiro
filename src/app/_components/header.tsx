@@ -6,7 +6,7 @@ import DateRangePicker from "./date-range-picker";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import LogoutButton from "./logout-button";
+import UserMenu from "./user-menu";
 import {
   ArrowLeft,
   House,
@@ -20,13 +20,13 @@ export default function Header({
   showBackButton = false,
   className,
   showDatePicker = true,
-  showLogoutButton = false,
+  showUserMenu = false,
 }: {
   children?: React.ReactNode;
   showBackButton?: boolean;
   className?: string;
   showDatePicker?: boolean;
-  showLogoutButton?: boolean;
+  showUserMenu?: boolean;
 }) {
   const router = useRouter();
 
@@ -117,7 +117,7 @@ export default function Header({
             <DateRangePicker />
           </div>
         )}
-        {showLogoutButton && <LogoutButton />}
+        {showUserMenu && <UserMenu />}
         {children}
       </div>
     </header>

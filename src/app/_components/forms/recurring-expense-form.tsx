@@ -40,7 +40,7 @@ export function RecurringExpenseForm({
   onSuccess?: () => void;
   id?: string;
 }) {
-  const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
+  const [state, formAction] = useActionState<ActionResponse, FormData>(
     actionAddRecurringExpense,
     initialState,
   );

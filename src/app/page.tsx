@@ -23,7 +23,7 @@ export default async function HomePage({
   return (
     <main className="">
       {/* Page header with optional back button */}
-      <Header showBackButton={false} showLogoutButton={true} />
+      <Header showBackButton={false} showUserMenu={true} />
       <div className="container mx-auto flex max-w-screen-lg flex-col gap-4 p-5 pb-16">
         {/* Profit summary section */}
         {from && to ? (
