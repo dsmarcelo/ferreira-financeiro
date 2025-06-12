@@ -4,13 +4,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { AlertCircle } from 'lucide-react'
 
 interface LoginPageProps {
-  searchParams: Promise<{ redirectTo?: string }>
+  searchParams: Promise<{ redirectTo?: string; error?: string }>
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { redirectTo } = await searchParams
+  const { redirectTo, error } = await searchParams
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -22,6 +23,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <div className="mb-4 flex items-center gap-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4" />
+              {error}
+            </div>
+          )}
+
           <form className="space-y-4">
             {redirectTo && (
               <input type="hidden" name="redirectTo" value={redirectTo} />

@@ -1,95 +1,88 @@
 'use server'
 
-import { z } from 'zod'
-import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
+import { translateAuthError } from '@/utils/error-translations'
 
-const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, 'Senha atual é obrigatória'),
-  newPassword: z.string().min(6, 'Nova senha deve ter pelo menos 6 caracteres'),
-  confirmPassword: z.string().min(6, 'Confirmação de senha deve ter pelo menos 6 caracteres'),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "As senhas não coincidem",
-  path: ["confirmPassword"],
-})
-
-export type ActionResponse = {
+export interface ActionResponse {
+  success: boolean
+  message: string
   errors?: Record<string, string[]>
-  message?: string
-  success?: boolean
 }
 
-export async function changePassword(prevState: ActionResponse | null, formData: FormData): Promise<ActionResponse> {
-  try {
-    const rawData = {
-      currentPassword: formData.get('currentPassword') as string,
-      newPassword: formData.get('newPassword') as string,
-      confirmPassword: formData.get('confirmPassword') as string,
-    }
+export async function changePassword(formData: FormData): Promise<ActionResponse> {
+  const currentPassword = formData.get('currentPassword') as string
+  const newPassword = formData.get('newPassword') as string
+  const confirmPassword = formData.get('confirmPassword') as string
 
-    // Validate the form data
-    const validatedData = changePasswordSchema.safeParse(rawData)
-
-    if (!validatedData.success) {
-      return {
-        success: false,
-        message: 'Por favor, corrija os erros no formulário',
-        errors: validatedData.error.flatten().fieldErrors,
-      }
-    }
-
-    const supabase = await createClient()
-
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return {
-        success: false,
-        message: 'Usuário não autenticado',
-      }
-    }
-
-    // First, verify the current password by attempting to sign in
-    const { error: verifyError } = await supabase.auth.signInWithPassword({
-      email: user.email!,
-      password: validatedData.data.currentPassword,
-    })
-
-    if (verifyError) {
-      return {
-        success: false,
-        message: 'Senha atual incorreta',
-        errors: {
-          currentPassword: ['Senha atual incorreta']
-        }
-      }
-    }
-
-    // Update the password
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: validatedData.data.newPassword
-    })
-
-    if (updateError) {
-      console.error('Error updating password:', updateError)
-      return {
-        success: false,
-        message: 'Erro ao alterar senha. Tente novamente.',
-      }
-    }
-
-    revalidatePath('/alterar-senha')
-
-    return {
-      success: true,
-      message: 'Senha alterada com sucesso!',
-    }
-  } catch (error) {
-    console.error('Unexpected error:', error)
+  // Validate passwords match
+  if (newPassword !== confirmPassword) {
     return {
       success: false,
-      message: 'Erro inesperado ao alterar senha',
+      message: 'As senhas não coincidem.',
+      errors: {
+        confirmPassword: ['As senhas não coincidem.']
+      }
     }
+  }
+
+  // Validate password length
+  if (newPassword.length < 6) {
+    return {
+      success: false,
+      message: 'A senha deve ter pelo menos 6 caracteres.',
+      errors: {
+        newPassword: ['A senha deve ter pelo menos 6 caracteres.']
+      }
+    }
+  }
+
+  const supabase = await createClient()
+
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.email) {
+    return {
+      success: false,
+      message: 'Usuário não encontrado.',
+      errors: {
+        currentPassword: ['Usuário não encontrado.']
+      }
+    }
+  }
+
+  // First, verify the current password
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  })
+
+  if (signInError) {
+    return {
+      success: false,
+      message: translateAuthError(signInError.message),
+      errors: {
+        currentPassword: [translateAuthError(signInError.message)]
+      }
+    }
+  }
+
+  // Update the password
+  const { error: updateError } = await supabase.auth.updateUser({
+    password: newPassword
+  })
+
+  if (updateError) {
+    return {
+      success: false,
+      message: translateAuthError(updateError.message),
+      errors: {
+        newPassword: [translateAuthError(updateError.message)]
+      }
+    }
+  }
+
+  return {
+    success: true,
+    message: 'Senha alterada com sucesso!'
   }
 }

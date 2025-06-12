@@ -31,8 +31,9 @@ export default async function CreateAccountPage({
           {error && (
             <div className="mb-4 flex items-center gap-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
               <AlertCircle className="h-4 w-4" />
-              {error === 'invalid_admin_password' && 'Senha de administrador incorreta'}
-              {error === 'signup_failed' && 'Erro ao criar conta. Tente novamente.'}
+              {error === 'missing_admin_password' && 'Senha de administrador não configurada no sistema.'}
+              {error === 'invalid_admin_password' && 'Senha de administrador incorreta.'}
+              {error !== 'missing_admin_password' && error !== 'invalid_admin_password' && error}
             </div>
           )}
 

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { env } from '@/env'
+import { translateAuthError } from '@/utils/error-translations'
 
 export async function createAccount(formData: FormData) {
   const adminPassword = formData.get('adminPassword') as string
@@ -11,9 +12,6 @@ export async function createAccount(formData: FormData) {
   const password = formData.get('password') as string
 
   const envAdminPassword = env.ADMIN_PASSWORD
-  if (!envAdminPassword) {
-    console.error('Admin password is not set in environment variables.')
-    {}
   if (!envAdminPassword) {
     console.error('Admin password is not set in environment variables.')
     redirect('/admin/criar-conta?error=missing_admin_password')
@@ -33,11 +31,10 @@ export async function createAccount(formData: FormData) {
 
   if (error) {
     console.error('Error creating account:', error)
-    // Redirect to the create account page with an error message
-    redirect('/admin/criar-conta?error=signup_failed')
+    // Redirect to the create account page with a translated error message
+    redirect(`/admin/criar-conta?error=${encodeURIComponent(translateAuthError(error.message))}`)
   }
 
   revalidatePath('/admin/criar-conta')
   redirect('/admin/criar-conta?success=true')
-}
 }
