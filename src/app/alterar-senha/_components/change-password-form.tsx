@@ -65,6 +65,7 @@ export default function ChangePasswordForm({ userEmail }: ChangePasswordFormProp
               required
               min={6}
               disabled={pending}
+              defaultValue={state?.currentPassword}
             />
             {errors.currentPassword && (
               <p className="text-sm text-red-500" aria-live="polite">
@@ -83,6 +84,7 @@ export default function ChangePasswordForm({ userEmail }: ChangePasswordFormProp
               required
               min={6}
               disabled={pending}
+              defaultValue={state?.newPassword}
             />
             {errors.newPassword && (
               <p className="text-sm text-red-500" aria-live="polite">
@@ -101,6 +103,7 @@ export default function ChangePasswordForm({ userEmail }: ChangePasswordFormProp
               required
               min={6}
               disabled={pending}
+              defaultValue={state?.confirmPassword}
             />
             {errors.confirmPassword && (
               <p className="text-sm text-red-500" aria-live="polite">

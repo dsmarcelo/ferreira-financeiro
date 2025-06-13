@@ -7,6 +7,9 @@ export interface ActionResponse {
   success: boolean
   message: string
   errors?: Record<string, string[]>
+  currentPassword?: string
+  newPassword?: string
+  confirmPassword?: string
 }
 
 export async function changePassword(prevState: ActionResponse | null, formData: FormData): Promise<ActionResponse> {
@@ -21,7 +24,10 @@ export async function changePassword(prevState: ActionResponse | null, formData:
       message: 'As senhas não coincidem.',
       errors: {
         confirmPassword: ['As senhas não coincidem.']
-      }
+      },
+      currentPassword,
+      newPassword,
+      confirmPassword
     }
   }
 
@@ -32,7 +38,10 @@ export async function changePassword(prevState: ActionResponse | null, formData:
       message: 'A senha deve ter pelo menos 6 caracteres.',
       errors: {
         newPassword: ['A senha deve ter pelo menos 6 caracteres.']
-      }
+      },
+      currentPassword,
+      newPassword,
+      confirmPassword
     }
   }
 
@@ -46,7 +55,10 @@ export async function changePassword(prevState: ActionResponse | null, formData:
       message: 'Usuário não encontrado.',
       errors: {
         currentPassword: ['Usuário não encontrado.']
-      }
+      },
+      currentPassword,
+      newPassword,
+      confirmPassword
     }
   }
 
@@ -62,7 +74,10 @@ export async function changePassword(prevState: ActionResponse | null, formData:
       message: translateAuthError(signInError.message),
       errors: {
         currentPassword: [translateAuthError(signInError.message)]
-      }
+      },
+      currentPassword,
+      newPassword,
+      confirmPassword
     }
   }
 
@@ -77,7 +92,10 @@ export async function changePassword(prevState: ActionResponse | null, formData:
       message: translateAuthError(updateError.message),
       errors: {
         newPassword: [translateAuthError(updateError.message)]
-      }
+      },
+      currentPassword,
+      newPassword,
+      confirmPassword
     }
   }
 

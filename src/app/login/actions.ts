@@ -5,7 +5,12 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { translateAuthError } from '@/utils/error-translations'
 
-export async function login(prevState: string | null, formData: FormData): Promise<string | null> {
+export interface LoginResponse {
+  error?: string
+  email?: string
+}
+
+export async function login(prevState: LoginResponse | null, formData: FormData): Promise<LoginResponse> {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const redirectTo = formData.get('redirectTo') as string
@@ -19,7 +24,7 @@ export async function login(prevState: string | null, formData: FormData): Promi
 
   if (error) {
     console.error('Error logging in:', error)
-    return translateAuthError(error.message)
+    return { error: translateAuthError(error.message), email }
   }
 
   revalidatePath('/', 'layout')
