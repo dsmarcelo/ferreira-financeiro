@@ -40,6 +40,7 @@ export function expensesToTableData(expenses: Expense[], source?: ExpenseSource)
 
   const rows = sortedExpenses.map((item) => ({
     description: item.description,
+    category: item.category.name,
     dueDate: item.date
       ? formatInTimeZone(item.date, "America/Sao_Paulo", "dd/MM/yyyy")
       : "-",
@@ -49,6 +50,7 @@ export function expensesToTableData(expenses: Expense[], source?: ExpenseSource)
   const total = expenses.reduce((acc, item) => acc + Number(item.value), 0);
   rows.push({
     description: "Total",
+    category: "",
     dueDate: "",
     isPaid: "",
     value: formatCurrency(total),
@@ -57,12 +59,14 @@ export function expensesToTableData(expenses: Expense[], source?: ExpenseSource)
   return {
     columns: [
       { header: "DESCRIÇÃO", accessorKey: "description" },
+      { header: "CATEGORIA", accessorKey: "category" },
       { header: "VENCIMENTO", accessorKey: "dueDate" },
       { header: "SITUAÇÃO", accessorKey: "isPaid" },
       { header: "VALOR", accessorKey: "value" },
     ],
     rows: rows.map((row) => ({
       description: row.description,
+      category: row.category,
       dueDate: row.dueDate,
       isPaid: row.isPaid,
       value: row.value,

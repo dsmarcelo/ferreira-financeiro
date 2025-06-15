@@ -1,6 +1,7 @@
 "use client";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { Expense } from "@/server/db/schema/expense-schema";
 import * as React from "react";
@@ -51,7 +52,14 @@ export function ExpenseListItem({
             onTogglePaid(expense.id, checked as boolean, date, index);
           }}
         />
-        <p className="flex-1 break-words">{expense.description}</p>
+        <div className="flex-1 break-words">
+          <p>{expense.description}</p>
+          <div className="flex items-center gap-1 mt-1">
+            <Badge variant="outline" className="text-xs">
+              {expense.category.name}
+            </Badge>
+          </div>
+        </div>
       </div>
       <div className="flex flex-col items-end -space-y-1">
         {expense.isPaid && (

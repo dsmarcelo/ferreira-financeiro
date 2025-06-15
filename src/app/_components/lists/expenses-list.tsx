@@ -25,11 +25,25 @@ function sumExpensesByDate(expenses: Expense[]): number {
   return expenses.reduce((sum, expense) => sum + Number(expense.value), 0);
 }
 
+function groupExpensesByCategory(expenses: Expense[]): Record<string, Expense[]> {
+  return expenses.reduce<Record<string, Expense[]>>((acc, expense) => {
+    const categoryName = expense.category.name;
+    acc[categoryName] ??= [];
+    acc[categoryName].push(expense);
+    return acc;
+  }, {});
+}
+
+function sumExpensesByCategory(expenses: Expense[]): number {
+  return expenses.reduce((sum, expense) => sum + Number(expense.value), 0);
+}
+
 import { actionToggleExpenseIsPaid } from "@/actions/expense-actions";
 import DownloadButton from "../buttons/download-button";
 import ShareButton from "../buttons/share-button";
 import { Dot } from "lucide-react";
 import { downloadExpensesPDF, shareExpensesPDF } from "@/lib/pdf/expenses-pdf";
+import { Badge } from "@/components/ui/badge";
 
 export default function ExpensesList({
   expensesPromise,
@@ -72,6 +86,7 @@ export default function ExpensesList({
   };
 
   const grouped = groupByDate(optimisticExpenses);
+  const groupedByCategory = groupExpensesByCategory(optimisticExpenses);
 
   const sortedDates = Object.keys(grouped).sort();
 
@@ -118,15 +133,36 @@ export default function ExpensesList({
           <DownloadButton
             aria-label="Baixar PDF das despesas"
             onClick={() => downloadExpensesPDF(allExpenses)}
-            // disabled={isPending}
+          // disabled={isPending}
           />
           <ShareButton
             aria-label="Compartilhar PDF das despesas"
             onClick={() => shareExpensesPDF(allExpenses)}
-            // disabled={isPending}
+          // disabled={isPending}
           />
         </div>
       </div>
+
+      {/* Category Summary */}
+      {Object.keys(groupedByCategory).length > 0 && (
+        <div className="border rounded-lg p-4 space-y-3">
+          <h3 className="font-semibold text-sm">Despesas por Categoria</h3>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(groupedByCategory)
+              .sort(([, a], [, b]) => sumExpensesByCategory(b) - sumExpensesByCategory(a))
+              .map(([categoryName, categoryExpenses]) => (
+                <div key={categoryName} className="flex items-center gap-2">
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <span>{categoryName}</span>
+                    <span className="text-xs opacity-70">
+                      {formatCurrency(sumExpensesByCategory(categoryExpenses))}
+                    </span>
+                  </Badge>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
 
       {sortedDates.length === 0 && (
         <div className="text-muted-foreground py-8 text-center">
