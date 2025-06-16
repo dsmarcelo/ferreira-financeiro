@@ -8,7 +8,6 @@ import {
 } from "../db/schema/expense-schema";
 import { and, eq, gte, isNull, lte, ne, or, type SQL, sum } from "drizzle-orm";
 import { expenseCategory, DEFAULT_CATEGORY } from "../db/schema/expense-category";
-import type { ExpenseCategory } from "../db/schema/expense-category";
 import {
   addDays,
   addMonths,
@@ -21,19 +20,22 @@ import {
   parseISO,
 } from "date-fns";
 
-function mapJoinedExpenseToExpense(joinedExpense: any): Expense {
+type JoinedExpense = {
+  expense: typeof expense.$inferSelect;
+  expense_category: typeof expenseCategory.$inferSelect | null;
+};
+
+function mapJoinedExpenseToExpense(joinedExpense: JoinedExpense): Expense {
   if (!joinedExpense.expense) throw new Error("Invalid expense data");
   return {
     ...joinedExpense.expense,
-    category: joinedExpense.expense_category || DEFAULT_CATEGORY,
+    category: joinedExpense.expense_category ?? DEFAULT_CATEGORY,
   };
 }
 
 export async function addExpense(data: ExpenseInsert): Promise<Expense> {
   // Set default category if none provided
-  if (!data.categoryId) {
-    data.categoryId = DEFAULT_CATEGORY.id;
-  }
+  data.categoryId ??= DEFAULT_CATEGORY.id;
   const [newExpense] = await db.insert(expense).values(data).returning();
   if (!newExpense) throw new Error("Failed to create expense");
 
@@ -209,7 +211,7 @@ export async function getExpensesByPeriod({
           processedExpenses.push(occurrence);
         }
       }
-    } else if (ex.type === "recurring_occurrence" && ex.originalRecurringExpenseId != null) {
+    } else if (ex.type === "recurring_occurrence" && ex.originalRecurringExpenseId !== null) {
       continue;
     } else {
       processedExpenses.push(ex);

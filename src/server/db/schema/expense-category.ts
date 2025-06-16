@@ -14,11 +14,13 @@ export const expenseCategory = createTable("expense_category", {
   ),
 });
 
-export const DEFAULT_CATEGORY = {
+export const DEFAULT_CATEGORY: ExpenseCategory = {
   id: 1,
   name: "General",
   description: "Default category for expenses",
-} as const;
+  createdAt: new Date(),
+  updatedAt: null,
+};
 
 export type ExpenseCategory = typeof expenseCategory.$inferSelect;
 export type ExpenseCategoryInsert = typeof expenseCategory.$inferInsert;
