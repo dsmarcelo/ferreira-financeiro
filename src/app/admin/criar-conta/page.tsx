@@ -1,16 +1,30 @@
 'use client'
 
-import { useActionState } from 'react'
-import { createAccount } from './actions'
+import { useActionState, useEffect } from 'react'
+import { createAccount, type CreateAccountResponse } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
-import { AlertCircle, CheckCircle, Shield, Loader2 } from 'lucide-react'
+import { Shield, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 export default function CreateAccountPage() {
-  const [state, formAction, pending] = useActionState(createAccount, null)
+  const router = useRouter()
+  const [state, formAction, pending] = useActionState<CreateAccountResponse, FormData>(createAccount, {})
+
+  useEffect(() => {
+    if (state?.success === true && state.message) {
+      toast.success(state.message)
+      setTimeout(() => {
+        router.push('/login')
+      }, 2000)
+    } else if (state?.error) {
+      toast.error(state.error)
+    }
+  }, [state, router])
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -25,22 +39,6 @@ export default function CreateAccountPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {state && state !== 'success' && (
-            <div className="mb-4 flex items-center gap-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4" />
-              {state === 'missing_admin_password' && 'Senha de administrador não configurada no sistema.'}
-              {state === 'invalid_admin_password' && 'Senha de administrador incorreta.'}
-              {state !== 'missing_admin_password' && state !== 'invalid_admin_password' && state}
-            </div>
-          )}
-
-          {state === 'success' && (
-            <div className="mb-4 flex items-center gap-2 rounded-md bg-green-50 p-3 text-sm text-green-700">
-              <CheckCircle className="h-4 w-4" />
-              Conta criada com sucesso!
-            </div>
-          )}
-
           <form action={formAction} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="adminPassword">Senha do Administrador</Label>
@@ -51,6 +49,7 @@ export default function CreateAccountPage() {
                 placeholder="Digite a senha de administrador"
                 required
                 disabled={pending}
+                defaultValue={state?.adminPassword}
               />
               <p className="text-xs text-muted-foreground">
                 Senha necessária para criar novas contas
@@ -67,6 +66,7 @@ export default function CreateAccountPage() {
                   placeholder="usuario@email.com"
                   required
                   disabled={pending}
+                  defaultValue={state?.email}
                 />
               </div>
 

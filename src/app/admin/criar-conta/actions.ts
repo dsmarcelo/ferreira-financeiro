@@ -5,7 +5,15 @@ import { createClient } from '@/utils/supabase/server'
 import { env } from '@/env'
 import { translateAuthError } from '@/utils/error-translations'
 
-export async function createAccount(prevState: string | null, formData: FormData): Promise<string | null> {
+export interface CreateAccountResponse {
+  error?: string
+  success?: boolean
+  message?: string
+  email?: string
+  adminPassword?: string
+}
+
+export async function createAccount(prevState: CreateAccountResponse | null, formData: FormData): Promise<CreateAccountResponse> {
   const adminPassword = formData.get('adminPassword') as string
   const email = formData.get('email') as string
   const password = formData.get('password') as string
@@ -13,12 +21,12 @@ export async function createAccount(prevState: string | null, formData: FormData
   const envAdminPassword = env.ADMIN_PASSWORD
   if (!envAdminPassword) {
     console.error('Admin password is not set in environment variables.')
-    return 'missing_admin_password'
+    return { error: 'Senha de administrador não configurada no sistema.', email, adminPassword }
   }
 
   // Check admin password (in production, this should be stored securely)
   if (adminPassword !== envAdminPassword) {
-    return 'invalid_admin_password'
+    return { error: 'Senha de administrador incorreta.', email, adminPassword }
   }
 
   const supabase = await createClient()
@@ -30,9 +38,9 @@ export async function createAccount(prevState: string | null, formData: FormData
 
   if (error) {
     console.error('Error creating account:', error)
-    return translateAuthError(error.message)
+    return { error: translateAuthError(error.message), email, adminPassword }
   }
 
   revalidatePath('/admin/criar-conta')
-  return 'success'
+  return { success: true, message: 'Conta criada com sucesso!' }
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { login } from './actions'
+import { login, type LoginResponse } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,7 +13,7 @@ import { useSearchParams } from 'next/navigation'
 export default function LoginPage() {
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirectTo')
-  const [state, formAction, pending] = useActionState(login, null)
+  const [state, formAction, pending] = useActionState<LoginResponse, FormData>(login, {})
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -25,10 +25,10 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {state && (
+          {state.error && (
             <div className="mb-4 flex items-center gap-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
               <AlertCircle className="h-4 w-4" />
-              {state}
+              {state.error}
             </div>
           )}
 
@@ -45,6 +45,7 @@ export default function LoginPage() {
                 placeholder="seu@email.com"
                 required
                 disabled={pending}
+                defaultValue={state?.email}
               />
             </div>
             <div className="space-y-2">
