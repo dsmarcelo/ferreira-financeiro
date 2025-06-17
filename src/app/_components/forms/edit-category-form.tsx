@@ -9,6 +9,7 @@ import { updateCategory, type ActionResponse } from "@/server/actions/category-a
 import type { ExpenseCategory } from "@/server/db/schema/expense-category";
 import { DeleteCategoryButton } from "../buttons/delete-category-button";
 import { CategoryColorSelector } from "../inputs/category-color-selector";
+import { EmojiPicker } from "../inputs/emoji-picker";
 
 const initialState: ActionResponse = {
   message: "",
@@ -45,6 +46,7 @@ export function EditCategoryForm({ category }: EditCategoryFormProps) {
   const updateCategoryWithId = updateCategory.bind(null, category.id);
   const [state, formAction, pending] = useActionState(updateCategoryWithId, initialState);
   const [selectedColor, setSelectedColor] = useState(category.color);
+  const [selectedEmoji, setSelectedEmoji] = useState(category.emoji || "💸");
 
   return (
     <div className="mx-auto max-w-screen-md px-4">
@@ -79,11 +81,21 @@ export function EditCategoryForm({ category }: EditCategoryFormProps) {
           <FieldError messages={state?.errors?.description} />
         </div>
 
+        <EmojiPicker
+          selectedEmoji={selectedEmoji}
+          onEmojiSelect={setSelectedEmoji}
+          label="Emoji da Categoria"
+          messages={state?.errors?.emoji}
+        />
+
         <CategoryColorSelector
           selectedColor={selectedColor}
           setSelectedColor={setSelectedColor}
           messages={state?.errors?.color}
         />
+
+        {/* Hidden input to submit emoji value */}
+        <input type="hidden" name="emoji" value={selectedEmoji} />
 
         {state?.message && (
           <p

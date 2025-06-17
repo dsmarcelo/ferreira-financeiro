@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { FieldError } from "./field-error";
 import { createCategory, type ActionResponse } from "@/server/actions/category-actions";
 import { CategoryColorSelector } from "../inputs/category-color-selector";
+import { EmojiPicker } from "../inputs/emoji-picker";
 
 const initialState: ActionResponse = {
   message: "",
@@ -39,6 +40,7 @@ const CATEGORY_COLORS = [
 export function CreateCategoryForm() {
   const [state, formAction, pending] = useActionState(createCategory, initialState);
   const [selectedColor, setSelectedColor] = useState("blue");
+  const [selectedEmoji, setSelectedEmoji] = useState("💸");
 
   return (
     <div className="mx-auto max-w-screen-md px-4">
@@ -68,11 +70,21 @@ export function CreateCategoryForm() {
           <FieldError messages={state?.errors?.description} />
         </div>
 
+        <EmojiPicker
+          selectedEmoji={selectedEmoji}
+          onEmojiSelect={setSelectedEmoji}
+          label="Emoji da Categoria"
+          messages={state?.errors?.emoji}
+        />
+
         <CategoryColorSelector
           selectedColor={selectedColor}
           setSelectedColor={setSelectedColor}
           messages={state?.errors?.color}
         />
+
+        {/* Hidden input to submit emoji value */}
+        <input type="hidden" name="emoji" value={selectedEmoji} />
 
         {state?.message && (
           <p

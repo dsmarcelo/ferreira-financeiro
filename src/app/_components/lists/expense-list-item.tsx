@@ -59,6 +59,7 @@ export function ExpenseListItem({
             <CategoryBadge
               color={expense.category.color}
               name={expense.category.name}
+              emoji={expense.category.emoji}
             />
           </div>
         </div>

@@ -13,6 +13,7 @@ const categorySchema = z.object({
   name: z.string().min(1, "Nome é obrigatório").max(100, "Nome deve ter no máximo 100 caracteres"),
   description: z.string().optional(),
   color: z.string().min(1, "Cor é obrigatória"),
+  emoji: z.string().min(1, "Emoji é obrigatório"),
 });
 
 export type ActionResponse = {
@@ -30,6 +31,7 @@ export async function createCategory(
       name: formData.get("name") as string,
       description: formData.get("description") as string,
       color: formData.get("color") as string,
+      emoji: formData.get("emoji") as string,
     };
 
     // Validate the form data
@@ -66,6 +68,7 @@ export async function updateCategory(
       name: formData.get("name") as string,
       description: formData.get("description") as string,
       color: formData.get("color") as string,
+      emoji: formData.get("emoji") as string,
     };
 
     // Validate the form data

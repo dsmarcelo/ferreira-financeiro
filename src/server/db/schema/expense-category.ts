@@ -7,6 +7,7 @@ export const expenseCategory = createTable("expense_category", {
   name: text("name").notNull(),
   description: text("description"),
   color: text("color").notNull().default("blue"),
+  emoji: text("emoji").notNull().default("💸"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
@@ -20,6 +21,7 @@ export const DEFAULT_CATEGORY: ExpenseCategory = {
   name: "Diversos",
   description: "Categoria padrão para despesas",
   color: "blue",
+  emoji: "💸",
   createdAt: new Date(),
   updatedAt: null,
 };

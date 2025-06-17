@@ -36,7 +36,10 @@ export default async function CategoriesPage(props: { searchParams: Promise<Reco
               <CardHeader className="p-2 px-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-lg">{category.name}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{category.emoji || "💸"}</span>
+                      <CardTitle className="text-lg">{category.name}</CardTitle>
+                    </div>
                     {category.description && (
                       <CardDescription>
                         {category.description}
