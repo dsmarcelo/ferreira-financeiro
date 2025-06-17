@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, KeyRound, User } from 'lucide-react'
+import { LogOut, KeyRound, User, Tag } from 'lucide-react'
 import { signout } from '@/app/login/actions'
 import Link from 'next/link'
 
@@ -26,10 +26,15 @@ export default function UserMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <div className="px-2 py-1.5">
-          <p className="text-sm font-medium">Conta</p>
-        </div>
+        <DropdownMenuItem asChild>
+          <Link href="/categorias" className="flex items-center gap-2 cursor-pointer">
+            <Tag size={16} />
+            Editar Categorias
+          </Link>
+        </DropdownMenuItem>
+
         <DropdownMenuSeparator />
+
         <DropdownMenuItem asChild>
           <Link href="/alterar-senha" className="flex items-center gap-2 cursor-pointer">
             <KeyRound size={16} />

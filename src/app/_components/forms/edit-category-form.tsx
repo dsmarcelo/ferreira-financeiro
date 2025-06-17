@@ -84,7 +84,7 @@ export function EditCategoryForm({ category }: EditCategoryFormProps) {
         <EmojiPicker
           selectedEmoji={selectedEmoji}
           onEmojiSelect={setSelectedEmoji}
-          label="Emoji da Categoria"
+          label="Ícone da Categoria"
           messages={state?.errors?.emoji}
         />
 
