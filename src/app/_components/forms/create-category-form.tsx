@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 
 import { FieldError } from "./field-error";
 import { createCategory, type ActionResponse } from "@/server/actions/category-actions";
+import { CategoryColorSelector } from "../inputs/category-color-selector";
 
 const initialState: ActionResponse = {
   message: "",
@@ -67,30 +68,11 @@ export function CreateCategoryForm() {
           <FieldError messages={state?.errors?.description} />
         </div>
 
-        <div className="space-y-2">
-          <Label>Cor da Categoria</Label>
-          <input type="hidden" name="color" value={selectedColor} />
-          <div className="grid grid-cols-5 gap-2">
-            {CATEGORY_COLORS.map((color) => (
-              <button
-                key={color.name}
-                type="button"
-                onClick={() => setSelectedColor(color.name)}
-                className={`w-12 h-12 rounded-lg border-2 transition-all hover:scale-105 ${color.color
-                  } ${selectedColor === color.name
-                    ? "border-gray-900 ring-2 ring-gray-400 ring-offset-2"
-                    : "border-gray-300"
-                  }`}
-                title={color.label}
-                aria-label={`Selecionar cor ${color.label}`}
-              />
-            ))}
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Cor selecionada: {CATEGORY_COLORS.find(c => c.name === selectedColor)?.label}
-          </p>
-          <FieldError messages={state?.errors?.color} />
-        </div>
+        <CategoryColorSelector
+          selectedColor={selectedColor}
+          setSelectedColor={setSelectedColor}
+          messages={state?.errors?.color}
+        />
 
         {state?.message && (
           <p

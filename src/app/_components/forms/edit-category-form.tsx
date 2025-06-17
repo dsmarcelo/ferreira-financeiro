@@ -1,16 +1,41 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FieldError } from "./field-error";
 import { updateCategory, type ActionResponse } from "@/server/actions/category-actions";
 import type { ExpenseCategory } from "@/server/db/schema/expense-category";
+import { DeleteCategoryButton } from "../buttons/delete-category-button";
+import { CategoryColorSelector } from "../inputs/category-color-selector";
 
 const initialState: ActionResponse = {
   message: "",
 };
+
+const CATEGORY_COLORS = [
+  { name: "red", label: "Vermelho", color: "bg-red-500" },
+  { name: "orange", label: "Laranja", color: "bg-orange-500" },
+  { name: "amber", label: "Âmbar", color: "bg-amber-500" },
+  { name: "yellow", label: "Amarelo", color: "bg-yellow-500" },
+  { name: "lime", label: "Lima", color: "bg-lime-500" },
+  { name: "green", label: "Verde", color: "bg-green-500" },
+  { name: "emerald", label: "Esmeralda", color: "bg-emerald-500" },
+  { name: "teal", label: "Azul-esverdeado", color: "bg-teal-500" },
+  { name: "cyan", label: "Ciano", color: "bg-cyan-500" },
+  { name: "sky", label: "Azul-claro", color: "bg-sky-500" },
+  { name: "blue", label: "Azul", color: "bg-blue-500" },
+  { name: "indigo", label: "Índigo", color: "bg-indigo-500" },
+  { name: "violet", label: "Violeta", color: "bg-violet-500" },
+  { name: "purple", label: "Roxo", color: "bg-purple-500" },
+  { name: "fuchsia", label: "Fúcsia", color: "bg-fuchsia-500" },
+  { name: "pink", label: "Rosa", color: "bg-pink-500" },
+  { name: "rose", label: "Rosa-escuro", color: "bg-rose-500" },
+  { name: "gray", label: "Cinza", color: "bg-gray-500" },
+  { name: "slate", label: "Ardósia", color: "bg-slate-500" },
+  { name: "zinc", label: "Zinco", color: "bg-zinc-500" },
+] as const;
 
 interface EditCategoryFormProps {
   category: ExpenseCategory;
@@ -19,9 +44,13 @@ interface EditCategoryFormProps {
 export function EditCategoryForm({ category }: EditCategoryFormProps) {
   const updateCategoryWithId = updateCategory.bind(null, category.id);
   const [state, formAction, pending] = useActionState(updateCategoryWithId, initialState);
+  const [selectedColor, setSelectedColor] = useState(category.color);
 
   return (
     <div className="mx-auto max-w-screen-md px-4">
+      <div className="flex justify-end">
+        <DeleteCategoryButton categoryId={category.id} categoryName={category.name} />
+      </div>
       <form action={formAction} className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor="name">Nome da Categoria</Label>
@@ -49,6 +78,12 @@ export function EditCategoryForm({ category }: EditCategoryFormProps) {
           />
           <FieldError messages={state?.errors?.description} />
         </div>
+
+        <CategoryColorSelector
+          selectedColor={selectedColor}
+          setSelectedColor={setSelectedColor}
+          messages={state?.errors?.color}
+        />
 
         {state?.message && (
           <p

@@ -1,11 +1,10 @@
 import { getAllExpenseCategories } from "@/server/queries/expense-category-queries";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Plus, Edit } from "lucide-react";
 import Link from "next/link";
-import { DeleteCategoryButton } from "@/app/_components/buttons/delete-category-button";
 import SubPageHeader from "@/app/_components/sub-page-header";
+import { getCategoryColorClasses } from "@/lib/utils";
 
 export default async function CategoriesPage() {
   const categories = await getAllExpenseCategories();
@@ -25,7 +24,7 @@ export default async function CategoriesPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {categories.map((category) => (
-          <Card key={category.id} className="relative">
+          <Card key={category.id} className={`relative ${getCategoryColorClasses(category.color)}`}>
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -36,11 +35,6 @@ export default async function CategoriesPage() {
                     </CardDescription>
                   )}
                 </div>
-                {category.id === 1 && (
-                  <Badge variant="secondary" className="ml-2">
-                    Padrão
-                  </Badge>
-                )}
               </div>
             </CardHeader>
             <CardContent className="pt-0">
@@ -51,9 +45,6 @@ export default async function CategoriesPage() {
                     Editar
                   </Link>
                 </Button>
-                {category.id !== 1 && (
-                  <DeleteCategoryButton categoryId={category.id} categoryName={category.name} />
-                )}
               </div>
             </CardContent>
           </Card>
