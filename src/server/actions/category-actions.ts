@@ -45,9 +45,6 @@ export async function createCategory(
 
     // Create the category
     await createExpenseCategory(validatedData.data);
-
-    revalidatePath("/categorias");
-    redirect("/categorias"); // TODO: Check if this works
   } catch (error) {
     console.error("Error creating category:", error);
     return {
@@ -55,6 +52,8 @@ export async function createCategory(
       message: "Erro inesperado ao criar categoria",
     };
   }
+  revalidatePath("/categorias");
+  redirect("/categorias"); // TODO: Check if this works
 }
 
 export async function updateCategory(
@@ -82,9 +81,6 @@ export async function updateCategory(
 
     // Update the category
     await updateExpenseCategory(id, validatedData.data);
-
-    revalidatePath("/categorias");
-    redirect("/categorias");
   } catch (error) {
     console.error("Error updating category:", error);
     return {
@@ -92,6 +88,8 @@ export async function updateCategory(
       message: "Erro inesperado ao atualizar categoria",
     };
   }
+  revalidatePath("/categorias");
+  redirect("/categorias");
 }
 
 export async function removeCategoryAction(id: number): Promise<ActionResponse> {

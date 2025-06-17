@@ -24,8 +24,8 @@ export default async function EditCategoryPage({ params }: EditCategoryPageProps
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <SubPageHeader title={`Editar Categoria: ${category.name}`} />
+    <div className="container mx-auto">
+      <SubPageHeader title={`Editar Categoria`} className="mb-4 px-4" prevURL="/categorias" />
       <EditCategoryForm category={category} />
     </div>
   );
