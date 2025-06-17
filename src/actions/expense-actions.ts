@@ -18,6 +18,7 @@ const oneTimeExpenseSchema = z.object({
   type: z.literal("one_time"),
   source: z.enum(["personal", "store", "product_purchase"]),
   isPaid: z.boolean().optional(),
+  categoryId: z.coerce.number().optional(),
 });
 
 export interface ActionResponse {
@@ -36,6 +37,7 @@ export async function actionAddOneTimeExpense(
       ...data,
       value: data.value,
       isPaid: data.isPaid === "on",
+      categoryId: data.categoryId ? Number(data.categoryId) : undefined,
     });
     if (!parsed.success) {
       return {
@@ -68,6 +70,7 @@ const installmentExpenseSchema = z.object({
   installmentNumber: z.number().min(1),
   totalInstallments: z.number().min(1),
   groupId: z.string().uuid(),
+  categoryId: z.coerce.number().optional(),
 });
 
 export async function actionAddInstallmentExpense(
@@ -87,6 +90,7 @@ export async function actionAddInstallmentExpense(
         ? Number(data.totalInstallments)
         : undefined,
       groupId: data.groupId,
+      categoryId: data.categoryId ? Number(data.categoryId) : undefined,
     });
     if (!parsed.success) {
       return {
@@ -122,6 +126,7 @@ const recurringExpenseSchema = z.object({
   recurrenceType: z.enum(["weekly", "monthly", "yearly", "custom_days"]),
   recurrenceInterval: z.coerce.number().optional(),
   recurrenceEndDate: z.string().optional(),
+  categoryId: z.coerce.number().optional(),
 });
 
 export async function actionAddRecurringExpense(
@@ -138,6 +143,7 @@ export async function actionAddRecurringExpense(
         ? Number(data.recurrenceInterval)
         : undefined,
       recurrenceEndDate: data.recurrenceEndDate ?? undefined,
+      categoryId: data.categoryId ? Number(data.categoryId) : undefined,
     });
     if (!parsed.success) {
       console.error(parsed.error);
@@ -155,7 +161,7 @@ export async function actionAddRecurringExpense(
       : today;
     const occurrences: Omit<ExpenseInsert, "id">[] = [];
     const groupId = crypto.randomUUID();
-    const currentDate = new Date(startDate);    
+    const currentDate = new Date(startDate);
     if (startDate < today) {
       while (currentDate <= endDate && currentDate <= today) {
         occurrences.push({
@@ -256,6 +262,7 @@ const updateExpenseSchema = z.object({
   groupId: z.string().uuid().optional(),
   installmentId: z.string().uuid().optional(),
   originalRecurringExpenseId: z.number().optional().nullable(),
+  categoryId: z.coerce.number().optional(),
 });
 
 export async function actionUpdateExpense(
@@ -269,13 +276,13 @@ export async function actionUpdateExpense(
     const id = Number(rawData.id);
     const isPaid = rawData.isPaid === "on";
     const parentId = rawData.parentId && typeof rawData.parentId === 'string' ? Number(rawData.parentId) : undefined;
-    
+
     const mainDateRaw = rawData.date;
     const mainDate = typeof mainDateRaw === 'string' && mainDateRaw !== "" ? mainDateRaw : undefined;
 
     const recurrenceEndDateRaw = rawData.recurrenceEndDate;
     const recurrenceEndDateValue = typeof recurrenceEndDateRaw === 'string' && recurrenceEndDateRaw !== "" ? recurrenceEndDateRaw : undefined;
-    
+
     const recurrenceIntervalRaw = rawData.recurrenceInterval;
     let recurrenceIntervalValue: string | undefined;
     if (rawData.recurrenceType !== "custom_days" || typeof recurrenceIntervalRaw !== 'string' || recurrenceIntervalRaw === "") {
@@ -285,15 +292,16 @@ export async function actionUpdateExpense(
     }
     // recurrenceIntervalValue is now string | undefined. Zod's .coerce.number() will handle conversion from string.
 
-    const parsed = updateExpenseSchema.safeParse({
+        const parsed = updateExpenseSchema.safeParse({
       ...rawData, // Spread rawData to include all other fields from form (description, value, type, source, recurrenceType etc.)
       id: id,    // Override with processed/typed values
       date: mainDate,
       isPaid: isPaid,
       parentId: parentId,
       recurrenceEndDate: recurrenceEndDateValue,
-      recurrenceInterval: recurrenceIntervalValue, 
+      recurrenceInterval: recurrenceIntervalValue,
       originalRecurringExpenseId: rawData.originalRecurringExpenseId ? Number(rawData.originalRecurringExpenseId) : null,
+      categoryId: rawData.categoryId ? Number(rawData.categoryId) : undefined,
     });
 
     if (parsed.error) {
@@ -409,7 +417,7 @@ export async function actionToggleExpenseIsPaid(
   try {
     // First, get the expense to check if it's a recurring expense
     const expense = await getExpenseById(id);
-    
+
     if (!expense) {
       return {
         success: false,
@@ -425,17 +433,17 @@ export async function actionToggleExpenseIsPaid(
     if (expense.type === 'recurring') {
       if (isPaid) {
         // For recurring expenses being marked as PAID, create a new one-time expense for the paid occurrence
-        const { 
-          id: _id, 
-          ...expenseData 
+        const {
+          id: _id,
+          ...expenseData
         } = expense;
-        
+
         const paidDate = date ?? new Date().toISOString().split('T')[0];
-        
+
         const description = expenseData.description ? String(expenseData.description) : 'Recurring payment';
         const value = expenseData.value ? String(expenseData.value) : '0';
         const source = expenseData.source ?? 'personal';
-        
+
         const paidExpense: ExpenseInsert = {
           description,
           value,
@@ -444,15 +452,15 @@ export async function actionToggleExpenseIsPaid(
           source: source,
           isPaid: true,
           originalRecurringExpenseId: expense.id,
-          ...(expenseData.installmentNumber !== undefined && { 
+          ...(expenseData.installmentNumber !== undefined && {
             installmentNumber: Number(expenseData.installmentNumber) || 0
           }),
-          ...(expenseData.totalInstallments !== undefined && { 
+          ...(expenseData.totalInstallments !== undefined && {
             totalInstallments: Number(expenseData.totalInstallments) || 0
           }),
           ...(expenseData.groupId && { groupId: String(expenseData.groupId) }),
         };
-        
+
         await addExpense(paidExpense);
       }
     }
@@ -460,7 +468,7 @@ export async function actionToggleExpenseIsPaid(
     if (expense.type === 'recurring_occurrence' && expense.originalRecurringExpenseId !== undefined && isPaid === false) {
         // For recurring expenses being marked as UNPAID, find and delete the corresponding one-time record
         if (date) { // Date is crucial to find the specific instance
-          if (id) { 
+          if (id) {
             await dbDeleteExpense(id);
           } else {
             console.warn(`One-time occurrence not found for recurring expense ${expense.id} on date ${date} to delete, or it has no ID.`);

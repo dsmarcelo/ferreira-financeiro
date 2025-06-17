@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CategorySelector } from "@/app/_components/inputs/category-selector";
 
 interface InstallmentExpenseFormProps {
   source: ExpenseInsert["source"];
@@ -67,6 +68,7 @@ export function InstallmentExpenseForm({
   const [firstInstallmentDate, setFirstInstallmentDate] = useState<
     Date | undefined
   >(undefined);
+  const [categoryId, setCategoryId] = useState<string>("");
 
   useEffect(() => {
     if (state.success === true && state.message) {
@@ -329,6 +331,9 @@ export function InstallmentExpenseForm({
       if (installment.isPaid) {
         formData.append("isPaid", "on");
       }
+      if (categoryId) {
+        formData.append("categoryId", categoryId);
+      }
 
       const res = await actionAddInstallmentExpense(initialState, formData);
       if (!res.success) {
@@ -364,6 +369,16 @@ export function InstallmentExpenseForm({
       className="flex h-full max-h-full flex-col gap-2"
     >
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
+        <div className="space-y-2">
+          <Label htmlFor="categoryId">Categoria</Label>
+          <CategorySelector
+            name="categoryId"
+            onValueChange={setCategoryId}
+            required
+          />
+          <FieldError messages={errors?.categoryId} />
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="description">Descrição</Label>
           <Input

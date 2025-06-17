@@ -1,7 +1,8 @@
-import { db } from "../db";
-import { expenseCategory } from "../db/schema/expense-category";
-import { eq } from "drizzle-orm";
-import type { ExpenseCategory, ExpenseCategoryInsert } from "../db/schema/expense-category";
+'use server'
+import { db } from '@/server/db'
+import { expenseCategory } from '@/server/db/schema/expense-category'
+import { eq } from 'drizzle-orm'
+import type { ExpenseCategoryInsert } from '@/server/db/schema/expense-category'
 
 /**
  * Create a new expense category
