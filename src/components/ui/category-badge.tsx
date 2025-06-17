@@ -8,17 +8,18 @@ interface CategoryBadgeProps {
   className?: string;
 }
 
-export function CategoryBadge({ color, name, emoji, className }: CategoryBadgeProps) {
+export function CategoryBadge({
+  color,
+  name,
+  emoji,
+  className,
+}: CategoryBadgeProps) {
   return (
     <Badge
       variant="secondary"
-      className={cn(
-        "text-xs",
-        getCategoryColorClasses(color),
-        className
-      )}
+      className={cn("text-xs", getCategoryColorClasses(color), className)}
     >
-      {emoji && <span className="mr-1">{emoji}</span>}
+      {emoji && <span className="mr-0">{emoji}</span>}
       {name}
     </Badge>
   );
