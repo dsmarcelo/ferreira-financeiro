@@ -8,6 +8,7 @@ import * as React from "react";
 import EditExpenseSheet from "../sheets/edit-expense-sheet";
 import { useMediaQuery } from "usehooks-ts";
 import Link from "next/link";
+import { CategoryBadge } from "@/components/ui/category-badge";
 
 export interface ExpenseListItemProps {
   expense: Expense;
@@ -55,9 +56,10 @@ export function ExpenseListItem({
         <div className="flex-1 break-words">
           <p>{expense.description}</p>
           <div className="flex items-center gap-1 mt-1">
-            <Badge variant="outline" className="text-xs">
-              {expense.category.name}
-            </Badge>
+            <CategoryBadge
+              color={expense.category.color}
+              name={expense.category.name}
+            />
           </div>
         </div>
       </div>

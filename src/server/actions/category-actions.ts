@@ -2,16 +2,17 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import {
   createExpenseCategory,
   updateExpenseCategory,
   deleteExpenseCategory,
 } from "@/server/queries/expense-category-queries";
+import { redirect } from "next/navigation";
 
 const categorySchema = z.object({
   name: z.string().min(1, "Nome é obrigatório").max(100, "Nome deve ter no máximo 100 caracteres"),
   description: z.string().optional(),
+  color: z.string().min(1, "Cor é obrigatória"),
 });
 
 export type ActionResponse = {
@@ -28,6 +29,7 @@ export async function createCategory(
     const rawData = {
       name: formData.get("name") as string,
       description: formData.get("description") as string,
+      color: formData.get("color") as string,
     };
 
     // Validate the form data
@@ -45,7 +47,7 @@ export async function createCategory(
     await createExpenseCategory(validatedData.data);
 
     revalidatePath("/categorias");
-    redirect("/categorias");
+    redirect("/categorias"); // TODO: Check if this works
   } catch (error) {
     console.error("Error creating category:", error);
     return {
@@ -64,6 +66,7 @@ export async function updateCategory(
     const rawData = {
       name: formData.get("name") as string,
       description: formData.get("description") as string,
+      color: formData.get("color") as string,
     };
 
     // Validate the form data

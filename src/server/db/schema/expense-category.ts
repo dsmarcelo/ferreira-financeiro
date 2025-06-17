@@ -6,6 +6,7 @@ export const expenseCategory = createTable("expense_category", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
+  color: text("color").notNull().default("blue"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
@@ -16,8 +17,9 @@ export const expenseCategory = createTable("expense_category", {
 
 export const DEFAULT_CATEGORY: ExpenseCategory = {
   id: 1,
-  name: "General",
-  description: "Default category for expenses",
+  name: "Diversos",
+  description: "Categoria padrão para despesas",
+  color: "blue",
   createdAt: new Date(),
   updatedAt: null,
 };
