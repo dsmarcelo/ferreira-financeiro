@@ -6,6 +6,7 @@ import {
   createExpenseCategory,
   updateExpenseCategory,
   deleteExpenseCategory,
+  getAllExpenseCategories,
 } from "@/server/queries/expense-category-queries";
 import { redirect } from "next/navigation";
 
@@ -14,6 +15,7 @@ const categorySchema = z.object({
   description: z.string().optional(),
   color: z.string().min(1, "Cor é obrigatória"),
   emoji: z.string().min(1, "Emoji é obrigatório"),
+  sortOrder: z.coerce.number().min(0, "Ordem deve ser um número positivo").default(0),
 });
 
 export type ActionResponse = {
@@ -32,6 +34,7 @@ export async function createCategory(
       description: formData.get("description") as string,
       color: formData.get("color") as string,
       emoji: formData.get("emoji") as string,
+      sortOrder: formData.get("sortOrder") as string,
     };
 
     // Validate the form data
@@ -45,8 +48,10 @@ export async function createCategory(
       };
     }
 
-    // Create the category
-    await createExpenseCategory(validatedData.data);
+    // Set isDefault true only for the first category
+    const allCategories = await getAllExpenseCategories();
+    const isDefault = allCategories.length === 0;
+    await createExpenseCategory({ ...validatedData.data, isDefault });
   } catch (error) {
     console.error("Error creating category:", error);
     return {
@@ -55,7 +60,7 @@ export async function createCategory(
     };
   }
   revalidatePath("/categorias");
-  redirect("/categorias"); // TODO: Check if this works
+  redirect("/categorias");
 }
 
 export async function updateCategory(
@@ -69,6 +74,7 @@ export async function updateCategory(
       description: formData.get("description") as string,
       color: formData.get("color") as string,
       emoji: formData.get("emoji") as string,
+      sortOrder: formData.get("sortOrder") as string,
     };
 
     // Validate the form data
@@ -82,7 +88,7 @@ export async function updateCategory(
       };
     }
 
-    // Update the category
+    // Never update isDefault from the form
     await updateExpenseCategory(id, validatedData.data);
   } catch (error) {
     console.error("Error updating category:", error);
@@ -95,19 +101,13 @@ export async function updateCategory(
   redirect("/categorias");
 }
 
-export async function removeCategoryAction(id: number): Promise<ActionResponse> {
+export async function removeCategoryAction(id: number) {
   try {
     await deleteExpenseCategory(id);
     revalidatePath("/categorias");
-    return {
-      success: true,
-      message: "Categoria removida com sucesso",
-    };
+    return { success: true };
   } catch (error) {
     console.error("Error deleting category:", error);
-    return {
-      success: false,
-      message: "Erro ao remover categoria",
-    };
+    return { success: false, message: "Erro ao deletar categoria" };
   }
 }

@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FieldError } from "./field-error";
 import { updateCategory, type ActionResponse } from "@/server/actions/category-actions";
 import type { ExpenseCategory } from "@/server/db/schema/expense-category";
@@ -81,6 +82,23 @@ export function EditCategoryForm({ category }: EditCategoryFormProps) {
           <FieldError messages={state?.errors?.description} />
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="sortOrder">Ordem de Exibição</Label>
+          <Input
+            type="number"
+            id="sortOrder"
+            name="sortOrder"
+            defaultValue={category.sortOrder}
+            placeholder="0"
+            min="0"
+            className="w-full"
+          />
+          <p className="text-sm text-muted-foreground">
+            Menor número aparece primeiro na lista
+          </p>
+          <FieldError messages={state?.errors?.sortOrder} />
+        </div>
+
         <EmojiPicker
           selectedEmoji={selectedEmoji}
           onEmojiSelect={setSelectedEmoji}
@@ -93,9 +111,6 @@ export function EditCategoryForm({ category }: EditCategoryFormProps) {
           setSelectedColor={setSelectedColor}
           messages={state?.errors?.color}
         />
-
-        {/* Hidden input to submit emoji value */}
-        <input type="hidden" name="emoji" value={selectedEmoji} />
 
         {state?.message && (
           <p

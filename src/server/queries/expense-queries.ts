@@ -8,6 +8,7 @@ import {
 } from "../db/schema/expense-schema";
 import { and, eq, gte, isNull, lte, ne, or, type SQL, sum } from "drizzle-orm";
 import { expenseCategory, DEFAULT_CATEGORY } from "../db/schema/expense-category";
+import { getDefaultExpenseCategory } from "./expense-category-queries";
 import {
   addDays,
   addMonths,
@@ -35,7 +36,11 @@ function mapJoinedExpenseToExpense(joinedExpense: JoinedExpense): Expense {
 
 export async function addExpense(data: ExpenseInsert): Promise<Expense> {
   // Set default category if none provided
-  data.categoryId ??= DEFAULT_CATEGORY.id;
+  if (!data.categoryId) {
+    const defaultCategory = await getDefaultExpenseCategory();
+    data.categoryId = defaultCategory?.id ?? DEFAULT_CATEGORY.id;
+  }
+
   const [newExpense] = await db.insert(expense).values(data).returning();
   if (!newExpense) throw new Error("Failed to create expense");
 

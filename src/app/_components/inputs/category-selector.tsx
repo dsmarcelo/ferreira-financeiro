@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { CategoryBadge } from "@/components/ui/category-badge";
 import { Plus, Settings } from "lucide-react";
-import { getAllExpenseCategories } from "@/server/queries/expense-category-queries";
+import { getAllExpenseCategories, getDefaultExpenseCategory } from "@/server/queries/expense-category-queries";
 import type { ExpenseCategory } from "@/server/db/schema/expense-category";
 import Link from "next/link";
 
@@ -40,11 +40,17 @@ export function CategorySelector({
         const fetchedCategories = await getAllExpenseCategories();
         setCategories(fetchedCategories);
 
-        // If no default value and categories exist, set the first category as default
+        // If no default value provided, use the default category from database
         if (!defaultValue && fetchedCategories.length > 0) {
-          const firstCategory = fetchedCategories[0];
-          if (firstCategory) {
-            setSelectedCategoryId(firstCategory.id.toString());
+          const defaultCategory = await getDefaultExpenseCategory();
+          if (defaultCategory) {
+            setSelectedCategoryId(defaultCategory.id.toString());
+          } else {
+            // Fallback to first category if no default is set
+            const firstCategory = fetchedCategories[0];
+            if (firstCategory) {
+              setSelectedCategoryId(firstCategory.id.toString());
+            }
           }
         }
       } catch (error) {

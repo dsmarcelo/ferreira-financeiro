@@ -73,7 +73,7 @@ export function RecurringExpenseForm({
       <input type="hidden" name="type" value="recurring" />
       <input type="hidden" name="categoryId" value={categoryId} />
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
-      <div className="space-y-2">
+        <div className="space-y-2">
           <Label htmlFor="categoryId">Categoria</Label>
           <CategorySelector
             name="categoryId"
