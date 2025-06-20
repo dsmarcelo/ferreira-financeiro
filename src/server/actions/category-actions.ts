@@ -22,6 +22,7 @@ export type ActionResponse = {
   errors?: Record<string, string[]>;
   message?: string;
   success?: boolean;
+  category?: any;
 };
 
 export async function createCategory(
@@ -48,10 +49,7 @@ export async function createCategory(
       };
     }
 
-    // Set isDefault true only for the first category
-    const allCategories = await getAllExpenseCategories();
-    const isDefault = allCategories.length === 0;
-    await createExpenseCategory({ ...validatedData.data, isDefault });
+    await createExpenseCategory(validatedData.data);
   } catch (error) {
     console.error("Error creating category:", error);
     return {
@@ -109,5 +107,45 @@ export async function removeCategoryAction(id: number) {
   } catch (error) {
     console.error("Error deleting category:", error);
     return { success: false, message: "Erro ao deletar categoria" };
+  }
+}
+
+export async function createCategoryWithoutRedirect(
+  prevState: ActionResponse | null,
+  formData: FormData,
+): Promise<ActionResponse & { category?: any }> {
+  try {
+    const rawData = {
+      name: formData.get("name") as string,
+      description: formData.get("description") as string,
+      color: formData.get("color") as string,
+      emoji: formData.get("emoji") as string,
+      sortOrder: formData.get("sortOrder") as string,
+    };
+
+    // Validate the form data
+    const validatedData = categorySchema.safeParse(rawData);
+
+    if (!validatedData.success) {
+      return {
+        success: false,
+        message: "Por favor, corrija os erros no formulário",
+        errors: validatedData.error.flatten().fieldErrors,
+      };
+    }
+
+    const category = await createExpenseCategory(validatedData.data);
+
+    return {
+      success: true,
+      message: "Categoria criada com sucesso!",
+      category,
+    };
+  } catch (error) {
+    console.error("Error creating category:", error);
+    return {
+      success: false,
+      message: "Erro inesperado ao criar categoria",
+    };
   }
 }

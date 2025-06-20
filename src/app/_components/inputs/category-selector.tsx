@@ -16,6 +16,7 @@ import { getAllExpenseCategories, getDefaultExpenseCategory } from "@/server/que
 import type { ExpenseCategory } from "@/server/db/schema/expense-category";
 import Link from "next/link";
 import { cn, getCategoryColorClasses } from "@/lib/utils";
+import { CreateCategoryDialog } from "../dialogs/add/create-category-dialog";
 
 interface CategorySelectorProps {
   name: string;
@@ -36,32 +37,32 @@ export function CategorySelector({
   );
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const fetchedCategories = await getAllExpenseCategories();
-        setCategories(fetchedCategories);
+  const loadCategories = async () => {
+    try {
+      const fetchedCategories = await getAllExpenseCategories();
+      setCategories(fetchedCategories);
 
-        // If no default value provided, use the default category from database
-        if (!defaultValue && fetchedCategories.length > 0) {
-          const defaultCategory = await getDefaultExpenseCategory();
-          if (defaultCategory) {
-            setSelectedCategoryId(defaultCategory.id.toString());
-          } else {
-            // Fallback to first category if no default is set
-            const firstCategory = fetchedCategories[0];
-            if (firstCategory) {
-              setSelectedCategoryId(firstCategory.id.toString());
-            }
+      // If no default value provided, use the default category from database
+      if (!defaultValue && fetchedCategories.length > 0) {
+        const defaultCategory = await getDefaultExpenseCategory();
+        if (defaultCategory) {
+          setSelectedCategoryId(defaultCategory.id.toString());
+        } else {
+          // Fallback to first category if no default is set
+          const firstCategory = fetchedCategories[0];
+          if (firstCategory) {
+            setSelectedCategoryId(firstCategory.id.toString());
           }
         }
-      } catch (error) {
-        console.error("Failed to load categories:", error);
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     void loadCategories();
   }, [defaultValue]);
 
@@ -72,6 +73,14 @@ export function CategorySelector({
   const handleValueChange = (value: string) => {
     setSelectedCategoryId(value);
     onValueChange?.(value);
+  };
+
+  const handleCategoryCreated = (category: ExpenseCategory) => {
+    // Add the new category to the list
+    setCategories(prev => [...prev, category]);
+    // Select the newly created category
+    setSelectedCategoryId(category.id.toString());
+    onValueChange?.(category.id.toString());
   };
 
   if (isLoading) {
@@ -107,12 +116,21 @@ export function CategorySelector({
               </SelectItem>
             ))}
             <SelectSeparator />
-            <SelectItem value="new">
-              <div className="flex items-center gap-2 px-2 rounded-md">
-                <Plus className="h-4 w-4" />
-                <span>Nova categoria</span>
-              </div>
-            </SelectItem>
+            <div className="p-2">
+              <CreateCategoryDialog
+                onCategoryCreated={handleCategoryCreated}
+                trigger={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full justify-start gap-2 h-9 px-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Nova categoria</span>
+                  </Button>
+                }
+              />
+            </div>
           </SelectContent>
         </Select>
       </div>

@@ -1,15 +1,16 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { FieldError } from "./field-error";
-import { createCategory, type ActionResponse } from "@/server/actions/category-actions";
+import { createCategory, createCategoryWithoutRedirect, type ActionResponse } from "@/server/actions/category-actions";
 import { CategoryColorSelector } from "../inputs/category-color-selector";
 import { EmojiPicker } from "../inputs/emoji-picker";
+import type { ExpenseCategory } from "@/server/db/schema/expense-category";
 
 const initialState: ActionResponse = {
   message: "",
@@ -38,13 +39,26 @@ const CATEGORY_COLORS = [
   { name: "zinc", label: "Zinco", color: "bg-zinc-500" },
 ] as const;
 
-export function CreateCategoryForm() {
-  const [state, formAction, pending] = useActionState(createCategory, initialState);
+interface CreateCategoryFormProps {
+  onSuccess?: (category: ExpenseCategory) => void;
+  showCancelButton?: boolean;
+}
+
+export function CreateCategoryForm({ onSuccess, showCancelButton = true }: CreateCategoryFormProps) {
+  const action = onSuccess ? createCategoryWithoutRedirect : createCategory;
+  const [state, formAction, pending] = useActionState(action, initialState);
   const [selectedColor, setSelectedColor] = useState("blue");
   const [selectedEmoji, setSelectedEmoji] = useState("💸");
 
+  // Handle successful category creation
+  useEffect(() => {
+    if (state?.success && state.category && onSuccess) {
+      onSuccess(state.category);
+    }
+  }, [state, onSuccess]);
+
   return (
-    <div className="mx-auto max-w-screen-md px-4">
+    <div className={onSuccess ? "" : "mx-auto max-w-screen-md px-4"}>
       <form action={formAction} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="name">Nome da Categoria</Label>
@@ -112,10 +126,12 @@ export function CreateCategoryForm() {
         )}
 
         <div className="flex gap-4">
-          <Button type="button" variant="outline" className="flex-1" asChild>
-            <a href="/categorias">Cancelar</a>
-          </Button>
-          <Button type="submit" disabled={pending} className="flex-1">
+          {showCancelButton && (
+            <Button type="button" variant="outline" className="flex-1" asChild>
+              <a href="/categorias">Cancelar</a>
+            </Button>
+          )}
+          <Button type="submit" disabled={pending} className={showCancelButton ? "flex-1" : "w-full"}>
             {pending ? "Criando..." : "Criar Categoria"}
           </Button>
         </div>
