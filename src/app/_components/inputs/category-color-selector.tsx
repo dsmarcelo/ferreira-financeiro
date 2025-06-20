@@ -39,15 +39,15 @@ export function CategoryColorSelector({
 }: CategoryColorSelectorProps) {
   return (
     <div className="space-y-2">
-      <Label>Cor da Categoria</Label>
+      <Label>Cor da Categoria: {CATEGORY_COLORS.find(c => c.name === selectedColor)?.label}</Label>
       <input type="hidden" name="color" value={selectedColor} />
-      <div className="grid grid-cols-5 gap-2">
+      <div className="flex flex-wrap gap-2">
         {CATEGORY_COLORS.map((color) => (
           <button
             key={color.name}
             type="button"
             onClick={() => setSelectedColor(color.name)}
-            className={`w-12 h-12 rounded-lg border-2 transition-all hover:scale-105 ${color.color
+            className={`w-10 h-10 rounded-lg border-2 transition-all hover:scale-105 ${color.color
               } ${selectedColor === color.name
                 ? "border-gray-900 ring-2 ring-gray-400 ring-offset-2"
                 : "border-gray-300"
@@ -57,9 +57,6 @@ export function CategoryColorSelector({
           />
         ))}
       </div>
-      <p className="text-sm text-muted-foreground">
-        Cor selecionada: {CATEGORY_COLORS.find(c => c.name === selectedColor)?.label}
-      </p>
       <FieldError messages={messages} />
     </div>
   );

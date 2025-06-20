@@ -40,19 +40,19 @@ export function EmojiPicker({
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="w-20 h-20 text-2xl p-0 hover:bg-muted"
+            className="w-12 h-12 text-2xl p-0 hover:bg-muted"
             type="button"
           >
             {selectedEmoji || "😀"}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 p-4">
-          <div className="grid grid-cols-8 gap-2">
+        <PopoverContent className="w-[90dvw] mx-2 max-w-[500px] max-h-80 p-2 overflow-y-auto">
+          <div className="flex flex-wrap justify-center gap-2">
             {CATEGORY_EMOJIS.map((emoji) => (
               <Button
                 key={emoji}
                 variant="ghost"
-                className="w-8 h-8 p-0 text-lg hover:bg-muted"
+                className="w-10 h-10 p-0 text-2xl hover:bg-muted"
                 onClick={() => handleEmojiSelect(emoji)}
                 type="button"
               >

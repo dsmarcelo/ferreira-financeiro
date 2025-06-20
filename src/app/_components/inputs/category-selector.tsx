@@ -6,6 +6,7 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -14,6 +15,7 @@ import { Plus, Settings } from "lucide-react";
 import { getAllExpenseCategories, getDefaultExpenseCategory } from "@/server/queries/expense-category-queries";
 import type { ExpenseCategory } from "@/server/db/schema/expense-category";
 import Link from "next/link";
+import { cn, getCategoryColorClasses } from "@/lib/utils";
 
 interface CategorySelectorProps {
   name: string;
@@ -98,38 +100,22 @@ export function CategorySelector({
           <SelectContent>
             {categories.map((category) => (
               <SelectItem key={category.id} value={category.id.toString()}>
-                <div className="flex items-center gap-2">
+                <div className={cn("flex items-center gap-2 px-2 rounded-md", getCategoryColorClasses(category.color))}>
                   <span className="text-sm">{category.emoji}</span>
                   <span>{category.name}</span>
                 </div>
               </SelectItem>
             ))}
+            <SelectSeparator />
+            <SelectItem value="new">
+              <div className="flex items-center gap-2 px-2 rounded-md">
+                <Plus className="h-4 w-4" />
+                <span>Nova categoria</span>
+              </div>
+            </SelectItem>
           </SelectContent>
         </Select>
-
-        <Link href="/categorias" passHref>
-          <Button type="button" variant="outline" size="icon" title="Gerenciar categorias">
-            <Settings className="h-4 w-4" />
-          </Button>
-        </Link>
-
-        <Link href="/categorias/criar" passHref>
-          <Button type="button" variant="outline" size="icon" title="Criar nova categoria">
-            <Plus className="h-4 w-4" />
-          </Button>
-        </Link>
       </div>
-
-      {selectedCategory && (
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Categoria selecionada:</span>
-          <CategoryBadge
-            color={selectedCategory.color}
-            name={selectedCategory.name}
-            emoji={selectedCategory.emoji}
-          />
-        </div>
-      )}
     </div>
   );
 }

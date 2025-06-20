@@ -45,7 +45,7 @@ export function CreateCategoryForm() {
 
   return (
     <div className="mx-auto max-w-screen-md px-4">
-      <form action={formAction} className="space-y-6">
+      <form action={formAction} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="name">Nome da Categoria</Label>
           <Input
@@ -71,7 +71,8 @@ export function CreateCategoryForm() {
           <FieldError messages={state?.errors?.description} />
         </div>
 
-        <div className="space-y-2">
+        {/* TODO: Add a draggable list of categories in settings */}
+        {/* <div className="space-y-2">
           <Label htmlFor="sortOrder">Ordem de Exibição</Label>
           <Input
             type="number"
@@ -86,7 +87,7 @@ export function CreateCategoryForm() {
             Menor número aparece primeiro na lista
           </p>
           <FieldError messages={state?.errors?.sortOrder} />
-        </div>
+        </div> */}
 
         <EmojiPicker
           selectedEmoji={selectedEmoji}
@@ -111,11 +112,11 @@ export function CreateCategoryForm() {
         )}
 
         <div className="flex gap-4">
-          <Button type="submit" disabled={pending} className="flex-1">
-            {pending ? "Criando..." : "Criar Categoria"}
-          </Button>
           <Button type="button" variant="outline" className="flex-1" asChild>
             <a href="/categorias">Cancelar</a>
+          </Button>
+          <Button type="submit" disabled={pending} className="flex-1">
+            {pending ? "Criando..." : "Criar Categoria"}
           </Button>
         </div>
       </form>
