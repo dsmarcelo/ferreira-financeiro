@@ -2,20 +2,21 @@
 
 import { useActionState, useState, useEffect } from "react";
 import {
-  actionDeleteCashRegister,
-  actionUpdateCashRegister,
+  actionDeleteIncome,
+  actionUpdateIncome,
   type ActionResponse,
-} from "@/actions/cash-register-actions";
+} from "@/actions/income-actions";
 import ResponsiveDialog from "@/app/_components/responsive-dialog";
 import { Label } from "@/components/ui/label";
 import CurrencyInput from "@/components/inputs/currency-input";
-import type { CashRegister } from "@/server/db/schema/cash-register";
+import type { Income } from "@/server/db/schema/incomes-schema";
 import { Button } from "@/components/ui/button";
 import { DeleteDialog } from "../delete-dialog";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
-interface EditCashRegisterProps {
-  data: CashRegister;
+
+interface EditIncomeProps {
+  data: Income;
   className?: string;
   children?: React.ReactNode;
 }
@@ -25,13 +26,13 @@ const initialState: ActionResponse = {
   message: "",
 };
 
-export default function EditCashRegister({
+export default function EditIncome({
   data,
   children,
-}: EditCashRegisterProps) {
+}: EditIncomeProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
-    actionUpdateCashRegister,
+    actionUpdateIncome,
     initialState,
   );
 
@@ -51,11 +52,11 @@ export default function EditCashRegister({
   return (
     <ResponsiveDialog
       triggerButton={
-        children ?? <Button className="rounded-full">Editar Caixa</Button>
+        children ?? <Button className="rounded-full">Editar Receita</Button>
       }
       isOpen={isOpen}
       onOpenChange={setIsOpen}
-      title="Editar Caixa"
+      title="Editar Receita"
     >
       <form
         key={isOpen ? "open" : "closed"}
@@ -73,10 +74,10 @@ export default function EditCashRegister({
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="amount">Valor</Label>
+          <Label htmlFor="value">Receita Total</Label>
           <CurrencyInput
-            id="amount"
-            name="amount"
+            id="value"
+            name="value"
             step="0.01"
             min={0}
             required
@@ -88,10 +89,29 @@ export default function EditCashRegister({
             </p>
           )}
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="profitMargin">Margem de Lucro (%)</Label>
+          <input
+            id="profitMargin"
+            name="profitMargin"
+            type="number"
+            step="0.01"
+            min={0}
+            max={100}
+            defaultValue={Number(data.profitMargin)}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            required
+          />
+          {errors.profitMargin && (
+            <p className="mt-1 text-sm text-red-500" aria-live="polite">
+              {errors.profitMargin[0]}
+            </p>
+          )}
+        </div>
         <div className="mt-8 flex gap-2">
           <DeleteDialog
             onConfirm={() => {
-              void actionDeleteCashRegister(data.id);
+              void actionDeleteIncome(data.id);
             }}
           />
           <Button type="submit" className="flex-1" disabled={pending}>

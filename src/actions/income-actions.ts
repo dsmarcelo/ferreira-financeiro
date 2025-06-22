@@ -7,7 +7,7 @@ import {
   deleteIncome,
   listIncomes,
   sumIncomesByDateRange,
-  sumProfitMarginsByDateRange,
+  sumProfitAmountsByDateRange,
   sumTotalProfitByDateRange,
 } from "@/server/queries/income-queries";
 import { revalidatePath } from "next/cache";
@@ -17,7 +17,7 @@ import { z } from "zod";
 const incomeInsertSchema = z.object({
   date: z.string({ message: "Data inválida" }),
   value: z.number().min(0, { message: "Valor inválido" }),
-  profitMargin: z.number().min(0, { message: "Margem de lucro inválida" }),
+  profitMargin: z.number().min(0).max(100, { message: "Margem de lucro deve estar entre 0% e 100%" }),
 });
 
 // Define a common ActionResponse interface for form actions
@@ -53,7 +53,7 @@ export async function actionCreateIncome(
   }
 
   try {
-    // Format values for DB (always as string with 2 decimals)
+    // Format values for DB (value with 2 decimals, profit margin as percentage with 2 decimals)
     const dbValue = value !== undefined ? value.toFixed(2) : undefined;
     const dbProfitMargin = profitMargin !== undefined ? profitMargin.toFixed(2) : undefined;
 
@@ -141,12 +141,12 @@ export async function actionSumIncomesByDateRange(
   return sumIncomesByDateRange(startDate, endDate);
 }
 
-// Server action to get the sum of profit margins in a date range
-export async function actionSumProfitMarginsByDateRange(
+// Server action to get the sum of profit amounts in a date range
+export async function actionSumProfitAmountsByDateRange(
   startDate: string,
   endDate: string,
 ) {
-  return sumProfitMarginsByDateRange(startDate, endDate);
+  return sumProfitAmountsByDateRange(startDate, endDate);
 }
 
 // Server action to get the total profit data in a date range

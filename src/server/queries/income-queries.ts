@@ -83,36 +83,45 @@ export async function sumIncomesByDateRange(
   return Number(result[0]?.sum ?? 0);
 }
 
-// Get the sum of profit margins in a date range
-export async function sumProfitMarginsByDateRange(
+// Get the sum of profit amounts (calculated from totalIncome * profitMargin%) in a date range
+export async function sumProfitAmountsByDateRange(
   startDate: string,
   endDate: string,
 ): Promise<number> {
-  // Aggregate the sum of the profit_margin column for the given date range
-  const result = await db
-    .select({ sum: sum(incomes.profitMargin) })
-    .from(incomes)
-    .where(
-      and(gte(incomes.date, startDate), lte(incomes.date, endDate)),
-    );
-  // Return the sum or 0 if no records
-  return Number(result[0]?.sum ?? 0);
+  // Get all income records to calculate profit amounts
+  const incomeRecords = await listIncomes(startDate, endDate);
+
+  // Calculate total profit amount from totalIncome * (profitMargin / 100)
+  const totalProfitAmount = incomeRecords.reduce((sum, income) => {
+    const totalIncome = Number(income.value); // This is the total income input by user
+    const profitMarginPercent = Number(income.profitMargin);
+    const profitAmount = totalIncome * (profitMarginPercent / 100);
+    return sum + profitAmount;
+  }, 0);
+
+  return totalProfitAmount;
 }
 
-// Get the total profit (sum of values + profit margins) in a date range
+// Get the total profit breakdown (base value, profit amounts, and total income) in a date range
 export async function sumTotalProfitByDateRange(
   startDate: string,
   endDate: string,
-): Promise<{ totalValue: number; totalProfitMargin: number; totalProfit: number }> {
-  // Get both sums in parallel
-  const [totalValue, totalProfitMargin] = await Promise.all([
-    sumIncomesByDateRange(startDate, endDate),
-    sumProfitMarginsByDateRange(startDate, endDate),
-  ]);
+): Promise<{ totalIncome: number; totalProfitAmount: number; totalBaseValue: number }> {
+  // Get all income records to calculate detailed breakdown
+  const incomeRecords = await listIncomes(startDate, endDate);
 
-  return {
-    totalValue,
-    totalProfitMargin,
-    totalProfit: totalValue + totalProfitMargin,
-  };
+  const totals = incomeRecords.reduce((acc, income) => {
+    const totalIncome = Number(income.value); // This is the total income input by user
+    const profitMarginPercent = Number(income.profitMargin);
+    const profitAmount = totalIncome * (profitMarginPercent / 100);
+    const baseValue = totalIncome - profitAmount;
+
+    return {
+      totalIncome: acc.totalIncome + totalIncome,
+      totalProfitAmount: acc.totalProfitAmount + profitAmount,
+      totalBaseValue: acc.totalBaseValue + baseValue,
+    };
+  }, { totalIncome: 0, totalProfitAmount: 0, totalBaseValue: 0 });
+
+  return totals;
 }
