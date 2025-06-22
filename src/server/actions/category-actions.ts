@@ -9,6 +9,7 @@ import {
   getAllExpenseCategories,
 } from "@/server/queries/expense-category-queries";
 import { redirect } from "next/navigation";
+import type { ExpenseCategory } from "@/server/db/schema/expense-category";
 
 const categorySchema = z.object({
   name: z.string().min(1, "Nome é obrigatório").max(100, "Nome deve ter no máximo 100 caracteres"),
@@ -22,7 +23,7 @@ export type ActionResponse = {
   errors?: Record<string, string[]>;
   message?: string;
   success?: boolean;
-  category?: any;
+  category?: ExpenseCategory;
 };
 
 export async function createCategory(
@@ -113,7 +114,7 @@ export async function removeCategoryAction(id: number) {
 export async function createCategoryWithoutRedirect(
   prevState: ActionResponse | null,
   formData: FormData,
-): Promise<ActionResponse & { category?: any }> {
+): Promise<ActionResponse & { category?: ExpenseCategory }> {
   try {
     const rawData = {
       name: formData.get("name") as string,
