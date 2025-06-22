@@ -17,9 +17,9 @@ export function CategoryBadge({
   return (
     <Badge
       variant="secondary"
-      className={cn("text-xs", getCategoryColorClasses(color), className)}
+      className={cn("text-xs px-1 py-0", getCategoryColorClasses(color), className)}
     >
-      {emoji && <span className="mr-0">{emoji}</span>}
+      {emoji && <span>{emoji}</span>}
       {name}
     </Badge>
   );
