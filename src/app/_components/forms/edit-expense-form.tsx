@@ -157,6 +157,72 @@ export default function EditExpenseForm({
   const [currentRecurrenceType, setCurrentRecurrenceType] = useState(expense.recurrenceType ?? "");
   const [formDate, setFormDate] = useState<string>(expense.date);
 
+    // Form state preservation
+  const saveFormState = useCallback(() => {
+    const formElement = document.querySelector('form');
+    if (formElement) {
+      const formData = new FormData(formElement);
+      const formState: Record<string, string> = {};
+
+      for (const [key, value] of formData.entries()) {
+        if (typeof value === 'string') {
+          formState[key] = value;
+        }
+      }
+
+      // Also save checkbox states
+      const checkboxes = formElement.querySelectorAll('input[type="checkbox"]');
+      checkboxes.forEach(checkbox => {
+        if (checkbox instanceof HTMLInputElement) {
+          formState[checkbox.name] = checkbox.checked.toString();
+        }
+      });
+
+      // Save current recurrence type and form date states
+      formState._currentRecurrenceType = currentRecurrenceType;
+      formState._formDate = formDate;
+
+      sessionStorage.setItem('editExpenseFormState', JSON.stringify(formState));
+    }
+  }, [currentRecurrenceType, formDate]);
+
+  // Restore form state on mount
+  useEffect(() => {
+    const savedState = sessionStorage.getItem('editExpenseFormState');
+    if (savedState) {
+      try {
+        const formState = JSON.parse(savedState) as Record<string, string>;
+
+                // Restore form fields
+        Object.entries(formState).forEach(([key, value]) => {
+          if (key.startsWith('_')) return; // Skip internal state keys
+
+          const element = document.querySelector(`[name="${key}"]`);
+          if (element && (element instanceof HTMLInputElement || element instanceof HTMLSelectElement)) {
+            if (element.type === 'checkbox' && element instanceof HTMLInputElement) {
+              element.checked = value === 'true';
+            } else {
+              element.value = value;
+            }
+          }
+        });
+
+        // Restore internal states
+        if (formState._currentRecurrenceType) {
+          setCurrentRecurrenceType(formState._currentRecurrenceType);
+        }
+        if (formState._formDate) {
+          setFormDate(formState._formDate);
+        }
+
+        // Clear saved state after restoration
+        sessionStorage.removeItem('editExpenseFormState');
+      } catch (error) {
+        console.error('Failed to restore form state:', error);
+      }
+    }
+  }, []);
+
   const [relatedInstallments, setRelatedInstallments] = useState<Expense[]>([]);
   const [isLoadingInstallments, setIsLoadingInstallments] = useState(false);
 
@@ -347,6 +413,7 @@ export default function EditExpenseForm({
             name="categoryId"
             defaultValue={expense.category?.id}
             required
+            onBeforeNavigate={saveFormState}
           />
           {state.errors?.categoryId && <FieldError messages={state.errors.categoryId} />}
         </div>

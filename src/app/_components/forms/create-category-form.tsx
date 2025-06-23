@@ -22,11 +22,13 @@ const initialState: ActionResponse = {
 interface CreateCategoryFormProps {
   onSuccess?: (category: ExpenseCategory) => void;
   showCancelButton?: boolean;
+  onCancel?: () => void;
 }
 
 export function CreateCategoryForm({
   onSuccess,
   showCancelButton = true,
+  onCancel,
 }: CreateCategoryFormProps) {
   const [state, formAction, pending] = useActionState(
     (onSuccess ? createCategoryWithoutRedirect : createCategory) as (
@@ -41,7 +43,7 @@ export function CreateCategoryForm({
   // Handle successful category creation
   useEffect(() => {
     if (state?.success && state.category && onSuccess) {
-      onSuccess(state.category as ExpenseCategory);
+      onSuccess(state.category);
     }
   }, [state, onSuccess]);
 
@@ -115,8 +117,13 @@ export function CreateCategoryForm({
 
         <div className="flex gap-4">
           {showCancelButton && (
-            <Button type="button" variant="outline" className="flex-1" asChild>
-              <a href="/categorias">Cancelar</a>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={onCancel ?? (() => window.history.back())}
+            >
+              Cancelar
             </Button>
           )}
           <Button
