@@ -13,7 +13,7 @@ interface CreateCategoryDialogProps {
 
 export function CreateCategoryDialog({
   onCategoryCreated,
-  trigger
+  trigger,
 }: CreateCategoryDialogProps) {
   const [open, setOpen] = useState(false);
 
@@ -24,15 +24,19 @@ export function CreateCategoryDialog({
 
   return (
     <ResponsiveSheet
-      triggerButton={trigger ?? <Button variant="outline">Nova Categoria</Button>}
+      triggerButton={
+        trigger ?? <Button variant="outline">Nova Categoria</Button>
+      }
       title="Criar Nova Categoria"
-      description="Crie uma nova categoria para organizar suas despesas."
       isOpen={open}
       onOpenChange={setOpen}
       maxWidth="sm:max-w-[600px]"
       _enableMobileKeyboardHandling={true}
     >
-      <CreateCategoryForm onSuccess={handleCategoryCreated} showCancelButton={false} />
+      <CreateCategoryForm
+        onSuccess={handleCategoryCreated}
+        showCancelButton={false}
+      />
     </ResponsiveSheet>
   );
 }

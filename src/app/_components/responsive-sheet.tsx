@@ -59,9 +59,7 @@ export default function ResponsiveSheet({
   if (isMobile) {
     return (
       <>
-        <div onClick={() => handleOpenChange(true)}>
-          {triggerButton}
-        </div>
+        <div onClick={() => handleOpenChange(true)}>{triggerButton}</div>
         <MobileDrawer
           open={isSheetOpen}
           onOpenChange={handleOpenChange}
@@ -78,16 +76,12 @@ export default function ResponsiveSheet({
   return (
     <Drawer open={isSheetOpen} onOpenChange={handleOpenChange}>
       <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
-      <DrawerContent
-        className={`${maxWidth} max-h-[90dvh] overflow-y-auto`}
-      >
-        <DrawerHeader className="sticky top-0 bg-background z-10 pb-4">
+      <DrawerContent className={`${maxWidth} max-h-[90dvh] overflow-y-auto`}>
+        <DrawerHeader className="bg-background sticky top-0 z-10">
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        <div className="flex-1 overflow-y-auto">
-          {children}
-        </div>
+        <div className="flex-1 overflow-y-auto">{children}</div>
       </DrawerContent>
     </Drawer>
   );
