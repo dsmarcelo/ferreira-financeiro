@@ -22,6 +22,7 @@ export function MobileDrawer({
   const [viewportHeight, setViewportHeight] = React.useState(0);
   const [mounted, setMounted] = React.useState(false);
   const sheetRef = React.useRef<HTMLDivElement>(null);
+  const contentRef = React.useRef<HTMLDivElement>(null);
 
   // Ensure component is mounted before rendering portal
   React.useEffect(() => {
@@ -40,6 +41,13 @@ export function MobileDrawer({
       // Prevent body scroll when sheet is open
       document.body.style.overflow = "hidden";
 
+      // Prevent zoom on iOS when focusing inputs
+      const viewport = document.querySelector('meta[name="viewport"]');
+      const originalContent = viewport?.getAttribute('content');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+      }
+
       // Listen for viewport changes (keyboard)
       if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", updateViewportHeight);
@@ -48,6 +56,12 @@ export function MobileDrawer({
 
       return () => {
         document.body.style.overflow = "";
+
+        // Restore original viewport settings
+        if (viewport && originalContent) {
+          viewport.setAttribute('content', originalContent);
+        }
+
         if (window.visualViewport) {
           window.visualViewport.removeEventListener(
             "resize",
@@ -82,6 +96,32 @@ export function MobileDrawer({
       return () => document.removeEventListener("keydown", handleEscape);
     }
   }, [open, onOpenChange]);
+
+  // Handle input focus to ensure visibility when keyboard opens
+  React.useEffect(() => {
+    if (!open || !contentRef.current) return;
+
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        // Small delay to let the keyboard animate in
+        setTimeout(() => {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          });
+        }, 300);
+      }
+    };
+
+    const content = contentRef.current;
+    content.addEventListener('focusin', handleFocusIn);
+
+    return () => {
+      content.removeEventListener('focusin', handleFocusIn);
+    };
+  }, [open]);
 
   // Calculate sheet height based on viewport
   const sheetHeight =
@@ -128,8 +168,14 @@ export function MobileDrawer({
           </Button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+                {/* Content */}
+        <div
+          ref={contentRef}
+          className="flex-1 overflow-y-auto px-4 py-4"
+          style={{
+            paddingBottom: viewportHeight > 0 && viewportHeight < window.innerHeight ? '20px' : '16px'
+          }}
+        >
           {children}
         </div>
       </div>
