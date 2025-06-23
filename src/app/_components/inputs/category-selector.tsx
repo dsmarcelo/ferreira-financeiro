@@ -36,6 +36,7 @@ export function CategorySelector({
     defaultValue ? defaultValue.toString() : ""
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const loadCategories = async () => {
     try {
@@ -81,6 +82,8 @@ export function CategorySelector({
     // Select the newly created category
     setSelectedCategoryId(category.id.toString());
     onValueChange?.(category.id.toString());
+    // Close the create dialog
+    setIsCreateDialogOpen(false);
   };
 
   if (isLoading) {
@@ -96,7 +99,7 @@ export function CategorySelector({
           onValueChange={handleValueChange}
           required={required}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="flex-1">
             <SelectValue placeholder="Selecione uma categoria">
               {selectedCategory && (
                 <div className="flex items-center gap-2">
@@ -117,23 +120,27 @@ export function CategorySelector({
             ))}
             <SelectSeparator />
             <div className="p-2">
-              <CreateCategoryDialog
-                onCategoryCreated={handleCategoryCreated}
-                trigger={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full justify-start gap-2 h-9 px-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Nova categoria</span>
-                  </Button>
-                }
-              />
+            <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => setIsCreateDialogOpen(true)}
+          className="shrink-0 w-full"
+        >
+          <Plus className="h-4 w-4" />
+          Nova categoria
+        </Button>
             </div>
           </SelectContent>
         </Select>
       </div>
+
+      <CreateCategoryDialog
+        onCategoryCreated={handleCategoryCreated}
+        trigger={null}
+        isOpen={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+      />
     </div>
   );
 }

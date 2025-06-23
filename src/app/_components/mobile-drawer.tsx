@@ -61,8 +61,9 @@ export function MobileDrawer({
     }
   }, [open]);
 
-  // Handle backdrop click
-  const handleBackdropClick = (e: React.MouseEvent) => {
+  // Close the drawer when the user clicks on the backdrop
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    // Only close if the click target is the backdrop element itself
     if (e.target === e.currentTarget) {
       onOpenChange(false);
     }
@@ -90,13 +91,11 @@ export function MobileDrawer({
 
   const sheetContent = (
     <div className="fixed inset-0 z-50 flex">
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={handleBackdropClick}
       />
 
-      {/* Sheet */}
       <div
         ref={sheetRef}
         className="bg-background animate-in slide-in-from-bottom fixed inset-x-0 bottom-0 z-50 flex flex-col shadow-lg duration-200"
@@ -130,7 +129,9 @@ export function MobileDrawer({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">{children}</div>
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {children}
+        </div>
       </div>
     </div>
   );
