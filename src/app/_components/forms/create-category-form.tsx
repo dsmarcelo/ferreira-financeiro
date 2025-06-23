@@ -6,7 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { FieldError } from "./field-error";
-import { createCategory, createCategoryWithoutRedirect, type ActionResponse } from "@/server/actions/category-actions";
+import {
+  createCategory,
+  createCategoryWithoutRedirect,
+  type ActionResponse,
+} from "@/server/actions/category-actions";
 import { CategoryColorSelector } from "../inputs/category-color-selector";
 import { EmojiPicker } from "../inputs/emoji-picker";
 import type { ExpenseCategory } from "@/server/db/schema/expense-category";
@@ -20,16 +24,24 @@ interface CreateCategoryFormProps {
   showCancelButton?: boolean;
 }
 
-export function CreateCategoryForm({ onSuccess, showCancelButton = true }: CreateCategoryFormProps) {
-  const action = onSuccess ? createCategoryWithoutRedirect : createCategory;
-  const [state, formAction, pending] = useActionState(action, initialState);
+export function CreateCategoryForm({
+  onSuccess,
+  showCancelButton = true,
+}: CreateCategoryFormProps) {
+  const [state, formAction, pending] = useActionState(
+    (onSuccess ? createCategoryWithoutRedirect : createCategory) as (
+      prevState: ActionResponse,
+      formData: FormData,
+    ) => Promise<ActionResponse>,
+    initialState,
+  );
   const [selectedColor, setSelectedColor] = useState("blue");
   const [selectedEmoji, setSelectedEmoji] = useState("💸");
 
   // Handle successful category creation
   useEffect(() => {
     if (state?.success && state.category && onSuccess) {
-      onSuccess(state.category);
+      onSuccess(state.category as ExpenseCategory);
     }
   }, [state, onSuccess]);
 
@@ -55,8 +67,8 @@ export function CreateCategoryForm({ onSuccess, showCancelButton = true }: Creat
             id="description"
             name="description"
             placeholder="Digite uma descrição para a categoria"
-            rows={3}
-            className="w-full min-h-[80px] px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
+            rows={2}
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[40px] w-full rounded-md border px-3 py-2 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           />
           <FieldError messages={state?.errors?.description} />
         </div>
@@ -95,7 +107,7 @@ export function CreateCategoryForm({ onSuccess, showCancelButton = true }: Creat
         {state?.message && (
           <p
             aria-live="polite"
-            className={`text-sm ${state.success ? 'text-green-600' : 'text-red-600'}`}
+            className={`text-sm ${state.success ? "text-green-600" : "text-red-600"}`}
           >
             {state.message}
           </p>
@@ -107,7 +119,11 @@ export function CreateCategoryForm({ onSuccess, showCancelButton = true }: Creat
               <a href="/categorias">Cancelar</a>
             </Button>
           )}
-          <Button type="submit" disabled={pending} className={showCancelButton ? "flex-1" : "w-full"}>
+          <Button
+            type="submit"
+            disabled={pending}
+            className={showCancelButton ? "flex-1" : "w-full"}
+          >
             {pending ? "Criando..." : "Criar Categoria"}
           </Button>
         </div>
