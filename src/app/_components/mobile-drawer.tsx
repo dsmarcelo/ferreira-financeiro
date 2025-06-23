@@ -71,8 +71,8 @@ export function MobileDrawer({
       <DrawerContent
         className="overflow-hidden"
         style={{
-          maxHeight:
-            typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight,
+          top: "12px",
+          maxHeight: "calc(100dvh - 12px)",
         }}
       >
         {/* Header */}
