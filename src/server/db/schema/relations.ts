@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { schema } from ".";
 
-const { profiles, userSessions, expense, cashRegister } = schema;
+const { profiles, userSessions, expense, cashRegister, expenseCategory } = schema;
 
 /**
  * Define relationships between tables for Drizzle ORM
@@ -21,4 +21,17 @@ export const userSessionsRelations = relations(userSessions, ({ one }) => ({
     fields: [userSessions.userId],
     references: [profiles.id],
   }),
+}));
+
+// Expense relations
+export const expenseRelations = relations(expense, ({ one }) => ({
+  category: one(expenseCategory, {
+    fields: [expense.categoryId],
+    references: [expenseCategory.id],
+  }),
+}));
+
+// Category relations
+export const expenseCategoryRelations = relations(expenseCategory, ({ many }) => ({
+  expenses: many(expense),
 }));

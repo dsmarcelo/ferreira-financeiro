@@ -83,13 +83,13 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
 
   const handleSuccess = () => {
     if (!expense || hasHandledSuccess.current) return;
-    
+
     // Mark as handled to prevent multiple success handlers
     hasHandledSuccess.current = true;
-    
+
     // Show success message without redirecting
     toast.success("Despesa atualizada com sucesso!");
-    
+
     // For other expense types, redirect after a short delay to ensure state updates complete
     setTimeout(() => {
     //   if (router.back) {
@@ -119,8 +119,8 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
     // If we're viewing an original recurring expense after clicking from an occurrence
     if (originalExpense) {
       return (
-        <EditExpenseForm 
-          expense={originalExpense} 
+        <EditExpenseForm
+          expense={originalExpense}
           onSuccess={handleSuccess}
         />
       );
@@ -129,8 +129,8 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
     // Choose the appropriate form based on expense type
     if (expense.type === "recurring_occurrence") {
       return (
-        <EditOccurrenceForm 
-          occurrenceExpense={expense} 
+        <EditOccurrenceForm
+          occurrenceExpense={expense}
           onSuccess={handleSuccess}
           onEditOriginal={handleEditOriginal}
         />
@@ -138,8 +138,8 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
     }
 
     return (
-      <EditExpenseForm 
-        expense={expense} 
+      <EditExpenseForm
+        expense={expense}
         onSuccess={handleSuccess}
       />
     );
@@ -147,29 +147,28 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
 
   const getPageTitle = () => {
     if (loading || !expense) return "Editar Despesa";
-    
+
     if (originalExpense) {
       return "Editar Despesa Recorrente Original";
     }
-    
+
     if (expense.type === "recurring_occurrence") {
       return "Editar Ocorrência de Despesa";
     }
-    
+
     if (expense.type === "recurring") {
       return "Editar Despesa Recorrente";
     }
-    
+
     if (expense.type === "installment") {
       return `Editar Parcela ${expense.installmentNumber}/${expense.totalInstallments}`;
     }
-    
+
     return "Editar Despesa";
   };
 
   return (
     <div className="">
-      <Header showBackButton={false} showDatePicker={false} />
       <SubPageHeader prevURL={expenseURL} title={getPageTitle()} />
       <div className="mx-auto mt-4 container px-4">
         {renderContent()}

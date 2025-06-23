@@ -1,5 +1,7 @@
 import { sql } from "drizzle-orm";
 import { createTable } from "./table-creator";
+import { expenseCategory } from "./expense-category";
+import type { ExpenseCategory } from "./expense-category";
 
 import {
   boolean,
@@ -47,6 +49,7 @@ export const expense = createTable("expense", {
   type: expenseTypeEnum("type").notNull(),
   source: expenseSourceEnum("source").notNull(),
   isPaid: boolean("is_paid").default(false).notNull(),
+  categoryId: integer("category_id").references(() => expenseCategory.id),
   installmentNumber: integer("installment_number"),
   totalInstallments: integer("total_installments"),
   groupId: uuid("group_id"), // To link expenses of the same purchase (now UUID)
@@ -62,7 +65,9 @@ export const expense = createTable("expense", {
   ),
 });
 
-export type Expense = typeof expense.$inferSelect;
+export type Expense = typeof expense.$inferSelect & {
+  category: ExpenseCategory;
+};
 export type ExpenseInsert = typeof expense.$inferInsert;
 export type ExpenseType = typeof expenseTypeEnum;
 export type ExpenseSource = (typeof expenseSourceEnum.enumValues)[number];

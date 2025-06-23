@@ -2,7 +2,7 @@
 import { ptBR } from "date-fns/locale";
 import { format, parseISO } from "date-fns";
 import { startTransition, use } from "react";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, getCategoryColorClasses } from "@/lib/utils";
 import { ExpenseListItem } from "./expense-list-item";
 import { useOptimistic } from "react";
 import type { Expense } from "@/server/db/schema/expense-schema";
@@ -25,11 +25,27 @@ function sumExpensesByDate(expenses: Expense[]): number {
   return expenses.reduce((sum, expense) => sum + Number(expense.value), 0);
 }
 
+function groupExpensesByCategory(
+  expenses: Expense[],
+): Record<string, Expense[]> {
+  return expenses.reduce<Record<string, Expense[]>>((acc, expense) => {
+    const categoryName = expense.category.name;
+    acc[categoryName] ??= [];
+    acc[categoryName].push(expense);
+    return acc;
+  }, {});
+}
+
+function sumExpensesByCategory(expenses: Expense[]): number {
+  return expenses.reduce((sum, expense) => sum + Number(expense.value), 0);
+}
+
 import { actionToggleExpenseIsPaid } from "@/actions/expense-actions";
 import DownloadButton from "../buttons/download-button";
 import ShareButton from "../buttons/share-button";
 import { Dot } from "lucide-react";
 import { downloadExpensesPDF, shareExpensesPDF } from "@/lib/pdf/expenses-pdf";
+import { Badge } from "@/components/ui/badge";
 
 export default function ExpensesList({
   expensesPromise,
@@ -41,7 +57,7 @@ export default function ExpensesList({
     allExpenses,
     (
       state: Expense[],
-      update: { id: number; checked: boolean; date: string; index: number }
+      update: { id: number; checked: boolean; date: string; index: number },
     ) => {
       // Find the nth occurrence of the expense with the given date and index within its date group
       let occurrence = 0;
@@ -60,7 +76,12 @@ export default function ExpensesList({
 
   if (!allExpenses) return <div>Nenhuma despesa encontrada</div>;
 
-  const handleTogglePaid = async (id: number, checked: boolean, date: string, index: number) => {
+  const handleTogglePaid = async (
+    id: number,
+    checked: boolean,
+    date: string,
+    index: number,
+  ) => {
     startTransition(() => {
       setOptimisticExpenses({ id, checked, date, index });
     });
@@ -72,6 +93,7 @@ export default function ExpensesList({
   };
 
   const grouped = groupByDate(optimisticExpenses);
+  const groupedByCategory = groupExpensesByCategory(optimisticExpenses);
 
   const sortedDates = Object.keys(grouped).sort();
 
@@ -128,6 +150,41 @@ export default function ExpensesList({
         </div>
       </div>
 
+      {/* Category Summary */}
+      {Object.keys(groupedByCategory).length > 0 && (
+        <div className="flex flex-wrap gap-2 rounded-lg border p-4">
+          {Object.entries(groupedByCategory)
+            .sort(
+              ([, a], [, b]) =>
+                sumExpensesByCategory(b) - sumExpensesByCategory(a),
+            )
+            .map(([categoryName, categoryExpenses]) => (
+              <div
+                key={categoryName}
+                className="flex items-center gap-2 text-sm"
+              >
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    "flex items-center gap-1",
+                    getCategoryColorClasses(
+                      categoryExpenses[0]?.category?.color ?? "blue",
+                    ),
+                  )}
+                >
+                  <span className="text-shadow-md">
+                    {categoryExpenses[0]?.category?.emoji ?? "💸"}
+                  </span>
+                  <span>{categoryName}:</span>
+                  <span className="font-semibold">
+                    {formatCurrency(sumExpensesByCategory(categoryExpenses))}
+                  </span>
+                </Badge>
+              </div>
+            ))}
+        </div>
+      )}
+
       {sortedDates.length === 0 && (
         <div className="text-muted-foreground py-8 text-center">
           Nenhuma despesa encontrada.
@@ -149,16 +206,16 @@ export default function ExpensesList({
                 {format(parseISO(date), "dd 'de' MMMM, EEE", { locale: ptBR })}
               </p>
               <Dot />
-              <p>
-                {formatCurrency(sumExpensesByDate(grouped[date] ?? []))}
-              </p>
+              <p>{formatCurrency(sumExpensesByDate(grouped[date] ?? []))}</p>
             </div>
             <div className="flex flex-col gap-2">
               {grouped[date]?.map((expense, index) => (
                 <ExpenseListItem
                   key={`${expense.id}-${index}`}
                   expense={expense}
-                  onTogglePaid={(id, checked) => handleTogglePaid(id, checked, date, index)}
+                  onTogglePaid={(id, checked) =>
+                    handleTogglePaid(id, checked, date, index)
+                  }
                   index={index}
                   date={date}
                 />

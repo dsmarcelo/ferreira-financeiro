@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { FieldError } from "@/app/_components/forms/field-error";
 import { type ActionResponse } from "@/actions/expense-actions";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
+import { CategorySelector } from "@/app/_components/inputs/category-selector";
 
 const recurrenceOptions = [
   { value: "monthly", label: "Mensal" },
@@ -59,6 +60,7 @@ export function RecurringExpenseForm({
     new Date().toISOString().slice(0, 10),
   );
   const [recurrenceEndDate, setRecurrenceEndDate] = useState<string | undefined>(undefined);
+  const [categoryId, setCategoryId] = useState<string>("");
 
   return (
     <form
@@ -69,7 +71,17 @@ export function RecurringExpenseForm({
     >
       <input type="hidden" name="source" value={source} />
       <input type="hidden" name="type" value="recurring" />
+      <input type="hidden" name="categoryId" value={categoryId} />
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
+        <div className="space-y-2">
+          <Label htmlFor="categoryId">Categoria</Label>
+          <CategorySelector
+            name="categoryId"
+            onValueChange={setCategoryId}
+            required
+          />
+          <FieldError messages={errors.categoryId} />
+        </div>
         <div className="space-y-2">
           <Label htmlFor="description">Descrição</Label>
           <Input

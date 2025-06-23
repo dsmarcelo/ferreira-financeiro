@@ -11,6 +11,7 @@ import { FieldError } from "@/app/_components/forms/field-error";
 import { DatePicker } from "@/components/inputs/date-picker";
 import CurrencyInput from "@/components/inputs/currency-input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CategorySelector } from "@/app/_components/inputs/category-selector";
 
 const initialState: {
   success: boolean;
@@ -52,6 +53,7 @@ export function UniquePaymentForm({
   const errors = state.errors ?? {};
   const [date, setDueDate] = useState<string>(() => getToday());
   const [isPaid, setIsPaid] = useState(false);
+  const [categoryId, setCategoryId] = useState<string>("");
 
   const handleDueDateChange = (date: string | null) => {
     if (date) setDueDate(date);
@@ -73,6 +75,7 @@ export function UniquePaymentForm({
     formData.append("description", description);
     formData.append("value", amount.toString());
     if (isPaid) formData.append("isPaid", "on");
+    if (categoryId) formData.append("categoryId", categoryId);
 
     const res = await actionAddOneTimeExpense(initialState, formData);
     if (!res.success) {
@@ -104,6 +107,15 @@ export function UniquePaymentForm({
       <input type="hidden" name="type" value="one_time" />
       <input type="hidden" name="source" value={source} />
       <div className="flex flex-col gap-2 overflow-y-auto">
+        <div className="space-y-2">
+          <Label htmlFor="categoryId">Categoria</Label>
+          <CategorySelector
+            name="categoryId"
+            onValueChange={setCategoryId}
+            required
+          />
+          <FieldError messages={errors.categoryId} />
+        </div>
         <div className="space-y-2">
           <Label htmlFor="description">Descrição</Label>
           <Input

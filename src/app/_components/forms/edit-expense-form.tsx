@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CategorySelector } from "@/app/_components/inputs/category-selector";
 
 const initialState: ActionResponse = {
   success: false,
@@ -49,7 +50,7 @@ function SingleInstallmentEditForm({ installment, onSuccess, onClose }: {
     actionUpdateExpense,
     initialState,
   );
-  
+
   // Custom form action wrapper to prevent multiple submissions
   const handleFormAction = useCallback(
     (formData: FormData) => {
@@ -86,47 +87,47 @@ function SingleInstallmentEditForm({ installment, onSuccess, onClose }: {
       <p className="text-sm font-medium mb-2">
         Parcela {installment.installmentNumber}/{installment.totalInstallments}
       </p>
-      
+
       <div className="mb-2 flex flex-col gap-2">
         <Label htmlFor={`description-${installment.id}`}>Descrição</Label>
-        <Input 
+        <Input
           id={`description-${installment.id}`}
-          name="description" 
-          defaultValue={installment.description} 
-          required 
+          name="description"
+          defaultValue={installment.description}
+          required
         />
-        {state.errors?.description && <FieldError messages={state.errors.description} />} 
+        {state.errors?.description && <FieldError messages={state.errors.description} />}
       </div>
 
       <div className="mb-2 flex flex-col gap-2">
         <Label htmlFor={`value-${installment.id}`}>Valor</Label>
-        <CurrencyInput 
-          name="value" 
-          initialValue={Number(installment.value)} 
-          required 
+        <CurrencyInput
+          name="value"
+          initialValue={Number(installment.value)}
+          required
         />
-        {state.errors?.value && <FieldError messages={state.errors.value} />} 
+        {state.errors?.value && <FieldError messages={state.errors.value} />}
       </div>
 
       <div className="mb-2 flex flex-col gap-2">
         <Label htmlFor={`date-${installment.id}`}>Data</Label>
-        <DatePicker 
-          name="date" 
-          defaultValue={installment.date} 
-          required 
+        <DatePicker
+          name="date"
+          defaultValue={installment.date}
+          required
         />
-        {state.errors?.date && <FieldError messages={state.errors.date} />} 
+        {state.errors?.date && <FieldError messages={state.errors.date} />}
       </div>
 
       <div className="flex items-center space-x-2 mb-3">
-        <Checkbox 
+        <Checkbox
           id={`isPaid-${installment.id}`}
-          name="isPaid" 
-          defaultChecked={installment.isPaid} 
+          name="isPaid"
+          defaultChecked={installment.isPaid}
         />
         <Label htmlFor={`isPaid-${installment.id}`}>Pago?</Label>
       </div>
-      {state.errors?.isPaid && <FieldError messages={state.errors.isPaid} />} 
+      {state.errors?.isPaid && <FieldError messages={state.errors.isPaid} />}
 
       <Button type="submit" disabled={pending} className="w-full sm:w-auto">
         {pending ? "Salvando Parcela..." : "Salvar Parcela"}
@@ -229,10 +230,10 @@ export default function EditExpenseForm({
     if (state.success && !hasHandledSuccess.current) {
       // Mark as handled to prevent multiple callbacks
       hasHandledSuccess.current = true;
-      
+
       // Show success toast
       toast.success(state.message);
-      
+
       // Call callbacks
       if (onSuccess) onSuccess();
       if (onClose) onClose();
@@ -279,7 +280,7 @@ export default function EditExpenseForm({
     if (!window.confirm("Tem certeza que deseja excluir esta despesa?")) return;
     const formData = new FormData();
     formData.append("id", expense.id.toString());
-    
+
     startDeleteTransition(() => {
       deleteFormAction(formData);
     });
@@ -300,54 +301,64 @@ export default function EditExpenseForm({
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="description">Descrição</Label>
-          <Input 
+          <Input
             id="description"
-            name="description" 
-            defaultValue={expense.description} 
-            required 
+            name="description"
+            defaultValue={expense.description}
+            required
           />
-          {state.errors?.description && <FieldError messages={state.errors.description} />} 
+          {state.errors?.description && <FieldError messages={state.errors.description} />}
         </div>
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="value">Valor</Label>
-          <CurrencyInput 
+          <CurrencyInput
             id="value"
-            name="value" 
-            initialValue={Number(expense.value)} 
-            required 
+            name="value"
+            initialValue={Number(expense.value)}
+            required
           />
-          {state.errors?.value && <FieldError messages={state.errors.value} />} 
+          {state.errors?.value && <FieldError messages={state.errors.value} />}
         </div>
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="date">Data</Label>
-          <DatePicker 
-            name="date" 
-            defaultValue={formDate} 
-            required 
+          <DatePicker
+            name="date"
+            defaultValue={formDate}
+            required
           />
-          {state.errors?.date && <FieldError messages={state.errors.date} />} 
+          {state.errors?.date && <FieldError messages={state.errors.date} />}
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Checkbox 
+                <div className="flex items-center space-x-2">
+          <Checkbox
             id="isPaid"
-            name="isPaid" 
-            defaultChecked={expense.isPaid} 
+            name="isPaid"
+            defaultChecked={expense.isPaid}
           />
           <Label htmlFor="isPaid">Pago?</Label>
         </div>
         {state.errors?.isPaid && <FieldError messages={state.errors.isPaid} />}
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="categoryId">Categoria</Label>
+          <CategorySelector
+            name="categoryId"
+            defaultValue={expense.category?.id}
+            required
+          />
+          {state.errors?.categoryId && <FieldError messages={state.errors.categoryId} />}
+        </div>
 
         {/* Recurrence Fields - only for recurring expenses */}
         {expense.type === "recurring" && (
           <>
             <div className="flex flex-col gap-2">
               <Label htmlFor="recurrenceType">Frequência da Recorrência</Label>
-              <Select 
-                name="recurrenceType" 
-                defaultValue={expense.recurrenceType ?? undefined} 
+              <Select
+                name="recurrenceType"
+                defaultValue={expense.recurrenceType ?? undefined}
                 onValueChange={setCurrentRecurrenceType}
               >
                 <SelectTrigger>
@@ -366,9 +377,9 @@ export default function EditExpenseForm({
             {currentRecurrenceType === "custom_days" && (
               <div className="flex flex-col gap-2">
                 <Label htmlFor="recurrenceInterval">Intervalo de Dias (Recorrência)</Label>
-                <Input 
+                <Input
                   id="recurrenceInterval"
-                  name="recurrenceInterval" 
+                  name="recurrenceInterval"
                   type="number"
                   defaultValue={expense.recurrenceInterval ?? undefined}
                   placeholder="Ex: 7 (para a cada 7 dias)"
@@ -379,8 +390,8 @@ export default function EditExpenseForm({
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="recurrenceEndDate">Data Final da Recorrência (Opcional)</Label>
-              <DatePicker 
-                name="recurrenceEndDate" 
+              <DatePicker
+                name="recurrenceEndDate"
                 defaultValue={expense.recurrenceEndDate ?? undefined}
               />
               {state.errors?.recurrenceEndDate && <FieldError messages={state.errors.recurrenceEndDate} />}
@@ -389,19 +400,19 @@ export default function EditExpenseForm({
         )}
 
         <div className="flex flex-col sm:flex-row gap-2 pt-2">
-          <Button 
-            type="button" 
+          <Button
+            type="button"
             size="icon"
-            variant="destructive" 
-            onClick={handleDelete} 
+            variant="destructive"
+            onClick={handleDelete}
             disabled={deletePending || pending || isDeletingTransition}
           >
             <TrashIcon className="h-4 w-4" />
           </Button>
 
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={() => {
               if (onClose) {
                 onClose();
@@ -420,7 +431,7 @@ export default function EditExpenseForm({
                 }
                 router.push(targetUrl);
               }
-            }} 
+            }}
             className="w-full sm:w-auto"
           >
             Cancelar
@@ -445,9 +456,9 @@ export default function EditExpenseForm({
           )}
           <div className="space-y-4">
             {relatedInstallments.map((inst) => (
-              <SingleInstallmentEditForm 
-                key={inst.id} 
-                installment={inst} 
+              <SingleInstallmentEditForm
+                key={inst.id}
+                installment={inst}
                 onSuccess={() => {
                   if (expense.groupId) {
                     getInstallmentsByGroupId(expense.groupId)

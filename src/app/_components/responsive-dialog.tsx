@@ -20,6 +20,8 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
+import { useViewportHeight } from "@/hooks/use-viewport-height";
+import { useIsMobile } from "@/hooks/use-mobile";
 // import { useMediaQuery } from "usehooks-ts";
 
 export default function ResponsiveDialog({
@@ -29,6 +31,8 @@ export default function ResponsiveDialog({
   description,
   isOpen,
   onOpenChange,
+  maxWidth = "sm:max-w-[425px]",
+  enableMobileKeyboardHandling = true,
 }: {
   triggerButton: React.ReactNode;
   children: React.ReactNode;
@@ -36,9 +40,13 @@ export default function ResponsiveDialog({
   description?: string;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  maxWidth?: string;
+  enableMobileKeyboardHandling?: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
+  const { getMobileDialogHeight } = useViewportHeight();
+  const isMobile = useIsMobile();
 
   React.useEffect(() => {
     setMounted(true);
@@ -53,15 +61,22 @@ export default function ResponsiveDialog({
   }
 
   if (isDesktop) {
+    const mobileMaxHeight = enableMobileKeyboardHandling && isMobile ? getMobileDialogHeight() : undefined;
+
     return (
       <Dialog open={isOpen ?? open} onOpenChange={onOpenChange ?? setOpen}>
         <DialogTrigger asChild>{triggerButton}</DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
+        <DialogContent
+          className={`${maxWidth} max-h-[90dvh] overflow-y-auto`}
+          style={mobileMaxHeight ? { maxHeight: `${mobileMaxHeight}px` } : undefined}
+        >
+          <DialogHeader className="sticky top-0 bg-background z-10 pb-4">
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          {children}
+          <div className="flex-1 overflow-y-auto">
+            {children}
+          </div>
         </DialogContent>
       </Dialog>
     );
@@ -75,10 +90,12 @@ export default function ResponsiveDialog({
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        <div className="px-4">{children}</div>
-        <DrawerFooter className="pt-4">
+        <div className="px-4 pb-4 overflow-y-auto">
+          {children}
+        </div>
+        <DrawerFooter className="pt-2">
           <DrawerClose asChild>
-            <Button variant="outline">Cancelar</Button>
+            <Button variant="outline">Cancel</Button>
           </DrawerClose>
         </DrawerFooter>
       </DrawerContent>

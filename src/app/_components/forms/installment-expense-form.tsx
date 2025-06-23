@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CategorySelector } from "@/app/_components/inputs/category-selector";
 
 interface InstallmentExpenseFormProps {
   source: ExpenseInsert["source"];
@@ -67,6 +68,7 @@ export function InstallmentExpenseForm({
   const [firstInstallmentDate, setFirstInstallmentDate] = useState<
     Date | undefined
   >(undefined);
+  const [categoryId, setCategoryId] = useState<string>("");
 
   useEffect(() => {
     if (state.success === true && state.message) {
@@ -133,7 +135,7 @@ export function InstallmentExpenseForm({
         case "custom_days":
           targetDate.setDate(
             targetDate.getDate() +
-              currentRecurrenceIntervalForCustom * installmentIndex,
+            currentRecurrenceIntervalForCustom * installmentIndex,
           );
           break;
         default:
@@ -155,8 +157,8 @@ export function InstallmentExpenseForm({
       const remainder =
         amount > 0 && newTotalInstallments > 0
           ? Math.round(
-              (amount - installmentValue * newTotalInstallments) * 100,
-            ) / 100
+            (amount - installmentValue * newTotalInstallments) * 100,
+          ) / 100
           : 0;
 
       const resolvedFirstDate =
@@ -184,7 +186,7 @@ export function InstallmentExpenseForm({
             totalInstallments: newTotalInstallments,
             description:
               currentItem?.description &&
-              currentItem.totalInstallments === newTotalInstallments
+                currentItem.totalInstallments === newTotalInstallments
                 ? currentItem.description // Preserve description if total installments haven't changed
                 : newTotalInstallments === 1
                   ? description
@@ -192,9 +194,9 @@ export function InstallmentExpenseForm({
             amount: valueForThisInstallment,
             dueDate:
               currentItem?.dueDate &&
-              currentItem.totalInstallments === newTotalInstallments &&
-              i === 0 &&
-              firstInstallmentDate === undefined
+                currentItem.totalInstallments === newTotalInstallments &&
+                i === 0 &&
+                firstInstallmentDate === undefined
                 ? currentItem.dueDate // Preserve first installment's original date if not explicitly changed
                 : dueDate,
             isPaid: currentItem?.isPaid ?? false,
@@ -329,6 +331,9 @@ export function InstallmentExpenseForm({
       if (installment.isPaid) {
         formData.append("isPaid", "on");
       }
+      if (categoryId) {
+        formData.append("categoryId", categoryId);
+      }
 
       const res = await actionAddInstallmentExpense(initialState, formData);
       if (!res.success) {
@@ -364,6 +369,16 @@ export function InstallmentExpenseForm({
       className="flex h-full max-h-full flex-col gap-2"
     >
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
+        <div className="space-y-2">
+          <Label htmlFor="categoryId">Categoria</Label>
+          <CategorySelector
+            name="categoryId"
+            onValueChange={setCategoryId}
+            required
+          />
+          <FieldError messages={errors?.categoryId} />
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="description">Descrição</Label>
           <Input

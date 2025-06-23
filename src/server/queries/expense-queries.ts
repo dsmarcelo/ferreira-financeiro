@@ -7,6 +7,8 @@ import {
   type ExpenseSource,
 } from "../db/schema/expense-schema";
 import { and, eq, gte, isNull, lte, ne, or, type SQL, sum } from "drizzle-orm";
+import { expenseCategory, DEFAULT_CATEGORY } from "../db/schema/expense-category";
+import { getDefaultExpenseCategory } from "./expense-category-queries";
 import {
   addDays,
   addMonths,
@@ -19,8 +21,36 @@ import {
   parseISO,
 } from "date-fns";
 
-export async function addExpense(data: ExpenseInsert) {
-  return db.insert(expense).values(data).returning();
+type JoinedExpense = {
+  expense: typeof expense.$inferSelect;
+  expense_category: typeof expenseCategory.$inferSelect | null;
+};
+
+function mapJoinedExpenseToExpense(joinedExpense: JoinedExpense): Expense {
+  if (!joinedExpense.expense) throw new Error("Invalid expense data");
+  return {
+    ...joinedExpense.expense,
+    category: joinedExpense.expense_category ?? DEFAULT_CATEGORY,
+  };
+}
+
+export async function addExpense(data: ExpenseInsert): Promise<Expense> {
+  // Set default category if none provided
+  if (!data.categoryId) {
+    const defaultCategory = await getDefaultExpenseCategory();
+    data.categoryId = defaultCategory?.id ?? DEFAULT_CATEGORY.id;
+  }
+
+  const [newExpense] = await db.insert(expense).values(data).returning();
+  if (!newExpense) throw new Error("Failed to create expense");
+
+  const [category] = await db
+    .select()
+    .from(expenseCategory)
+    .where(eq(expenseCategory.id, newExpense.categoryId!));
+  if (!category) throw new Error("Category not found");
+
+  return { ...newExpense, category };
 }
 
 export async function getExpensesByPeriod({
@@ -50,10 +80,10 @@ export async function getExpensesByPeriod({
         ),
         and(
           eq(expense.type, "recurring"),
-          lte(expense.date, queryEndDateString), // Series starts on or before query period ends
+          lte(expense.date, queryEndDateString),
           or(
             isNull(expense.recurrenceEndDate),
-            gte(expense.recurrenceEndDate, queryStartDateString), // Series ends on or after query period starts
+            gte(expense.recurrenceEndDate, queryStartDateString),
           ),
         ),
       ),
@@ -89,8 +119,11 @@ export async function getExpensesByPeriod({
     );
   }
 
-  const initialExpenses: Expense[] = await (() => {
-    const currentBaseSelect = db.select().from(expense);
+  const initialExpenses = await (() => {
+    const currentBaseSelect = db
+      .select()
+      .from(expense)
+      .leftJoin(expenseCategory, eq(expense.categoryId, expenseCategory.id));
 
     if (baseConditions.length > 0) {
       const validBaseConditions = baseConditions.filter(
@@ -100,7 +133,6 @@ export async function getExpensesByPeriod({
         return currentBaseSelect.where(and(...validBaseConditions));
       }
     }
-    // If no conditions or no valid conditions, return the base select
     return currentBaseSelect;
   })();
 
@@ -165,14 +197,16 @@ export async function getExpensesByPeriod({
     return processed;
   }
 
-  for (const ex of initialExpenses) {
+  for (const joinedExpense of initialExpenses) {
+    const ex = mapJoinedExpenseToExpense(joinedExpense);
     if (ex.type === "recurring" && ex.recurrenceType && queryStartDate && queryEndDate) {
-      // For each recurrence, show paid one-time expense if exists, otherwise the recurring occurrence
-      const paidOccurrences = initialExpenses.filter(e =>
-        e.type === "recurring_occurrence" &&
-        e.originalRecurringExpenseId === ex.id &&
-        e.isPaid // Ensure we only consider paid recurring_occurrence entries as replacements
-      );
+      const paidOccurrences = initialExpenses
+        .map(mapJoinedExpenseToExpense)
+        .filter(e =>
+          e.type === "recurring_occurrence" &&
+          e.originalRecurringExpenseId === ex.id &&
+          e.isPaid
+        );
       const occurrences = getRecurringExpenses(ex, queryStartDate, queryEndDate);
       for (const occurrence of occurrences) {
         const matchingPaid = paidOccurrences.find(o => o.date === occurrence.date);
@@ -182,8 +216,7 @@ export async function getExpensesByPeriod({
           processedExpenses.push(occurrence);
         }
       }
-    } else if (ex.type === "recurring_occurrence" && ex.originalRecurringExpenseId != null) {
-      // Skip paid recurring_occurrence entries for recurring occurrences (already processed)
+    } else if (ex.type === "recurring_occurrence" && ex.originalRecurringExpenseId !== null) {
       continue;
     } else {
       processedExpenses.push(ex);
@@ -203,7 +236,6 @@ export async function updateExpense(
 ): Promise<Expense | undefined> {
   const dataForUpdate: Partial<ExpenseInsert> = { ...data };
 
-  // Explicitly set undefined optional fields to null for database update
   if (dataForUpdate.recurrenceEndDate === undefined) {
     dataForUpdate.recurrenceEndDate = null;
   }
@@ -213,23 +245,34 @@ export async function updateExpense(
   if (dataForUpdate.recurrenceType === undefined) {
     dataForUpdate.recurrenceType = null;
   }
-  // Corrected to use originalRecurringExpenseId as per schema
   if (dataForUpdate.originalRecurringExpenseId === undefined) {
     dataForUpdate.originalRecurringExpenseId = null;
   }
-  // Note: groupId and installmentId are UUIDs and usually either present or not part of the update (not cleared to null)
-  // If clearing them is a use case, add similar checks.
 
   const [updated] = await db
     .update(expense)
-    .set(dataForUpdate) // Use the modified data
+    .set(dataForUpdate)
     .where(eq(expense.id, id))
     .returning();
-  return updated;
+
+  if (updated) {
+    const [category] = await db
+      .select()
+      .from(expenseCategory)
+      .where(eq(expenseCategory.id, updated.categoryId!));
+    if (!category) throw new Error("Category not found");
+    return { ...updated, category };
+  }
+  return undefined;
 }
 
 export async function getExpenseById(id: number): Promise<Expense | undefined> {
-  return db.query.expense.findFirst({ where: eq(expense.id, id) });
+  const [joinedExpense] = await db
+    .select()
+    .from(expense)
+    .leftJoin(expenseCategory, eq(expense.categoryId, expenseCategory.id))
+    .where(eq(expense.id, id));
+  return joinedExpense ? mapJoinedExpenseToExpense(joinedExpense) : undefined;
 }
 
 export async function deleteExpense(id: number): Promise<void> {
@@ -260,9 +303,10 @@ export async function getOneTimeExpenseByRecurringOriginAndDate(
   originalRecurringExpenseId: number,
   occurrenceDate: string,
 ): Promise<Expense | undefined> {
-  const result = await db
+  const [joinedExpense] = await db
     .select()
     .from(expense)
+    .leftJoin(expenseCategory, eq(expense.categoryId, expenseCategory.id))
     .where(
       and(
         eq(expense.type, "one_time"),
@@ -271,15 +315,17 @@ export async function getOneTimeExpenseByRecurringOriginAndDate(
       ),
     )
     .limit(1);
-  return result[0];
+  return joinedExpense ? mapJoinedExpenseToExpense(joinedExpense) : undefined;
 }
 
 export async function getInstallmentsByGroupId(
   groupId: string,
 ): Promise<Expense[]> {
-  return db
+  const results = await db
     .select()
     .from(expense)
+    .leftJoin(expenseCategory, eq(expense.categoryId, expenseCategory.id))
     .where(and(eq(expense.groupId, groupId), eq(expense.type, "installment")))
     .orderBy(expense.installmentNumber);
+  return results.map(mapJoinedExpenseToExpense);
 }

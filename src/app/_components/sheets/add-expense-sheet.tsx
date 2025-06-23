@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import AddExpenseForm from "@/app/_components/forms/add-expense-form";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
+import { useViewportHeight } from "@/hooks/use-viewport-height";
+import { useIsMobile } from "@/hooks/use-mobile";
 // import {
 //   Sheet,
 //   SheetClose,
@@ -35,13 +37,24 @@ export default function AddExpenseSheet({
   children?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const { getMobileDialogHeight } = useViewportHeight();
+  const isMobile = useIsMobile();
+
+  const mobileMaxHeight = isMobile ? getMobileDialogHeight(60, 400) : undefined; // More padding for this larger form
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children ?? <Button className="rounded-full">{buttonLabel}</Button>}
       </DialogTrigger>
-      <DialogContent className="flex h-[90dvh] max-h-[600px] max-w-[90dvw] min-w-[700px] flex-col">
-        <DialogHeader className="pb-0">
+      <DialogContent
+        className="flex h-[90dvh] max-h-[600px] max-w-[90dvw] min-w-[700px] flex-col"
+        style={mobileMaxHeight ? {
+          maxHeight: `${mobileMaxHeight}px`,
+          minWidth: isMobile ? '90vw' : '700px'
+        } : undefined}
+      >
+        <DialogHeader className="pb-0 sticky top-0 bg-background z-10">
           <DialogTitle>Adicionar Despesa</DialogTitle>
           <DialogDescription className="hidden" aria-hidden="true" />
         </DialogHeader>
@@ -52,7 +65,7 @@ export default function AddExpenseSheet({
             onSuccess={() => setOpen(false)}
           />
         </div>
-        <DialogFooter className="border-t pt-4">
+        <DialogFooter className="border-t pt-4 sticky bottom-0 bg-background">
           <Button type="submit" form="add-expense-form">
             Adicionar
           </Button>

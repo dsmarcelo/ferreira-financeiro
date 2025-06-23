@@ -59,3 +59,32 @@ export function getToday(): string {
   const [date] = iso.split("T");
   return typeof date === "string" ? date : "";
 }
+
+const COLOR_MAP = {
+  red: "bg-red-50 text-red-800",
+  orange: "bg-orange-50 text-orange-800",
+  amber: "bg-amber-50 text-amber-800",
+  yellow: "bg-yellow-50 text-yellow-800",
+  lime: "bg-lime-50 text-lime-800",
+  green: "bg-green-50 text-green-800",
+  emerald: "bg-emerald-50 text-emerald-800",
+  teal: "bg-teal-50 text-teal-800",
+  cyan: "bg-cyan-50 text-cyan-800",
+  sky: "bg-sky-50 text-sky-800",
+  blue: "bg-blue-50 text-blue-800",
+  indigo: "bg-indigo-50 text-indigo-800",
+  violet: "bg-violet-50 text-violet-800",
+  purple: "bg-purple-50 text-purple-800",
+  fuchsia: "bg-fuchsia-50 text-fuchsia-800",
+  pink: "bg-pink-50 text-pink-800",
+  rose: "bg-rose-50 text-rose-800",
+  gray: "bg-gray-50 text-gray-800",
+  slate: "bg-slate-50 text-slate-800",
+  zinc: "bg-zinc-50 text-zinc-800",
+} as const;
+
+export type CategoryColor = keyof typeof COLOR_MAP;
+
+export function getCategoryColorClasses(color: string): string {
+  return COLOR_MAP[color as CategoryColor] || COLOR_MAP.blue;
+}
