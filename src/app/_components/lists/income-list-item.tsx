@@ -11,10 +11,7 @@ export interface IncomeListItemProps {
   children?: React.ReactNode;
 }
 
-export function IncomeListItem({
-  income,
-  children,
-}: IncomeListItemProps) {
+export function IncomeListItem({ income, children }: IncomeListItemProps) {
   const totalIncome = Number(income.value); // This is the total income input by user
   const profitMarginPercent = Number(income.profitMargin);
   const profitAmount = totalIncome * (profitMarginPercent / 100);
@@ -28,19 +25,19 @@ export function IncomeListItem({
     >
       <div className="flex w-full items-center gap-2">
         <p>
-          {format(parseISO(income.date), "dd/MM", {
+          {format(parseISO(income.dateTime.toISOString()), "dd/MM", {
             locale: ptBR,
           }).toUpperCase()}
         </p>
       </div>
       <div className="flex flex-col items-end gap-1">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Base: {formatCurrency(baseValue)}
         </p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Lucro: {profitMarginPercent}% ({formatCurrency(profitAmount)})
         </p>
-        <p className={cn("w-fit text-right whitespace-nowrap font-semibold")}>
+        <p className={cn("w-fit text-right font-semibold whitespace-nowrap")}>
           Total: {formatCurrency(totalIncome)}
         </p>
       </div>

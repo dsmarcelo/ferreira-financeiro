@@ -23,10 +23,7 @@ interface AddIncomeProps {
   children?: React.ReactNode;
 }
 
-export default function AddIncome({
-  className,
-  children,
-}: AddIncomeProps) {
+export default function AddIncome({ className, children }: AddIncomeProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionCreateIncome,
@@ -68,6 +65,22 @@ export default function AddIncome({
         className="space-y-4"
       >
         <div className="space-y-2">
+          <Label htmlFor="description">Descrição</Label>
+          <input
+            id="description"
+            name="description"
+            type="text"
+            placeholder="Descrição da receita"
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            required
+          />
+          {errors.description && (
+            <p className="mt-1 text-sm text-red-500" aria-live="polite">
+              {errors.description?.[0]}
+            </p>
+          )}
+        </div>
+        <div className="space-y-2">
           <Label htmlFor="date">Data</Label>
           <DatePicker id="date" name="date" required defaultValue={today} />
           {errors.date && (
@@ -77,14 +90,24 @@ export default function AddIncome({
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="value">Receita Total</Label>
-          <CurrencyInput
-            id="value"
-            name="value"
-            step="0.01"
-            min={0}
+          <Label htmlFor="time">Hora</Label>
+          <input
+            id="time"
+            name="time"
+            type="time"
+            defaultValue="12:00"
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             required
           />
+          {errors.time && (
+            <p className="mt-1 text-sm text-red-500" aria-live="polite">
+              {errors.time?.[0]}
+            </p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="value">Receita Total</Label>
+          <CurrencyInput id="value" name="value" step="0.01" min={0} required />
           {errors.value && (
             <p className="mt-1 text-sm text-red-500" aria-live="polite">
               {errors.value[0]}
@@ -101,7 +124,7 @@ export default function AddIncome({
             min={0}
             max={100}
             defaultValue="28"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             required
           />
           {errors.profitMargin && (

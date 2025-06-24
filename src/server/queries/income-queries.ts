@@ -56,13 +56,17 @@ export async function listIncomes(
   endDate: string,
 ): Promise<Income[] | []> {
   if (startDate && endDate) {
+    // Convert date strings to full datetime ranges
+    const startDateTime = new Date(`${startDate}T00:00:00.000Z`);
+    const endDateTime = new Date(`${endDate}T23:59:59.999Z`);
+
     return db
       .select()
       .from(incomes)
       .where(
-        and(gte(incomes.date, startDate), lte(incomes.date, endDate)),
+        and(gte(incomes.dateTime, startDateTime), lte(incomes.dateTime, endDateTime)),
       )
-      .orderBy(asc(incomes.date));
+      .orderBy(asc(incomes.dateTime));
   }
   return [];
 }
@@ -72,12 +76,16 @@ export async function sumIncomesByDateRange(
   startDate: string,
   endDate: string,
 ): Promise<number> {
+  // Convert date strings to full datetime ranges
+  const startDateTime = new Date(`${startDate}T00:00:00.000Z`);
+  const endDateTime = new Date(`${endDate}T23:59:59.999Z`);
+
   // Aggregate the sum of the value column for the given date range
   const result = await db
     .select({ sum: sum(incomes.value) })
     .from(incomes)
     .where(
-      and(gte(incomes.date, startDate), lte(incomes.date, endDate)),
+      and(gte(incomes.dateTime, startDateTime), lte(incomes.dateTime, endDateTime)),
     );
   // Return the sum or 0 if no records
   return Number(result[0]?.sum ?? 0);

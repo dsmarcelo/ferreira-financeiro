@@ -15,7 +15,9 @@ import type { IncomeInsert } from "@/server/db/schema/incomes-schema";
 import { z } from "zod";
 
 const incomeInsertSchema = z.object({
+  description: z.string().min(1, { message: "Descrição é obrigatória" }),
   date: z.string({ message: "Data inválida" }),
+  time: z.string({ message: "Hora inválida" }),
   value: z.number().min(0, { message: "Valor inválido" }),
   profitMargin: z.number().min(0).max(100, { message: "Margem de lucro deve estar entre 0% e 100%" }),
 });
@@ -25,7 +27,11 @@ export interface ActionResponse {
   success: boolean;
   message: string;
   errors?: {
-    [K in keyof IncomeInsert]?: string[];
+    description?: string[];
+    date?: string[];
+    time?: string[];
+    value?: string[];
+    profitMargin?: string[];
   };
 }
 
@@ -35,14 +41,16 @@ export async function actionCreateIncome(
   formData: FormData,
 ): Promise<ActionResponse> {
   // Parse form data
+  const description = formData.get("description");
   const date = formData.get("date");
+  const time = formData.get("time");
   const valueStr = formData.get("value");
   const profitMarginStr = formData.get("profitMargin");
   const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
 
   // Validate using Zod, passing raw values
-  const result = incomeInsertSchema.safeParse({ date, value, profitMargin });
+  const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin });
   if (!result.success) {
     // Return field-level errors and a general message
     return {
@@ -52,13 +60,18 @@ export async function actionCreateIncome(
     };
   }
 
-  try {
+    try {
+    // Combine date and time into a single DateTime object
+    const dateTimeString = `${date as string}T${time as string}:00.000Z`;
+    const dateTime = new Date(dateTimeString);
+
     // Format values for DB (value with 2 decimals, profit margin as percentage with 2 decimals)
     const dbValue = value !== undefined ? value.toFixed(2) : undefined;
     const dbProfitMargin = profitMargin !== undefined ? profitMargin.toFixed(2) : undefined;
 
     await createIncome({
-      date: date as string,
+      description: description as string,
+      dateTime: dateTime,
       value: dbValue!,
       profitMargin: dbProfitMargin!
     });
@@ -82,14 +95,16 @@ export async function actionUpdateIncome(
     return { success: false, message: "ID inválido" };
   }
 
+  const description = formData.get("description");
   const date = formData.get("date");
+  const time = formData.get("time");
   const valueStr = formData.get("value");
   const profitMarginStr = formData.get("profitMargin");
   const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
 
   // Validate using Zod, passing raw values
-  const result = incomeInsertSchema.safeParse({ date, value, profitMargin });
+  const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin });
   if (!result.success) {
     return {
       success: false,
@@ -99,8 +114,13 @@ export async function actionUpdateIncome(
   }
 
   try {
+    // Combine date and time into a single DateTime object
+    const dateTimeString = `${date as string}T${time as string}:00.000Z`;
+    const dateTime = new Date(dateTimeString);
+
     await updateIncome(id, {
-      date: date as string,
+      description: description as string,
+      dateTime: dateTime,
       value: value!.toFixed(2),
       profitMargin: profitMargin!.toFixed(2),
     });
