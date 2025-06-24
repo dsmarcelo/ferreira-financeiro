@@ -2,15 +2,64 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 
 const CATEGORY_EMOJIS = [
-  "💸", "💰", "🏠", "🚗", "🍕", "🛒", "👕", "💊", "🎮", "📱",
-  "✈️", "🎬", "📚", "⚽", "🎵", "💡", "🔧", "🎂", "☕", "🌮",
-  "💳", "🏦", "🎯", "📊", "💼", "🎪", "🎨", "🧾", "📝", "🛍️",
-  "🏥", "⛽", "🍔", "🍺", "🎊", "🎁", "🧳", "🚿", "🧴", "🔌",
-  "📖", "🎤", "🏃", "🧠", "💻", "📷", "🎸", "🍇", "🥤", "🚲"
+  "💸",
+  "💰",
+  "🏠",
+  "🚗",
+  "🍕",
+  "🛒",
+  "👕",
+  "💊",
+  "🎮",
+  "📱",
+  "✈️",
+  "🎬",
+  "📚",
+  "⚽",
+  "🎵",
+  "💡",
+  "🔧",
+  "🎂",
+  "☕",
+  "🌮",
+  "💳",
+  "🏦",
+  "🎯",
+  "📊",
+  "💼",
+  "🎪",
+  "🎨",
+  "🧾",
+  "📝",
+  "🛍️",
+  "🏥",
+  "⛽",
+  "🍔",
+  "🍺",
+  "🎊",
+  "🎁",
+  "🧳",
+  "🚿",
+  "🧴",
+  "🔌",
+  "📖",
+  "🎤",
+  "🏃",
+  "🧠",
+  "💻",
+  "📷",
+  "🎸",
+  "🍇",
+  "🥤",
+  "🚲",
 ];
 
 interface EmojiPickerProps {
@@ -36,23 +85,24 @@ export function EmojiPicker({
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
+      <input type="hidden" name="emoji" value={selectedEmoji} />
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="w-12 h-12 text-2xl p-0 hover:bg-muted"
+            className="hover:bg-muted h-12 w-12 p-0 text-2xl"
             type="button"
           >
             {selectedEmoji || "😀"}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[90dvw] mx-2 max-w-[500px] max-h-80 p-2 overflow-y-auto">
+        <PopoverContent className="mx-2 max-h-80 w-[90dvw] max-w-[500px] overflow-y-auto p-2">
           <div className="flex flex-wrap justify-center gap-2">
             {CATEGORY_EMOJIS.map((emoji) => (
               <Button
                 key={emoji}
                 variant="ghost"
-                className="w-10 h-10 p-0 text-2xl hover:bg-muted"
+                className="hover:bg-muted h-10 w-10 p-0 text-2xl"
                 onClick={() => handleEmojiSelect(emoji)}
                 type="button"
               >
