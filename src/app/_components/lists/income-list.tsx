@@ -81,7 +81,7 @@ export default function IncomeList({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
+      <div className="flex flex-wrap items-start justify-between gap-2 px-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <div className="sm:border-r sm:pr-2">
             <p>Total do mês</p>
@@ -119,26 +119,26 @@ export default function IncomeList({
       </div>
 
       {sortedDates.length === 0 && (
-        <div className="text-muted-foreground py-8 text-center">
+        <div className="text-muted-foreground py-8 text-center px-5">
           Nenhuma receita encontrada.
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="divide-y">
         {sortedDates.map((date) => (
-          <div key={date}>
-            <div className="text-muted-foreground flex items-center text-xs">
+          <div key={date} className="pb-4">
+            <div className="text-muted-foreground flex items-center text-sm bg-muted p-1 px-4">
               <p className="font-semibold uppercase text-primary">
               {format(parseISO(date), "dd 'de' MMMM, EEE", { locale: ptBR })}
               </p>
               <Dot />
               <p>{formatCurrency(sumIncomesByDate(grouped[date] ?? []))}</p>
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col divide-y px-5">
               {grouped[date]?.map((income) => (
                 <EditIncome data={income} key={income.id}>
               <div>
-                    <IncomeListItem income={income} />
+                <IncomeListItem income={income} />
               </div>
             </EditIncome>
           ))}

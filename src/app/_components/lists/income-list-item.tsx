@@ -22,20 +22,20 @@ export function IncomeListItem({ income, children }: IncomeListItemProps) {
         "hover:bg-background-secondary active:bg-accent flex cursor-pointer items-center gap-2 py-2 sm:px-2",
       )}
     >
-      <div className="w-full space-y-2">
-        <p className="text-sm font-semibold">{income.description}</p>
-        {/* <p className="text-xs">
-          {format(parseISO(income.dateTime.toISOString()), "dd/MM", {
+      <div className="w-full">
+        <p className="text-base">{income.description}</p>
+        <p className="text-muted-foreground text-sm whitespace-nowrap">
+          {format(parseISO(income.dateTime.toISOString()), "HH:mm", {
             locale: ptBR,
           }).toUpperCase()}
-        </p> */}
+        </p>
       </div>
-      <div className="flex flex-col items-end gap-1">
+      <div className="flex flex-col items-end">
+        <p className={cn("w-fit text-right font-semibold")}>
+          {formatCurrency(totalIncome)}
+        </p>
         <p className="text-muted-foreground text-sm whitespace-nowrap">
           Lucro: {profitMarginPercent}% ({formatCurrency(profitAmount)})
-        </p>
-        <p className={cn("w-fit text-right font-semibold")}>
-          Total: {formatCurrency(totalIncome)}
         </p>
       </div>
       {children}
