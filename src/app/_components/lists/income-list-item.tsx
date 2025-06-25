@@ -23,7 +23,10 @@ export function IncomeListItem({ income, children }: IncomeListItemProps) {
         "hover:bg-background-secondary active:bg-accent flex cursor-pointer items-center gap-2 py-2 sm:px-2",
       )}
     >
-      <div className="flex w-full items-center gap-2">
+      <div className="w-full space-y-2">
+        <p>
+          {income.description}
+        </p>
         <p>
           {format(parseISO(income.dateTime.toISOString()), "dd/MM", {
             locale: ptBR,
