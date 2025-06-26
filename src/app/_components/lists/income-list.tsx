@@ -9,7 +9,7 @@ import ShareButton from "@/app/_components/buttons/share-button";
 import { ptBR } from "date-fns/locale";
 import { format, parseISO } from "date-fns";
 import { Dot } from "lucide-react";
-import Link from "next/link";
+import EditIncome from "@/app/_components/dialogs/edit/edit-income";
 
 function groupByDate(incomes: Income[]) {
   return incomes
@@ -136,14 +136,14 @@ export default function IncomeList({
             </div>
             <div className="flex flex-col divide-y px-5">
               {grouped[date]?.map((income) => (
-                <Link href={`/caixa/editar/${income.id}`} key={income.id} className="cursor-pointer">
-                  <div>
+                <EditIncome data={income} key={income.id}>
+                  <div className="cursor-pointer">
                     <IncomeListItem income={income} />
                   </div>
-                </Link>
+                </EditIncome>
               ))}
             </div>
-      </div>
+          </div>
         ))}
       </div>
     </div>

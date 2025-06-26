@@ -11,7 +11,6 @@ import {
   sumTotalProfitByDateRange,
 } from "@/server/queries/income-queries";
 import { revalidatePath } from "next/cache";
-import type { IncomeInsert } from "@/server/db/schema/incomes-schema";
 import { z } from "zod";
 
 const incomeInsertSchema = z.object({

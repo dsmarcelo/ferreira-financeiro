@@ -3,24 +3,19 @@
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  actionDeleteIncome,
-  actionUpdateIncome,
+  actionCreateIncome,
   type ActionResponse,
 } from "@/actions/income-actions";
 import { Label } from "@/components/ui/label";
 import CurrencyInput from "@/components/inputs/currency-input";
-import type { Income } from "@/server/db/schema/incomes-schema";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
-import { TrashIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
-interface EditIncomeFormProps {
+interface AddIncomeFormProps {
   id?: string;
-  income: Income;
   onSuccess?: () => void;
-  onClose?: () => void;
 }
 
 const initialState: ActionResponse = {
@@ -28,10 +23,10 @@ const initialState: ActionResponse = {
   message: "",
 };
 
-export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditIncomeFormProps) {
+export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
-    actionUpdateIncome,
+    actionCreateIncome,
     initialState,
   );
 
@@ -52,29 +47,21 @@ export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditI
   // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
 
-  const handleDelete = async () => {
-    if (!income.id) return;
-    if (!window.confirm("Tem certeza que deseja excluir esta receita?")) return;
+  // Get today's date and current time in local timezone
+  const today = new Date().toLocaleDateString('en-CA', {
+    timeZone: 'America/Sao_Paulo'
+  });
 
-    try {
-      await actionDeleteIncome(income.id);
-      toast.success("Receita excluída com sucesso!");
-      if (onClose) {
-        onClose();
-      } else {
-        router.back();
-      }
-    } catch (error) {
-      toast.error("Erro ao excluir receita");
-      console.error("Error deleting income:", error);
-    }
-  };
+  const currentTime = new Date().toLocaleTimeString('pt-BR', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Sao_Paulo'
+  });
 
   return (
     <div className="space-y-4">
       <form id={id} action={formAction} className="space-y-4">
-        <input type="hidden" name="id" value={income.id} />
-
         <div className="space-y-2">
           <Label htmlFor="description">Descrição</Label>
           <Input
@@ -82,7 +69,6 @@ export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditI
             name="description"
             type="text"
             placeholder="Descrição da receita"
-            defaultValue={income.description || ""}
             required
           />
           {errors.description && (
@@ -98,13 +84,7 @@ export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditI
             id="date"
             name="date"
             required
-            defaultValue={
-              income.dateTime
-                ? new Date(income.dateTime).toLocaleDateString('en-CA', {
-                    timeZone: 'America/Sao_Paulo'
-                  })
-                : ""
-            }
+            defaultValue={today}
           />
           {errors.date && (
             <p className="mt-1 text-sm text-red-500" aria-live="polite">
@@ -119,16 +99,7 @@ export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditI
             id="time"
             name="time"
             type="time"
-            defaultValue={
-              income.dateTime
-                ? new Date(income.dateTime).toLocaleTimeString('pt-BR', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    timeZone: 'America/Sao_Paulo'
-                  })
-                : "12:00"
-            }
+            defaultValue={currentTime}
             className="rounded-md"
             required
           />
@@ -140,14 +111,13 @@ export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditI
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="value">Valor</Label>
+          <Label htmlFor="value">Receita Total</Label>
           <CurrencyInput
             id="value"
             name="value"
             step="0.01"
             min={0}
             required
-            initialValue={Number(income.value)}
           />
           {errors.value && (
             <p className="mt-1 text-sm text-red-500" aria-live="polite">
@@ -166,7 +136,7 @@ export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditI
             step="0.01"
             min={0}
             max={100}
-            defaultValue={Number(income.profitMargin)}
+            defaultValue="28"
             required
           />
           {errors.profitMargin && (
@@ -177,21 +147,9 @@ export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditI
         </div>
 
         {!id && (
-          <div className="w-full flex justify-between gap-2 pt-2">
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              onClick={handleDelete}
-              disabled={pending}
-            >
-              <TrashIcon className="h-4 w-4 text-red-500" />
-            </Button>
-
-            <Button type="submit" disabled={pending} className="">
-              {pending ? "Salvando..." : "Salvar Alterações"}
-            </Button>
-          </div>
+          <Button type="submit" disabled={pending} className="w-full">
+            {pending ? "Adicionando..." : "Adicionar Receita"}
+          </Button>
         )}
 
         {state.message && (
