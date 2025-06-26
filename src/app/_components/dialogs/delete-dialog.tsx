@@ -11,12 +11,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Trash2 } from "lucide-react";
+import type { ReactNode } from "react";
 
 interface DeleteDialogProps {
   // The function to call when deletion is confirmed
   onConfirm: () => void;
   // Optional props
-  triggerText?: string;
+  triggerText?: ReactNode;
   title?: string;
   description?: string;
   confirmText?: string;

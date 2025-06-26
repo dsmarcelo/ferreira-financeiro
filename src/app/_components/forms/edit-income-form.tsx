@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
 import { TrashIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { DeleteDialog } from "../dialogs/delete-dialog";
 
 interface EditIncomeFormProps {
   id?: string;
@@ -178,15 +179,10 @@ export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditI
 
         {!id && (
           <div className="w-full flex justify-between gap-2 pt-2">
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              onClick={handleDelete}
-              disabled={pending}
-            >
-              <TrashIcon className="h-4 w-4 text-red-500" />
-            </Button>
+            <DeleteDialog
+              onConfirm={handleDelete}
+              triggerText={<TrashIcon className="h-4 w-4 text-red-500" />}
+            />
 
             <Button type="submit" disabled={pending} className="">
               {pending ? "Salvando..." : "Salvar Alterações"}
