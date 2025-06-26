@@ -1,5 +1,4 @@
 "use client";
-import EditIncome from "@/app/_components/dialogs/edit/edit-income";
 import { formatCurrency } from "@/lib/utils";
 import type { Income } from "@/server/db/schema/incomes-schema";
 import { use } from "react";
@@ -10,6 +9,7 @@ import ShareButton from "@/app/_components/buttons/share-button";
 import { ptBR } from "date-fns/locale";
 import { format, parseISO } from "date-fns";
 import { Dot } from "lucide-react";
+import Link from "next/link";
 
 function groupByDate(incomes: Income[]) {
   return incomes
@@ -136,13 +136,13 @@ export default function IncomeList({
             </div>
             <div className="flex flex-col divide-y px-5">
               {grouped[date]?.map((income) => (
-                <EditIncome data={income} key={income.id}>
-              <div>
-                <IncomeListItem income={income} />
-              </div>
-            </EditIncome>
-          ))}
-        </div>
+                <Link href={`/caixa/editar/${income.id}`} key={income.id} className="cursor-pointer">
+                  <div>
+                    <IncomeListItem income={income} />
+                  </div>
+                </Link>
+              ))}
+            </div>
       </div>
         ))}
       </div>
