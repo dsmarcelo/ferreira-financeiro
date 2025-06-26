@@ -41,7 +41,7 @@ export default function EditIncomeForm({ income, onSuccess, onClose }: EditIncom
       if (onSuccess) {
         onSuccess();
       } else {
-        router.push("/");
+        router.back();
       }
     } else if (state.success === false && state.message) {
       toast.error(state.message);
@@ -61,7 +61,7 @@ export default function EditIncomeForm({ income, onSuccess, onClose }: EditIncom
       if (onClose) {
         onClose();
       } else {
-        router.push("/");
+        router.back();
       }
     } catch (error) {
       toast.error("Erro ao excluir receita");
@@ -185,7 +185,7 @@ export default function EditIncomeForm({ income, onSuccess, onClose }: EditIncom
               if (onClose) {
                 onClose();
               } else {
-                router.push("/");
+                router.back();
               }
             }}
             className="w-full sm:w-auto"

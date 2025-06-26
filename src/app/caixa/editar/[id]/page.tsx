@@ -1,87 +1,73 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import { getIncomeById } from "@/server/queries/income-queries";
 import EditIncomeForm from "@/app/_components/forms/edit-income-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import type { Income } from "@/server/db/schema/incomes-schema";
 import SubPageHeader from "@/app/_components/sub-page-header";
+import { Suspense } from "react";
+import type { Income } from "@/server/db/schema/incomes-schema";
 
-export default function EditIncomePage({ params }: { params: Promise<{ id: string }> }) {
-  const router = useRouter();
-  const [income, setIncome] = useState<Income | null>(null);
-  const [loading, setLoading] = useState(true);
+function LoadingSkeleton() {
+  return (
+    <div className="border rounded-lg p-6 shadow-sm">
+      <Skeleton className="h-8 w-full mb-4" />
+      <Skeleton className="h-8 w-full mb-4" />
+      <Skeleton className="h-8 w-full mb-4" />
+      <Skeleton className="h-8 w-full" />
+    </div>
+  );
+}
 
-  useEffect(() => {
-    const fetchIncome = async () => {
+export default async function EditIncomePage({ params }: { params: Promise<{ id: string }> }) {
+    const fetchIncome = async (): Promise<Income | null> => {
       try {
         const resolvedParams = await params;
-        const id = parseInt(resolvedParams.id);
+        const incomeId = parseInt(resolvedParams.id);
 
-        if (isNaN(id)) {
+        if (isNaN(incomeId)) {
           toast.error("ID da receita inválido");
-          router.push("/");
-          return;
+          redirect("/");
+          return null;
         }
 
-        const fetchedIncome = await getIncomeById(id);
+        const fetchedIncome = await getIncomeById(incomeId);
 
         if (!fetchedIncome) {
           toast.error("Receita não encontrada");
-          router.push("/");
-          return;
+          redirect("/");
+          return null;
         }
 
-        setIncome(fetchedIncome);
+        return fetchedIncome;
       } catch (error) {
         console.error("Error fetching income:", error);
         toast.error("Erro ao buscar receita");
-        router.push("/");
-      } finally {
-        setLoading(false);
+        redirect("/");
       }
-    };
-
-    void fetchIncome();
-  }, [params, router]);
+  };
 
   const handleSuccess = () => {
     toast.success("Receita atualizada com sucesso!");
-    router.push("/");
+    redirect("/");
   };
 
-  const renderContent = () => {
-    if (loading) {
-      return (
-        <div className="border rounded-lg p-6 shadow-sm">
-          <Skeleton className="h-8 w-full mb-4" />
-          <Skeleton className="h-8 w-full mb-4" />
-          <Skeleton className="h-8 w-full mb-4" />
-          <Skeleton className="h-8 w-full" />
-        </div>
-      );
-    }
+  const income = await fetchIncome();
 
-    if (!income) {
-      return <p className="text-center">Receita não encontrada</p>;
-    }
-
-    return (
-      <EditIncomeForm
-        income={income}
-        onSuccess={handleSuccess}
-        onClose={() => router.push("/")}
-      />
-    );
-  };
+  if (!income) {
+    return <p className="text-center">Receita não encontrada</p>;
+  }
 
   return (
     <div className="">
       <SubPageHeader title="Editar Entrada" />
       <div className="mx-auto mt-4 container max-w-3xl px-5">
-        {renderContent()}
+        <Suspense fallback={<LoadingSkeleton />}>
+      <EditIncomeForm
+        income={income}
+        // onSuccess={handleSuccess}
+        // onClose={() => redirect("/")}
+      />
+      </Suspense>
       </div>
     </div>
   );
