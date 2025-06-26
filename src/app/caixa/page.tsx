@@ -19,7 +19,7 @@ export default async function CaixaPage({
       <Header className="sticky top-0 z-50 flex-none">
         <div className="hidden sm:block">
           <AddIncome>
-            <Button className="rounded-full">Adicionar Receita</Button>
+            <Button className="rounded-full">Adicionar Entrada</Button>
           </AddIncome>
         </div>
       </Header>
@@ -30,7 +30,7 @@ export default async function CaixaPage({
       </main>
       <div className="fixed bottom-24 block w-full px-5 sm:hidden">
         <AddIncome>
-          <Button className="h-12 w-full rounded-full">Adicionar Receita</Button>
+          <Button className="h-12 w-full rounded-full">Adicionar Entrada</Button>
         </AddIncome>
       </div>
     </div>

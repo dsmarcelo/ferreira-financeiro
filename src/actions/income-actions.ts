@@ -75,7 +75,7 @@ export async function actionCreateIncome(
       value: dbValue!,
       profitMargin: dbProfitMargin!
     });
-    revalidatePath("/receitas");
+    revalidatePath("/caixa");
     return { success: true, message: "Receita adicionada com sucesso!" };
   } catch (error) {
     return {
@@ -124,7 +124,7 @@ export async function actionUpdateIncome(
       value: value!.toFixed(2),
       profitMargin: profitMargin!.toFixed(2),
     });
-    revalidatePath("/receitas");
+    revalidatePath("/caixa");
     return { success: true, message: "Receita atualizada com sucesso!" };
   } catch (error) {
     return {
@@ -137,7 +137,7 @@ export async function actionUpdateIncome(
 // Server action to delete an income entry
 export async function actionDeleteIncome(id: number) {
   await deleteIncome(id);
-  revalidatePath("/receitas");
+  revalidatePath("/caixa");
 }
 
 // Server action to get an income entry by ID
