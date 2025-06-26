@@ -62,7 +62,7 @@ export async function actionCreateIncome(
 
     try {
     // Combine date and time into a single DateTime object
-    const dateTimeString = `${date as string}T${time as string}:00.000Z`;
+    const dateTimeString = `${date as string}T${time as string}:00`;
     const dateTime = new Date(dateTimeString);
 
     // Format values for DB (value with 2 decimals, profit margin as percentage with 2 decimals)
@@ -115,7 +115,7 @@ export async function actionUpdateIncome(
 
   try {
     // Combine date and time into a single DateTime object
-    const dateTimeString = `${date as string}T${time as string}:00.000Z`;
+    const dateTimeString = `${date as string}T${time as string}:00`;
     const dateTime = new Date(dateTimeString);
 
     await updateIncome(id, {

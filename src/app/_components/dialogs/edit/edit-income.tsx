@@ -88,7 +88,9 @@ export default function EditIncome({ data, children }: EditIncomeProps) {
             required
             defaultValue={
               data.dateTime
-                ? new Date(data.dateTime).toISOString().split("T")[0]
+                ? new Date(data.dateTime).toLocaleDateString('en-CA', {
+                    timeZone: 'America/Sao_Paulo'
+                  })
                 : ""
             }
           />
@@ -106,7 +108,12 @@ export default function EditIncome({ data, children }: EditIncomeProps) {
             type="time"
             defaultValue={
               data.dateTime
-                ? new Date(data.dateTime).toTimeString().slice(0, 5)
+                ? new Date(data.dateTime).toLocaleTimeString('pt-BR', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'America/Sao_Paulo'
+                  })
                 : "12:00"
             }
             className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"

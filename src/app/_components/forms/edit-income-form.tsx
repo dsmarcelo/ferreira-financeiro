@@ -99,7 +99,9 @@ export default function EditIncomeForm({ income, onSuccess, onClose }: EditIncom
             required
             defaultValue={
               income.dateTime
-                ? new Date(income.dateTime).toISOString().split("T")[0]
+                ? new Date(income.dateTime).toLocaleDateString('en-CA', {
+                    timeZone: 'America/Sao_Paulo'
+                  })
                 : ""
             }
           />
@@ -118,7 +120,12 @@ export default function EditIncomeForm({ income, onSuccess, onClose }: EditIncom
             type="time"
             defaultValue={
               income.dateTime
-                ? new Date(income.dateTime).toTimeString().slice(0, 5)
+                ? new Date(income.dateTime).toLocaleTimeString('pt-BR', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'America/Sao_Paulo'
+                  })
                 : "12:00"
             }
             className="rounded-md"

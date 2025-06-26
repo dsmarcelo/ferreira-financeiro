@@ -43,8 +43,10 @@ export default function AddIncome({ className, children }: AddIncomeProps) {
   // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
 
-  // Get today's date in YYYY-MM-DD format
-  const today = new Date().toISOString().split("T")[0];
+  // Get today's date in YYYY-MM-DD format using local timezone
+  const today = new Date().toLocaleDateString('en-CA', {
+    timeZone: 'America/Sao_Paulo'
+  });
 
   return (
     <ResponsiveDialog
@@ -95,7 +97,12 @@ export default function AddIncome({ className, children }: AddIncomeProps) {
             id="time"
             name="time"
             type="time"
-            defaultValue="12:00"
+            defaultValue={new Date().toLocaleTimeString('pt-BR', {
+              hour12: false,
+              hour: '2-digit',
+              minute: '2-digit',
+              timeZone: 'America/Sao_Paulo'
+            })}
             className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             required
           />
