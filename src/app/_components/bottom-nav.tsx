@@ -48,7 +48,7 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-white via-white to-transparent pt-0 pb-6 px-5 sm:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-white via-white to-transparent pb-6 px-5 sm:hidden">
       <nav
         className="mx-5 flex justify-between max-w-[400px] gap-2 rounded-full bg-white/90 px-1 py-1 shadow-[0_0_20px_0_rgba(0,0,0,0.25)] filter backdrop-blur"
         style={{ marginLeft: 'auto', marginRight: 'auto' }}
