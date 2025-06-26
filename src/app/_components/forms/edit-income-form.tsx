@@ -132,7 +132,7 @@ export default function EditIncomeForm({ income, onSuccess, onClose }: EditIncom
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="value">Receita Total</Label>
+          <Label htmlFor="value">Valor</Label>
           <CurrencyInput
             id="value"
             name="value"
