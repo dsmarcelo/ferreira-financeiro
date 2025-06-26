@@ -26,6 +26,8 @@ const initialState: ActionResponse = {
   message: "",
 };
 
+// TODO: make this a form to use in a page or inside a dialog
+
 export default function EditIncome({ data, children }: EditIncomeProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
