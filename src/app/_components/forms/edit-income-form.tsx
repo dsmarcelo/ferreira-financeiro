@@ -154,6 +154,7 @@ export default function EditIncomeForm({ income, onSuccess, onClose }: EditIncom
             id="profitMargin"
             name="profitMargin"
             type="number"
+            inputMode="numeric"
             step="0.01"
             min={0}
             max={100}
@@ -167,33 +168,18 @@ export default function EditIncomeForm({ income, onSuccess, onClose }: EditIncom
           )}
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 pt-2">
+        <div className="w-full flex justify-between gap-2 pt-2">
           <Button
             type="button"
             size="icon"
-            variant="destructive"
+            variant="outline"
             onClick={handleDelete}
             disabled={pending}
           >
-            <TrashIcon className="h-4 w-4" />
+            <TrashIcon className="h-4 w-4 text-red-500" />
           </Button>
 
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              if (onClose) {
-                onClose();
-              } else {
-                router.back();
-              }
-            }}
-            className="w-full sm:w-auto"
-          >
-            Cancelar
-          </Button>
-
-          <Button type="submit" disabled={pending} className="w-full sm:w-auto">
+          <Button type="submit" disabled={pending} className="">
             {pending ? "Salvando..." : "Salvar Alterações"}
           </Button>
         </div>
