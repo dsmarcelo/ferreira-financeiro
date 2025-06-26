@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/server/db";
-import { cashRegister } from "@/server/db/schema/cash-register";
+import { incomes } from "@/server/db/schema/incomes-schema";
 import { and, gte, lte, sum } from "drizzle-orm";
 import { getExpensesByPeriod } from "./expense-queries";
 import { type ExpenseSource } from "../db/schema/expense-schema";
@@ -14,12 +14,12 @@ export async function sumCashRegisterByDateRange(
   const cashRegisterSum = Number(
     (
       await db
-        .select({ sum: sum(cashRegister.value) })
-        .from(cashRegister)
+        .select({ sum: sum(incomes.value) })
+        .from(incomes)
         .where(
           and(
-            gte(cashRegister.date, startDate),
-            lte(cashRegister.date, endDate),
+            gte(incomes.dateTime, new Date(startDate)),
+            lte(incomes.dateTime, new Date(endDate)),
           ),
         )
     )[0]?.sum ?? 0,
