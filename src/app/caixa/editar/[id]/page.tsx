@@ -23,38 +23,19 @@ export default async function EditIncomePage({ params }: { params: Promise<{ id:
       try {
         const resolvedParams = await params;
         const incomeId = parseInt(resolvedParams.id);
-
-        if (isNaN(incomeId)) {
-          toast.error("ID da receita inválido");
-          redirect("/");
-          return null;
-        }
-
         const fetchedIncome = await getIncomeById(incomeId);
 
-        if (!fetchedIncome) {
-          toast.error("Receita não encontrada");
-          redirect("/");
-          return null;
-        }
-
-        return fetchedIncome;
+        return fetchedIncome ?? null;
       } catch (error) {
         console.error("Error fetching income:", error);
-        toast.error("Erro ao buscar receita");
-        redirect("/");
+        return null;
       }
-  };
-
-  const handleSuccess = () => {
-    toast.success("Receita atualizada com sucesso!");
-    redirect("/");
   };
 
   const income = await fetchIncome();
 
   if (!income) {
-    return <p className="text-center">Receita não encontrada</p>;
+    return <p className="text-center text-4xl font-bold mt-12">Receita não encontrada</p>;
   }
 
   return (
@@ -62,12 +43,10 @@ export default async function EditIncomePage({ params }: { params: Promise<{ id:
       <SubPageHeader title="Editar Entrada" />
       <div className="mx-auto mt-4 container max-w-3xl px-5">
         <Suspense fallback={<LoadingSkeleton />}>
-      <EditIncomeForm
-        income={income}
-        // onSuccess={handleSuccess}
-        // onClose={() => redirect("/")}
-      />
-      </Suspense>
+          <EditIncomeForm
+            income={income}
+          />
+        </Suspense>
       </div>
     </div>
   );
