@@ -28,41 +28,34 @@ export default function AddExpenseDialog({
   children?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const { getMobileDialogHeight } = useViewportHeight();
-  const isMobile = useIsMobile();
 
-  const mobileMaxHeight = isMobile ? getMobileDialogHeight(60, 400) : undefined; // More padding for this larger form
+  const title =
+    source === "personal" ? "Adicionar Despesa Pessoal" : "Adicionar Despesa";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children ?? <Button className="rounded-full">{buttonLabel}</Button>}
       </DialogTrigger>
-      <DialogContent
-        className="flex h-[90dvh] max-h-[600px] max-w-[90dvw] min-w-[700px] flex-col"
-        style={mobileMaxHeight ? {
-          maxHeight: `${mobileMaxHeight}px`,
-          minWidth: isMobile ? '90vw' : '700px'
-        } : undefined}
-      >
-        <DialogHeader className="pb-0 sticky top-0 bg-background z-10">
-          <DialogTitle>Adicionar Despesa</DialogTitle>
+      <DialogContent className="sm:max-w-[600px] max-h-[90dvh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="hidden" aria-hidden="true" />
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto">
+        <div className="py-4">
           <AddExpenseForm
             id="add-expense-form"
             source={source}
             onSuccess={() => setOpen(false)}
           />
         </div>
-        <DialogFooter className="border-t pt-4 sticky bottom-0 bg-background">
-          <Button type="submit" form="add-expense-form">
-            Adicionar
-          </Button>
+        <DialogFooter className="gap-2">
           <DialogClose asChild>
             <Button variant="outline">Cancelar</Button>
           </DialogClose>
+          <Button type="submit" form="add-expense-form">
+            Adicionar
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

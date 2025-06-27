@@ -71,7 +71,7 @@ export default function AddExpenseForm({
 
   return (
     <div className="mx-auto max-w-screen-md">
-      <p className="text-center mb-4 text-xl font-bold">{title}</p>
+      {/* <p className="text-center mb-4 text-xl font-bold">{title}</p> */}
       <Tabs defaultValue={expenseType} className="w-full px-4">
         <TabsList className="mx-auto w-full">
           <TabsTrigger

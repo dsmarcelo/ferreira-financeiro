@@ -8,7 +8,7 @@ export default function AddStoreExpensePage() {
   const router = useRouter();
   return (
     <>
-      <SubPageHeader prevURL="/despesas-loja" />
+      <SubPageHeader prevURL="/despesas-loja" title="Nova Despesa da Empresa" />
       <AddExpenseForm source="store" id="add-expense-form-store" onSuccess={() => router.push("/despesas-loja")} />
       <BottomButton
         type="submit"
