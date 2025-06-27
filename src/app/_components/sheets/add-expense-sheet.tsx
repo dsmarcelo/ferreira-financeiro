@@ -6,16 +6,7 @@ import AddExpenseForm from "@/app/_components/forms/add-expense-form";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 import { useViewportHeight } from "@/hooks/use-viewport-height";
 import { useIsMobile } from "@/hooks/use-mobile";
-// import {
-//   Sheet,
-//   SheetClose,
-//   SheetContent,
-//   SheetDescription,
-//   SheetFooter,
-//   SheetHeader,
-//   SheetTitle,
-//   SheetTrigger,
-// } from "@/components/ui/sheet";
+
 import {
   Dialog,
   DialogClose,
@@ -27,7 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-export default function AddExpenseSheet({
+export default function AddExpenseDialog({
   source,
   buttonLabel,
   children,

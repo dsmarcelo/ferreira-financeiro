@@ -4,7 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { Expense } from "@/server/db/schema/expense-schema";
 import * as React from "react";
-import EditExpenseSheet from "../sheets/edit-expense-sheet";
+import EditExpenseDialog from "../sheets/edit-expense-sheet";
 import { useMediaQuery } from "usehooks-ts";
 import Link from "next/link";
 import { CategoryBadge } from "@/components/ui/category-badge";
@@ -90,11 +90,11 @@ export function ExpenseListItem({
             {contentSection}
           </Link>
         ) : (
-          <EditExpenseSheet expense={expense}>
+          <EditExpenseDialog expense={expense}>
             <div className="flex flex-1 cursor-pointer items-center">
               {contentSection}
             </div>
-          </EditExpenseSheet>
+          </EditExpenseDialog>
         )}
       </div>
     </div>
