@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState, useEffect } from "react";
+import { useActionState, useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,13 +26,17 @@ interface CreateCategoryFormProps {
   onCancel?: () => void;
 }
 
-export function CreateCategoryForm({
+function CreateCategoryFormContent({
   onSuccess,
   showCancelButton = true,
   onCancel,
 }: CreateCategoryFormProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
+
   const [state, formAction, pending] = useActionState(
-    (onSuccess ? createCategoryWithoutRedirect : createCategory) as (
+    (returnTo ? createCategoryWithoutRedirect : createCategory) as (
       prevState: ActionResponse,
       formData: FormData,
     ) => Promise<ActionResponse>,
@@ -42,10 +47,39 @@ export function CreateCategoryForm({
 
   // Handle successful category creation
   useEffect(() => {
-    if (state?.success && state.category && onSuccess) {
-      onSuccess(state.category);
+    if (state?.success && state.category) {
+      // Store the newly created category ID for potential selection
+      if (state.category.id) {
+        sessionStorage.setItem('newlyCreatedCategoryId', state.category.id.toString());
+      }
+
+      // Call the onSuccess prop if provided (for custom handling)
+      if (onSuccess) {
+        onSuccess(state.category);
+      } else {
+        // Default navigation behavior
+        if (returnTo) {
+          router.push(returnTo);
+        } else {
+          router.back();
+        }
+      }
     }
-  }, [state, onSuccess]);
+  }, [state, onSuccess, router, returnTo]);
+
+  const handleCancel = () => {
+    // Call the onCancel prop if provided (for custom handling)
+    if (onCancel) {
+      onCancel();
+    } else {
+      // Default navigation behavior
+      if (returnTo) {
+        router.push(returnTo);
+      } else {
+        router.back();
+      }
+    }
+  };
 
   return (
     <div className={onSuccess ? "" : "mx-auto max-w-screen-md px-4"}>
@@ -121,7 +155,7 @@ export function CreateCategoryForm({
               type="button"
               variant="outline"
               className="flex-1"
-              onClick={onCancel ?? (() => window.history.back())}
+              onClick={handleCancel}
             >
               Cancelar
             </Button>
@@ -136,5 +170,13 @@ export function CreateCategoryForm({
         </div>
       </form>
     </div>
+  );
+}
+
+export function CreateCategoryForm(props: CreateCategoryFormProps) {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <CreateCategoryFormContent {...props} />
+    </Suspense>
   );
 }
