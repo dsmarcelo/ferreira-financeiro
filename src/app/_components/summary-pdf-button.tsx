@@ -48,7 +48,7 @@ export function SummaryPDFButton({ from, to }: SummaryPDFButtonProps) {
         totalCashRegister,
         totalPersonalExpenses,
         totalStoreExpenses,
-        totalProductPurchases,
+        // totalProductPurchases,
       );
       downloadPDF(doc, `Relatório - ${formatMonth(from)}`);
     } finally {
