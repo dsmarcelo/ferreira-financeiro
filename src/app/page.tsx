@@ -64,11 +64,11 @@ export default async function HomePage({
               Adicionar Despesa de Loja
             </Button>
           </AddStoreExpense>
-          <AddProductPurchase>
+          {/* <AddProductPurchase>
             <Button className="h-14 rounded-xl w-full">
               Adicionar Compra de produto
             </Button>
-          </AddProductPurchase>
+          </AddProductPurchase> */}
         </div>
       </div>
     </main>

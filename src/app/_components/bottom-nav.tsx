@@ -36,12 +36,12 @@ const navItems = [
     icon: Store,
     testId: "nav-loja",
   },
-  {
-    label: "Compras Produtos",
-    href: "/compras-produtos",
-    icon: PackagePlus,
-    testId: "nav-produtos",
-  },
+  // {
+  //   label: "Compras Produtos",
+  //   href: "/compras-produtos",
+  //   icon: PackagePlus,
+  //   testId: "nav-produtos",
+  // },
 ];
 
 export default function BottomNav() {
