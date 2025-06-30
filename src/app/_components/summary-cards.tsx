@@ -12,7 +12,7 @@ interface SummaryCardsProps {
 // Server component to fetch and display summary cards for the given date range
 export default async function SummaryCards({ from, to }: SummaryCardsProps) {
   // Fetch all summary data in parallel for performance
-  const [totalSales, profit, personalExpenses, storeExpenses, productPurchases] =
+  const [totalSales, profit, personalExpenses, storeExpenses] =
     await Promise.all([
       sumIncomesByDateRange(from, to),
       sumProfitAmountsByDateRange(from, to),
@@ -25,11 +25,6 @@ export default async function SummaryCards({ from, to }: SummaryCardsProps) {
         startDate: from,
         endDate: to,
         source: "store",
-      }),
-      sumExpensesByDateRangeWithSource({
-        startDate: from,
-        endDate: to,
-        source: "product_purchase",
       }),
     ]);
 
@@ -75,7 +70,7 @@ export default async function SummaryCards({ from, to }: SummaryCardsProps) {
         </Link>
       </div>
       {/* Product Purchases Card */}
-      <Link
+      {/* <Link
         href="/compras-produtos"
         className="bg-background-secondary flex flex-wrap items-center justify-between gap-2 rounded-lg p-4 py-3"
       >
@@ -83,7 +78,7 @@ export default async function SummaryCards({ from, to }: SummaryCardsProps) {
         <p className="text-lg font-semibold">
           {formatCurrency(productPurchases)}
         </p>
-      </Link>
+      </Link> */}
     </div>
   );
 }
