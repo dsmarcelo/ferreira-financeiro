@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { signIn, signOut } from '@/auth'
+import { AuthError } from 'next-auth'
 import { translateAuthError } from '@/utils/error-translations'
 
 export interface LoginResponse {
@@ -14,15 +16,27 @@ export async function login(prevState: LoginResponse | null, formData: FormData)
   const password = formData.get('password') as string
   const redirectTo = formData.get('redirectTo') as string
 
-  // TODO: Implement authentication with new auth provider
-  console.log('Login attempt:', { email, redirectTo })
+  try {
+    await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
+    })
 
-  // Placeholder - replace with actual auth provider implementation
-  return { error: 'Authentication not yet implemented', email }
+    revalidatePath('/', 'layout')
+    redirect(redirectTo || '/')
+  } catch (error) {
+    if (error instanceof AuthError) {
+      console.error('Error logging in:', error)
+      return { error: translateAuthError(error.message), email }
+    }
+    throw error
+  }
 }
 
 export async function signup(formData: FormData) {
-  // TODO: Implement signup with new auth provider
+  // TODO: Implement signup with Auth.js
+  // You'll need to create a user in the database and then sign them in
   const data = {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
@@ -30,14 +44,12 @@ export async function signup(formData: FormData) {
 
   console.log('Signup attempt:', { email: data.email })
 
-  // Placeholder - replace with actual auth provider implementation
+  // Placeholder - replace with actual user creation logic
   redirect('/error')
 }
 
 export async function signout() {
-  // TODO: Implement signout with new auth provider
-  console.log('Signout attempt')
-
+  await signOut({ redirect: false })
   revalidatePath('/', 'layout')
   redirect('/login')
 }

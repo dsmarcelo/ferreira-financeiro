@@ -1,0 +1,1 @@
+ALTER TABLE "ferreira-financeiro_auth_users" ADD COLUMN "password" text;

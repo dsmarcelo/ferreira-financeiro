@@ -1,10 +1,11 @@
+import { getCurrentUser } from '@/utils/auth'
 import Header from '@/app/_components/header'
 import SubPageHeader from '@/app/_components/sub-page-header'
 import ChangePasswordForm from './_components/change-password-form'
 
 export default async function ChangePasswordPage() {
-  // TODO: Implement user authentication check with new auth provider
-  const userEmail = 'user@example.com' // Placeholder - replace with actual user email from auth provider
+  // Ensure user is authenticated (middleware already checked this)
+  const user = await getCurrentUser()
 
   return (
     <div className="">
@@ -12,7 +13,7 @@ export default async function ChangePasswordPage() {
       <SubPageHeader prevURL="/" title="Alterar Senha" />
 
       <div className="mx-auto mt-4 container px-4">
-        <ChangePasswordForm userEmail={userEmail} />
+        <ChangePasswordForm userEmail={user.email!} />
       </div>
     </div>
   )

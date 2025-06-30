@@ -9,14 +9,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LogOut, KeyRound, User, Tag } from 'lucide-react'
+import { signout } from '@/app/login/actions'
 import Link from 'next/link'
 
 export default function UserMenu() {
-  const handleLogout = () => {
-    // TODO: Implement logout with new auth provider
-    console.log('Logout clicked - implement with new auth provider')
-  }
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -47,13 +43,15 @@ export default function UserMenu() {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 w-full text-left text-sm"
-          >
-            <LogOut size={16} />
-            Sair
-          </button>
+          <form action={signout} className="w-full">
+            <button
+              type="submit"
+              className="flex items-center gap-2 w-full text-left text-sm"
+            >
+              <LogOut size={16} />
+              Sair
+            </button>
+          </form>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
