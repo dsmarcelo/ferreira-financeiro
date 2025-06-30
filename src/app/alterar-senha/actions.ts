@@ -1,6 +1,5 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
 import { translateAuthError } from '@/utils/error-translations'
 
 export interface ActionResponse {
@@ -45,62 +44,18 @@ export async function changePassword(prevState: ActionResponse | null, formData:
     }
   }
 
-  const supabase = await createClient()
+  // TODO: Implement password change with new auth provider
+  console.log('Password change attempt')
 
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user?.email) {
-    return {
-      success: false,
-      message: 'Usuário não encontrado.',
-      errors: {
-        currentPassword: ['Usuário não encontrado.']
-      },
-      currentPassword,
-      newPassword,
-      confirmPassword
-    }
-  }
-
-  // First, verify the current password
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email: user.email,
-    password: currentPassword,
-  })
-
-  if (signInError) {
-    return {
-      success: false,
-      message: translateAuthError(signInError.message),
-      errors: {
-        currentPassword: [translateAuthError(signInError.message)]
-      },
-      currentPassword,
-      newPassword,
-      confirmPassword
-    }
-  }
-
-  // Update the password
-  const { error: updateError } = await supabase.auth.updateUser({
-    password: newPassword
-  })
-
-  if (updateError) {
-    return {
-      success: false,
-      message: translateAuthError(updateError.message),
-      errors: {
-        newPassword: [translateAuthError(updateError.message)]
-      },
-      currentPassword,
-      newPassword,
-      confirmPassword
-    }
-  }
-
+  // Placeholder - replace with actual auth provider implementation
   return {
-    success: true,
-    message: 'Senha alterada com sucesso!'
+    success: false,
+    message: 'Password change not yet implemented',
+    errors: {
+      currentPassword: ['Password change not yet implemented']
+    },
+    currentPassword,
+    newPassword,
+    confirmPassword
   }
 }

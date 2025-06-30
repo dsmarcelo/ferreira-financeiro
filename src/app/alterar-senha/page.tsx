@@ -1,11 +1,10 @@
-import { getCurrentUser } from '@/utils/supabase/user'
 import Header from '@/app/_components/header'
 import SubPageHeader from '@/app/_components/sub-page-header'
 import ChangePasswordForm from './_components/change-password-form'
 
 export default async function ChangePasswordPage() {
-  // Ensure user is authenticated (middleware already checked this)
-  const user = await getCurrentUser()
+  // TODO: Implement user authentication check with new auth provider
+  const userEmail = 'user@example.com' // Placeholder - replace with actual user email from auth provider
 
   return (
     <div className="">
@@ -13,7 +12,7 @@ export default async function ChangePasswordPage() {
       <SubPageHeader prevURL="/" title="Alterar Senha" />
 
       <div className="mx-auto mt-4 container px-4">
-        <ChangePasswordForm userEmail={user.email!} />
+        <ChangePasswordForm userEmail={userEmail} />
       </div>
     </div>
   )

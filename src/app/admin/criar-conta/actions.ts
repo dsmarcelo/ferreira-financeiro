@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/utils/supabase/server'
 import { env } from '@/env'
 import { translateAuthError } from '@/utils/error-translations'
 
@@ -29,18 +28,9 @@ export async function createAccount(prevState: CreateAccountResponse | null, for
     return { error: 'Senha de administrador incorreta.', email, adminPassword }
   }
 
-  const supabase = await createClient()
+  // TODO: Implement account creation with new auth provider
+  console.log('Account creation attempt:', { email })
 
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-  })
-
-  if (error) {
-    console.error('Error creating account:', error)
-    return { error: translateAuthError(error.message), email, adminPassword }
-  }
-
-  revalidatePath('/admin/criar-conta')
-  return { success: true, message: 'Conta criada com sucesso!' }
+  // Placeholder - replace with actual auth provider implementation
+  return { error: 'Account creation not yet implemented', email, adminPassword }
 }
