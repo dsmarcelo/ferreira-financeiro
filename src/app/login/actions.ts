@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/utils/supabase/server'
+import { signIn, signOut } from '@/auth'
+import { AuthError } from 'next-auth'
 import { translateAuthError } from '@/utils/error-translations'
 
 export interface LoginResponse {
@@ -15,47 +16,40 @@ export async function login(prevState: LoginResponse | null, formData: FormData)
   const password = formData.get('password') as string
   const redirectTo = formData.get('redirectTo') as string
 
-  const supabase = await createClient()
+  try {
+    await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
+    })
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-
-  if (error) {
-    console.error('Error logging in:', error)
-    return { error: translateAuthError(error.message), email }
+    revalidatePath('/', 'layout')
+    redirect(redirectTo || '/')
+  } catch (error) {
+    if (error instanceof AuthError) {
+      console.error('Error logging in:', error)
+      return { error: translateAuthError(error.message), email }
+    }
+    throw error
   }
-
-  revalidatePath('/', 'layout')
-  redirect(redirectTo || '/')
 }
 
 export async function signup(formData: FormData) {
-  const supabase = await createClient()
-
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
+  // TODO: Implement signup with Auth.js
+  // You'll need to create a user in the database and then sign them in
   const data = {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
   }
 
-  const { error } = await supabase.auth.signUp(data)
+  console.log('Signup attempt:', { email: data.email })
 
-  if (error) {
-    console.error('Error signing up:', error)
-    // Redirect to an error page or show a message
-    redirect('/error')
-  }
-
-  revalidatePath('/', 'layout')
-  redirect('/')
+  // Placeholder - replace with actual user creation logic
+  redirect('/error')
 }
 
 export async function signout() {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
+  await signOut({ redirect: false })
   revalidatePath('/', 'layout')
   redirect('/login')
 }

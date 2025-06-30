@@ -1,4 +1,4 @@
-import { createClient } from './server'
+import { auth } from '@/auth'
 
 /**
  * Get the current authenticated user from server context
@@ -6,14 +6,13 @@ import { createClient } from './server'
  * the user is authenticated (after middleware has validated authentication)
  */
 export async function getCurrentUser() {
-  const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
+  const session = await auth()
 
-  if (error || !user) {
+  if (!session?.user) {
     throw new Error('User not authenticated')
   }
 
-  return user
+  return session.user
 }
 
 /**
@@ -22,5 +21,22 @@ export async function getCurrentUser() {
  */
 export async function getCurrentUserId() {
   const user = await getCurrentUser()
-  return user.id
+  return user.id!
+}
+
+/**
+ * Get the current session from server context
+ * Returns null if no session exists
+ */
+export async function getCurrentSession() {
+  return await auth()
+}
+
+/**
+ * Check if the current user is authenticated
+ * Returns true if authenticated, false otherwise
+ */
+export async function isAuthenticated() {
+  const session = await auth()
+  return !!session?.user
 }

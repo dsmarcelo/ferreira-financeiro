@@ -70,6 +70,63 @@ export function InstallmentExpenseForm({
   >(undefined);
   const [categoryId, setCategoryId] = useState<string>("");
 
+  // Form state preservation
+  const saveFormState = useCallback(() => {
+    const formState = {
+      description,
+      amount: amount.toString(),
+      totalInstallments: totalInstallments.toString(),
+      recurrenceType,
+      recurrenceInterval: recurrenceInterval.toString(),
+      firstInstallmentDate: firstInstallmentDate?.toISOString() ?? "",
+      categoryId,
+      source,
+      installments: JSON.stringify(installments),
+    };
+    sessionStorage.setItem('installmentExpenseFormState', JSON.stringify(formState));
+  }, [description, amount, totalInstallments, recurrenceType, recurrenceInterval, firstInstallmentDate, categoryId, source, installments]);
+
+  // Restore form state on mount
+  useEffect(() => {
+    const savedState = sessionStorage.getItem('installmentExpenseFormState');
+    if (savedState) {
+      try {
+        const formState = JSON.parse(savedState) as Record<string, string>;
+
+        // Restore states
+        if (formState.totalInstallments) setTotalInstallments(parseInt(formState.totalInstallments));
+        if (formState.recurrenceType) setRecurrenceType(formState.recurrenceType);
+        if (formState.recurrenceInterval) setRecurrenceInterval(parseInt(formState.recurrenceInterval));
+        if (formState.firstInstallmentDate) setFirstInstallmentDate(new Date(formState.firstInstallmentDate));
+        if (formState.categoryId) setCategoryId(formState.categoryId);
+        if (formState.installments) {
+          try {
+            const parsedInstallments = JSON.parse(formState.installments) as InstallmentItem[];
+            setInstallments(parsedInstallments);
+          } catch (e) {
+            console.error('Failed to parse installments:', e);
+          }
+        }
+
+        // Restore parent component states through handlers
+        if (formState.description) {
+          const syntheticEvent = {
+            target: { value: formState.description }
+          } as React.ChangeEvent<HTMLInputElement>;
+          handleDescriptionChange(syntheticEvent);
+        }
+        if (formState.amount) {
+          handleAmountChange(parseFloat(formState.amount));
+        }
+
+        // Clear saved state after restoration
+        sessionStorage.removeItem('installmentExpenseFormState');
+      } catch (error) {
+        console.error('Failed to restore form state:', error);
+      }
+    }
+  }, [handleDescriptionChange, handleAmountChange]);
+
   useEffect(() => {
     if (state.success === true && state.message) {
       toast.success(state.message);
@@ -375,6 +432,7 @@ export function InstallmentExpenseForm({
             name="categoryId"
             onValueChange={setCategoryId}
             required
+            onBeforeNavigate={saveFormState}
           />
           <FieldError messages={errors?.categoryId} />
         </div>

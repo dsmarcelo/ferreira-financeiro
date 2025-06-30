@@ -1,5 +1,16 @@
 "use client";
 
+/**
+ * CategorySelector component with form state preservation
+ *
+ * Features:
+ * - Displays available expense categories in a dropdown
+ * - "Nova categoria" button navigates to category creation page
+ * - Preserves parent form state during navigation using sessionStorage
+ * - Automatically selects newly created category upon return
+ * - Refreshes category list when window regains focus
+ */
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,19 +21,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CategoryBadge } from "@/components/ui/category-badge";
-import { Plus, Settings } from "lucide-react";
+import { Plus } from "lucide-react";
 import { getAllExpenseCategories, getDefaultExpenseCategory } from "@/server/queries/expense-category-queries";
 import type { ExpenseCategory } from "@/server/db/schema/expense-category";
-import Link from "next/link";
 import { cn, getCategoryColorClasses } from "@/lib/utils";
-import { CreateCategoryDialog } from "../dialogs/add/create-category-dialog";
+import { useRouter } from "next/navigation";
 
 interface CategorySelectorProps {
   name: string;
   defaultValue?: number;
   onValueChange?: (value: string) => void;
   required?: boolean;
+  onBeforeNavigate?: () => void;
 }
 
 export function CategorySelector({
@@ -30,12 +40,14 @@ export function CategorySelector({
   defaultValue,
   onValueChange,
   required = false,
+  onBeforeNavigate,
 }: CategorySelectorProps) {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(
     defaultValue ? defaultValue.toString() : ""
   );
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   const loadCategories = async () => {
     try {
@@ -66,6 +78,34 @@ export function CategorySelector({
     void loadCategories();
   }, [defaultValue]);
 
+  // Listen for when returning from category creation
+  useEffect(() => {
+    const handleFocus = () => {
+      // Reload categories when window regains focus (user might have created a new category)
+      void loadCategories();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
+  // Check for newly created category on mount and after categories load
+  useEffect(() => {
+    const newlyCreatedCategoryId = sessionStorage.getItem('newlyCreatedCategoryId');
+    if (newlyCreatedCategoryId && categories.length > 0) {
+      // Find the newly created category
+      const newCategory = categories.find(cat => cat.id.toString() === newlyCreatedCategoryId);
+      if (newCategory) {
+        // Select the newly created category
+        setSelectedCategoryId(newCategory.id.toString());
+        onValueChange?.(newCategory.id.toString());
+
+        // Clear the stored ID
+        sessionStorage.removeItem('newlyCreatedCategoryId');
+      }
+    }
+  }, [categories, onValueChange]);
+
   const selectedCategory = categories.find(
     (cat) => cat.id.toString() === selectedCategoryId
   );
@@ -75,12 +115,12 @@ export function CategorySelector({
     onValueChange?.(value);
   };
 
-  const handleCategoryCreated = (category: ExpenseCategory) => {
-    // Add the new category to the list
-    setCategories(prev => [...prev, category]);
-    // Select the newly created category
-    setSelectedCategoryId(category.id.toString());
-    onValueChange?.(category.id.toString());
+  const handleCreateCategory = () => {
+    // Call the callback to save form state before navigation
+    onBeforeNavigate?.();
+    // Navigate to category creation page with return URL
+    const currentUrl = window.location.pathname + window.location.search;
+    router.push(`/categorias/criar?returnTo=${encodeURIComponent(currentUrl)}`);
   };
 
   if (isLoading) {
@@ -96,7 +136,7 @@ export function CategorySelector({
           onValueChange={handleValueChange}
           required={required}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="flex-1">
             <SelectValue placeholder="Selecione uma categoria">
               {selectedCategory && (
                 <div className="flex items-center gap-2">
@@ -117,19 +157,16 @@ export function CategorySelector({
             ))}
             <SelectSeparator />
             <div className="p-2">
-              <CreateCategoryDialog
-                onCategoryCreated={handleCategoryCreated}
-                trigger={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full justify-start gap-2 h-9 px-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Nova categoria</span>
-                  </Button>
-                }
-              />
+            <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={handleCreateCategory}
+          className="shrink-0 w-full"
+        >
+          <Plus className="h-4 w-4" />
+          Nova categoria
+        </Button>
             </div>
           </SelectContent>
         </Select>

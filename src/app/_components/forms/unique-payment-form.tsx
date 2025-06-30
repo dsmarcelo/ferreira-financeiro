@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { actionAddOneTimeExpense } from "@/actions/expense-actions";
 import type { ExpenseInsert } from "@/server/db/schema/expense-schema";
 import { Input } from "@/components/ui/input";
@@ -54,6 +54,50 @@ export function UniquePaymentForm({
   const [date, setDueDate] = useState<string>(() => getToday());
   const [isPaid, setIsPaid] = useState(false);
   const [categoryId, setCategoryId] = useState<string>("");
+
+  // Form state preservation
+  const saveFormState = useCallback(() => {
+    const formState = {
+      description,
+      amount: amount.toString(),
+      date,
+      isPaid: isPaid.toString(),
+      categoryId,
+      source,
+    };
+    sessionStorage.setItem('uniquePaymentFormState', JSON.stringify(formState));
+  }, [description, amount, date, isPaid, categoryId, source]);
+
+  // Restore form state on mount
+  useEffect(() => {
+    const savedState = sessionStorage.getItem('uniquePaymentFormState');
+    if (savedState) {
+      try {
+        const formState = JSON.parse(savedState) as Record<string, string>;
+
+        // Restore states
+        if (formState.date) setDueDate(formState.date);
+        if (formState.isPaid) setIsPaid(formState.isPaid === 'true');
+        if (formState.categoryId) setCategoryId(formState.categoryId);
+
+        // Restore parent component states through handlers
+        if (formState.description) {
+          const syntheticEvent = {
+            target: { value: formState.description }
+          } as React.ChangeEvent<HTMLInputElement>;
+          handleDescriptionChange(syntheticEvent);
+        }
+        if (formState.amount) {
+          handleAmountChange(parseFloat(formState.amount));
+        }
+
+        // Clear saved state after restoration
+        sessionStorage.removeItem('uniquePaymentFormState');
+      } catch (error) {
+        console.error('Failed to restore form state:', error);
+      }
+    }
+  }, [handleDescriptionChange, handleAmountChange]);
 
   const handleDueDateChange = (date: string | null) => {
     if (date) setDueDate(date);
@@ -113,6 +157,7 @@ export function UniquePaymentForm({
             name="categoryId"
             onValueChange={setCategoryId}
             required
+            onBeforeNavigate={saveFormState}
           />
           <FieldError messages={errors.categoryId} />
         </div>

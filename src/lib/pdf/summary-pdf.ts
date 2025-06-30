@@ -8,7 +8,7 @@ import type { ExpenseSummary } from "@/server/queries/summary-queries";
 import { listCashRegisters } from "@/server/queries/cash-register-queries";
 import { listPersonalExpenses } from "@/server/queries/personal-expense-queries";
 import { listStoreExpenses } from "@/server/queries/store-expense-queries";
-import { listProductPurchases } from "@/server/queries/product-purchase-queries";
+// import { listProductPurchases } from "@/server/queries/product-purchase-queries";
 
 // Helper type for grouping entries by due date
 type GroupedExpenses = {
@@ -50,7 +50,7 @@ export function generateSummaryPDF(
   totalCashRegister: number,
   totalPersonalExpenses: number,
   totalStoreExpenses: number,
-  totalProductPurchases: number,
+  // totalProductPurchases: number,
 ): jsPDF {
   const doc = new jsPDF(); // Create a new jsPDF instance
   const grouped = groupExpensesByDueDate(expenses); // Group expenses by due date
@@ -71,7 +71,7 @@ export function generateSummaryPDF(
     "DESPESAS PESSOAIS",
     "DESPESAS DA LOJA",
     "TOTAL DE DESPESAS",
-    "COMPRAS DE PRODUTOS",
+    // "COMPRAS DE PRODUTOS",
   ];
   const summaryValues = [
     formatCurrency(totalCashRegister),
@@ -79,7 +79,7 @@ export function generateSummaryPDF(
     formatCurrency(totalPersonalExpenses),
     formatCurrency(totalStoreExpenses),
     formatCurrency(totalExpenses),
-    formatCurrency(totalProductPurchases),
+    // formatCurrency(totalProductPurchases),
   ];
   autoTable(doc, {
     startY: 22,

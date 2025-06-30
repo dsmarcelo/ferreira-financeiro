@@ -1,4 +1,4 @@
-import AddCashRegister from "./_components/dialogs/add/add-cash-register";
+import AddIncome from "./_components/dialogs/add/add-income";
 import AddPersonalExpense from "./_components/dialogs/add/add-personal-expense";
 import AddStoreExpense from "./_components/dialogs/add/add-store-expense";
 import AddProductPurchase from "./_components/dialogs/add/add-product-purchase";
@@ -51,9 +51,9 @@ export default async function HomePage({
         )}
         {/* Buttons to add new entries for each type of financial record */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <AddCashRegister>
-            <Button className="h-14 rounded-xl w-full">Adicionar Caixa</Button>
-          </AddCashRegister>
+          <AddIncome>
+            <Button className="h-14 rounded-xl w-full">Adicionar Receita</Button>
+          </AddIncome>
           <AddPersonalExpense>
             <Button className="h-14 rounded-xl w-full">
               Adicionar Despesa Pessoal
@@ -64,11 +64,11 @@ export default async function HomePage({
               Adicionar Despesa de Loja
             </Button>
           </AddStoreExpense>
-          <AddProductPurchase>
+          {/* <AddProductPurchase>
             <Button className="h-14 rounded-xl w-full">
               Adicionar Compra de produto
             </Button>
-          </AddProductPurchase>
+          </AddProductPurchase> */}
         </div>
       </div>
     </main>

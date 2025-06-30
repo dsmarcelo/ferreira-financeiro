@@ -8,7 +8,7 @@ export default function AddPersonalExpensePage() {
   const router = useRouter();
   return (
     <>
-      <SubPageHeader prevURL="/despesas-pessoais" />
+      <SubPageHeader prevURL="/despesas-pessoais" title="Nova Despesa Pessoal" />
       <AddExpenseForm source="personal" id="add-expense-form-personal" onSuccess={() => router.push("/despesas-pessoais")} />
       <BottomButton
         type="submit"

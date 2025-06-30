@@ -4,14 +4,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { Expense } from "@/server/db/schema/expense-schema";
 import * as React from "react";
-import EditExpenseSheet from "../sheets/edit-expense-sheet";
+import EditExpenseDialog from "../sheets/edit-expense-sheet";
 import { useMediaQuery } from "usehooks-ts";
 import Link from "next/link";
 import { CategoryBadge } from "@/components/ui/category-badge";
 
 export interface ExpenseListItemProps {
   expense: Expense;
-  onTogglePaid: (id: number, checked: boolean, date: string, index: number) => void;
+  onTogglePaid: (
+    id: number,
+    checked: boolean,
+    date: string,
+    index: number,
+  ) => void;
   children?: React.ReactNode;
   index: number;
   date: string;
@@ -31,7 +36,7 @@ export function ExpenseListItem({
     <>
       <div className="flex-1 break-words">
         <p>{expense.description}</p>
-        <div className="flex items-center gap-1 mt-1">
+        <div className="mt-1 flex items-center gap-1">
           <CategoryBadge
             color={expense.category.color}
             name={expense.category.name}
@@ -41,13 +46,9 @@ export function ExpenseListItem({
       </div>
       <div className="flex flex-col items-end -space-y-1">
         {expense.isPaid && (
-          <span className="text-green-600 font-light text-xs">Pago</span>
+          <span className="text-xs font-light text-green-600">Pago</span>
         )}
-        <p
-          className={cn(
-            "w-fit text-right whitespace-nowrap",
-          )}
-        >
+        <p className={cn("w-fit text-right whitespace-nowrap")}>
           {formatCurrency(Number(expense.value) ?? 0)}
         </p>
       </div>
@@ -58,14 +59,19 @@ export function ExpenseListItem({
   return (
     <div
       className={cn(
-        "relative hover:bg-background-secondary active:bg-accent flex w-full items-center gap-2 px-2 rounded-lg",
-        expense.isPaid && "border-green-500 border",
-        !expense.isPaid && expense.date < new Date().toISOString() && "border-red-400 border",
+        "hover:bg-background-secondary active:bg-accent relative flex w-full items-center gap-2 rounded-lg px-2",
+        expense.isPaid && "border border-green-500",
+        !expense.isPaid &&
+          expense.date < new Date().toISOString() &&
+          "border border-red-400",
       )}
     >
       <div className="flex w-full items-center gap-2 py-2">
         <Checkbox
-          className={cn("h-8 w-8 active:bg-slate-500 rounded-full", expense.isPaid && "bg-green-500")}
+          className={cn(
+            "h-8 w-8 rounded-full active:bg-slate-500",
+            expense.isPaid && "bg-green-500",
+          )}
           checked={expense.isPaid}
           onClick={(e) => {
             e.preventDefault();
@@ -77,15 +83,18 @@ export function ExpenseListItem({
           }}
         />
         {isMobile ? (
-          <Link href={editLink} className="flex-1 flex items-center cursor-pointer">
+          <Link
+            href={editLink}
+            className="flex flex-1 cursor-pointer items-center"
+          >
             {contentSection}
           </Link>
         ) : (
-          <EditExpenseSheet expense={expense}>
-            <div className="flex-1 flex items-center cursor-pointer">
+          <EditExpenseDialog expense={expense}>
+            <div className="flex flex-1 cursor-pointer items-center">
               {contentSection}
             </div>
-          </EditExpenseSheet>
+          </EditExpenseDialog>
         )}
       </div>
     </div>

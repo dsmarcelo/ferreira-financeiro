@@ -1,10 +1,10 @@
-import AddCashRegister from "@/app/_components/dialogs/add/add-cash-register";
+import AddIncome from "@/app/_components/dialogs/add/add-income";
 import { Button } from "@/components/ui/button";
-import { listCashRegisters } from "@/server/queries/cash-register-queries";
+import { listIncomes } from "@/server/queries/income-queries";
 import Header from "../_components/header";
 import { Suspense } from "react";
 import Loading from "@/app/_components/loading/loading";
-import CashRegisterList from "@/app/_components/lists/cash-register-list";
+import IncomeList from "@/app/_components/lists/income-list";
 
 export default async function CaixaPage({
   searchParams,
@@ -12,26 +12,26 @@ export default async function CaixaPage({
   searchParams: Promise<{ from: string; to: string }>;
 }) {
   const { from, to } = await searchParams;
-  const cashRegisters = listCashRegisters(from, to);
+  const incomes = listIncomes(from, to);
 
   return (
     <div className="flex min-h-screen flex-col pb-24">
       <Header className="sticky top-0 z-50 flex-none">
         <div className="hidden sm:block">
-          <AddCashRegister>
-            <Button className="rounded-full">Adicionar Caixa</Button>
-          </AddCashRegister>
+          <AddIncome>
+            <Button className="rounded-full">Adicionar Entrada</Button>
+          </AddIncome>
         </div>
       </Header>
-      <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-5">
+      <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4">
         <Suspense fallback={<Loading />}>
-          <CashRegisterList cashRegisters={cashRegisters} />
+          <IncomeList incomes={incomes} />
         </Suspense>
       </main>
       <div className="fixed bottom-24 block w-full px-5 sm:hidden">
-        <AddCashRegister>
-          <Button className="h-12 w-full rounded-full">Adicionar Caixa</Button>
-        </AddCashRegister>
+        <AddIncome>
+          <Button className="h-12 w-full rounded-full">Adicionar Entrada</Button>
+        </AddIncome>
       </div>
     </div>
   );

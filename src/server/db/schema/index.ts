@@ -1,14 +1,23 @@
 import { cashRegister } from "./cash-register";
-import { storeExpense } from "./store-expense";
 import { expense } from "./expense-schema";
 import { profiles, userSessions } from "./user-profile";
 import { expenseCategory } from "./expense-category";
+import { incomes } from "./incomes-schema";
+import { users, accounts, sessions, verificationTokens } from "./auth-schema";
 
 export const schema = {
   cashRegister,
-  storeExpense,
   expense,
   profiles,
   userSessions,
-  expenseCategory
+  expenseCategory,
+  incomes,
+  // Auth.js tables
+  users,
+  accounts,
+  sessions,
+  verificationTokens,
 };
+
+// Re-export auth tables for easy import
+export { users, accounts, sessions, verificationTokens } from "./auth-schema";

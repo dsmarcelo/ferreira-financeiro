@@ -5,7 +5,9 @@ export default function CreateCategoryPage() {
   return (
     <div className="container mx-auto">
       <SubPageHeader title="Nova Categoria" className="mb-4" />
-      <CreateCategoryForm />
+      <div className="px-4">
+        <CreateCategoryForm />
+      </div>
     </div>
   );
 }

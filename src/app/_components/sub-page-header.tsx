@@ -1,7 +1,9 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SubPageHeader({
   title,
@@ -14,6 +16,7 @@ export default function SubPageHeader({
   className?: string;
   showBackButton?: boolean;
 }) {
+  const router = useRouter();
   return (
     <header
       className={cn(
@@ -29,11 +32,9 @@ export default function SubPageHeader({
             </Button>
           </Link>
         ) : showBackButton ? (
-          <Link href="/" className="flex items-center gap-2">
-            <Button variant="ghost">
+            <Button onClick={() => router.back()} variant="ghost" className="flex items-center gap-2">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-          </Link>
         ) : null}
         <h1 className="text-xl font-bold leading-none">{title}</h1>
       </div>

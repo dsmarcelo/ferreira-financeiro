@@ -57,12 +57,12 @@ export default function Header({
       icon: Store,
       testId: "nav-loja",
     },
-    {
-      label: "Produtos",
-      href: "/compras-produtos",
-      icon: PackagePlus,
-      testId: "nav-produtos",
-    },
+    // {
+    //   label: "Produtos",
+    //   href: "/compras-produtos",
+    //   icon: PackagePlus,
+    //   testId: "nav-produtos",
+    // },
   ];
   return (
     <header

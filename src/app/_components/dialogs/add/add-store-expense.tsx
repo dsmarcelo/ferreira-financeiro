@@ -1,5 +1,5 @@
 "use client";
-import AddExpenseSheet from "../../sheets/add-expense-sheet";
+import AddExpenseDialog from "../../sheets/add-expense-sheet";
 import { useMediaQuery } from "usehooks-ts";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -18,11 +18,11 @@ export default function AddStoreExpense({
       )}
     </Link>
   ) : (
-    <AddExpenseSheet
+    <AddExpenseDialog
       source="store"
       buttonLabel="Adicionar Despesa da Loja"
     >
       {children}
-    </AddExpenseSheet>
+    </AddExpenseDialog>
   );
 }

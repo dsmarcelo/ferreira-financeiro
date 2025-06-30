@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { sumCashRegisterByDateRange } from "@/server/queries/cash-register-queries";
 import { sumExpensesByDateRangeWithSource } from "@/server/queries/summary-queries";
+import { sumIncomesByDateRange, sumProfitAmountsByDateRange } from "@/server/queries/income-queries";
 import { formatCurrency } from "@/lib/utils";
 
 // Props for the SummaryCards component
@@ -12,9 +12,10 @@ interface SummaryCardsProps {
 // Server component to fetch and display summary cards for the given date range
 export default async function SummaryCards({ from, to }: SummaryCardsProps) {
   // Fetch all summary data in parallel for performance
-  const [cashRegister, personalExpenses, storeExpenses, productPurchases] =
+  const [totalSales, profit, personalExpenses, storeExpenses] =
     await Promise.all([
-      sumCashRegisterByDateRange(from, to),
+      sumIncomesByDateRange(from, to),
+      sumProfitAmountsByDateRange(from, to),
       sumExpensesByDateRangeWithSource({
         startDate: from,
         endDate: to,
@@ -25,29 +26,24 @@ export default async function SummaryCards({ from, to }: SummaryCardsProps) {
         endDate: to,
         source: "store",
       }),
-      sumExpensesByDateRangeWithSource({
-        startDate: from,
-        endDate: to,
-        source: "product_purchase",
-      }),
     ]);
 
   return (
     <div className="container mx-auto flex max-w-screen-sm flex-col gap-4 leading-none">
-      {/* Cash Register Card */}
+      {/* Total Sales Card */}
       <Link
         href="/caixa"
         className="bg-background-secondary flex flex-wrap items-center justify-between gap-2 rounded-lg p-4 py-3"
       >
         <p className="">
-          Caixa <span className="text-muted-foreground text-sm">(28%)</span>
+          Vendas
         </p>
         <div className="flex items-center gap-2">
-          <p className="text-lg font-semibold">
-            {formatCurrency(cashRegister)}
-          </p>
-          <p className="text-muted-foreground text-sm font-medium">
-            {"(" + formatCurrency(cashRegister * 0.28) + ")"}
+          <p className="text-lg font-semibold flex items-center gap-2">
+            {formatCurrency(totalSales)}
+            <span className="text-muted-foreground text-sm font-medium">
+              {"(" + formatCurrency(profit) + ")"}
+            </span>
           </p>
         </div>
       </Link>
@@ -74,7 +70,7 @@ export default async function SummaryCards({ from, to }: SummaryCardsProps) {
         </Link>
       </div>
       {/* Product Purchases Card */}
-      <Link
+      {/* <Link
         href="/compras-produtos"
         className="bg-background-secondary flex flex-wrap items-center justify-between gap-2 rounded-lg p-4 py-3"
       >
@@ -82,7 +78,7 @@ export default async function SummaryCards({ from, to }: SummaryCardsProps) {
         <p className="text-lg font-semibold">
           {formatCurrency(productPurchases)}
         </p>
-      </Link>
+      </Link> */}
     </div>
   );
 }

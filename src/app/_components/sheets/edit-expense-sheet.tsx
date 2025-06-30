@@ -17,15 +17,15 @@ import { getExpenseById } from "@/server/queries/expense-queries";
 import { useMediaQuery } from "usehooks-ts";
 import { toast } from "sonner";
 
-interface EditExpenseSheetProps {
+interface EditExpenseDialogProps {
   expense: Expense;
   children: React.ReactNode;
 }
 
-export default function EditExpenseSheet({
+export default function EditExpenseDialog({
   expense,
   children,
-}: EditExpenseSheetProps) {
+}: EditExpenseDialogProps) {
   const [open, setOpen] = useState(false);
   const [currentExpenseToEdit, setCurrentExpenseToEdit] = useState<Expense>(expense);
   const [isLoadingOriginal, setIsLoadingOriginal] = useState(false);
@@ -83,17 +83,17 @@ export default function EditExpenseSheet({
           {isLoadingOriginal ? (
             <div className="flex justify-center items-center h-40">Carregando dados da despesa original...</div>
           ) : currentExpenseToEdit.type === "recurring_occurrence" ? (
-            <EditOccurrenceForm 
-              occurrenceExpense={currentExpenseToEdit} 
-              onSuccess={() => setOpen(false)} 
-              onClose={() => setOpen(false)} 
+            <EditOccurrenceForm
+              occurrenceExpense={currentExpenseToEdit}
+              onSuccess={() => setOpen(false)}
+              onClose={() => setOpen(false)}
               onEditOriginal={handleEditOriginal}
             />
           ) : (
-            <EditExpenseForm 
-              expense={currentExpenseToEdit} 
-              onSuccess={() => setOpen(false)} 
-              onClose={() => setOpen(false)} 
+            <EditExpenseForm
+              expense={currentExpenseToEdit}
+              onSuccess={() => setOpen(false)}
+              onClose={() => setOpen(false)}
             />
           )}
         </div>

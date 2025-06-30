@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useCallback } from "react";
 import { actionAddRecurringExpense } from "@/actions/expense-actions";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/inputs/date-picker";
@@ -62,6 +62,54 @@ export function RecurringExpenseForm({
   const [recurrenceEndDate, setRecurrenceEndDate] = useState<string | undefined>(undefined);
   const [categoryId, setCategoryId] = useState<string>("");
 
+  // Form state preservation
+  const saveFormState = useCallback(() => {
+    const formState = {
+      description,
+      amount: amount.toString(),
+      recurrenceType,
+      recurrenceInterval: recurrenceInterval.toString(),
+      startDate: startDate ?? "",
+      recurrenceEndDate: recurrenceEndDate ?? "",
+      categoryId,
+      source,
+    };
+    sessionStorage.setItem('recurringExpenseFormState', JSON.stringify(formState));
+  }, [description, amount, recurrenceType, recurrenceInterval, startDate, recurrenceEndDate, categoryId, source]);
+
+  // Restore form state on mount
+  useEffect(() => {
+    const savedState = sessionStorage.getItem('recurringExpenseFormState');
+    if (savedState) {
+      try {
+        const formState = JSON.parse(savedState) as Record<string, string>;
+
+        // Restore states
+        if (formState.recurrenceType) setRecurrenceType(formState.recurrenceType);
+        if (formState.recurrenceInterval) setRecurrenceInterval(parseInt(formState.recurrenceInterval));
+        if (formState.startDate) setStartDate(formState.startDate);
+        if (formState.recurrenceEndDate) setRecurrenceEndDate(formState.recurrenceEndDate);
+        if (formState.categoryId) setCategoryId(formState.categoryId);
+
+        // Restore parent component states through handlers
+        if (formState.description) {
+          const syntheticEvent = {
+            target: { value: formState.description }
+          } as React.ChangeEvent<HTMLInputElement>;
+          handleDescriptionChange(syntheticEvent);
+        }
+        if (formState.amount) {
+          handleAmountChange(parseFloat(formState.amount));
+        }
+
+        // Clear saved state after restoration
+        sessionStorage.removeItem('recurringExpenseFormState');
+      } catch (error) {
+        console.error('Failed to restore form state:', error);
+      }
+    }
+  }, [handleDescriptionChange, handleAmountChange]);
+
   return (
     <form
       id={id}
@@ -79,6 +127,7 @@ export function RecurringExpenseForm({
             name="categoryId"
             onValueChange={setCategoryId}
             required
+            onBeforeNavigate={saveFormState}
           />
           <FieldError messages={errors.categoryId} />
         </div>

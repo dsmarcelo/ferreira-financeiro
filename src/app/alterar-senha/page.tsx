@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@/utils/supabase/user'
+import { getCurrentUser } from '@/utils/auth'
 import Header from '@/app/_components/header'
 import SubPageHeader from '@/app/_components/sub-page-header'
 import ChangePasswordForm from './_components/change-password-form'
