@@ -1,13 +1,13 @@
 import AddIncome from "./_components/dialogs/add/add-income";
 import AddPersonalExpense from "./_components/dialogs/add/add-personal-expense";
 import AddStoreExpense from "./_components/dialogs/add/add-store-expense";
-import AddProductPurchase from "./_components/dialogs/add/add-product-purchase";
 import Header from "./_components/header";
 import SummaryCards from "@/app/_components/summary-cards";
 import { Button } from "@/components/ui/button";
 import { SummaryPDFButton } from "@/app/_components/summary-pdf-button";
 import ProfitText from "./_components/profit-text";
 import { Suspense } from "react";
+import { User, Store, BanknoteArrowDown } from "lucide-react";
 
 // Home page for the financial dashboard
 export default async function HomePage({
@@ -33,14 +33,16 @@ export default async function HomePage({
                 <div className="bg-muted h-12 w-full animate-pulse rounded-lg" />
               }
             >
-              <ProfitText from={from} to={to} />
+              <div className="flex items-start justify-between gap-2">
+                <ProfitText from={from} to={to} />
+                <SummaryPDFButton from={from} to={to} />
+              </div>
             </Suspense>
             {/* Show summary cards and PDF button only if a period is selected */}
             {/* Summary cards for caixa, despesas pessoais, loja, produtos */}
             <SummaryCards from={from} to={to} />
             {/* Button to generate and download the summary PDF for the selected period */}
             <div className="mt-4">
-              <SummaryPDFButton from={from} to={to} />
             </div>
           </>
         ) : (
@@ -52,16 +54,21 @@ export default async function HomePage({
         {/* Buttons to add new entries for each type of financial record */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <AddIncome>
-            <Button className="h-14 rounded-xl w-full">Adicionar Receita</Button>
+            <Button className="h-14 rounded-xl w-full">
+              <BanknoteArrowDown className="h-4 w-4" />
+              <span>Adicionar Entrada</span>
+            </Button>
           </AddIncome>
           <AddPersonalExpense>
             <Button className="h-14 rounded-xl w-full">
-              Adicionar Despesa Pessoal
+              <User className="h-4 w-4" />
+              <span>Adicionar Despesa Pessoal</span>
             </Button>
           </AddPersonalExpense>
           <AddStoreExpense>
             <Button className="h-14 rounded-xl w-full">
-              Adicionar Despesa de Loja
+              <Store className="h-4 w-4" />
+              <span>Adicionar Despesa de Loja</span>
             </Button>
           </AddStoreExpense>
           {/* <AddProductPurchase>
