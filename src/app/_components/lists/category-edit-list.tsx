@@ -4,7 +4,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { Edit } from "lucide-react";
 import { getCategoryColorClasses } from "@/lib/utils";
 import type { ExpenseCategory } from "@/server/db/schema/expense-category";
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, TouchSensor } from "@dnd-kit/core";
 import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
@@ -16,7 +16,18 @@ interface CategoryEditListProps {
 
 export default function CategoryEditList({ categories }: CategoryEditListProps) {
   const [items, setItems] = useState<ExpenseCategory[]>(categories);
-  const sensors = useSensors(useSensor(PointerSensor));
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px movement before drag starts
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -72,7 +83,12 @@ function SortableItem({ id, category }: SortableItemProps) {
 
   return (
     <div ref={setNodeRef} style={style} className="flex w-full items-center gap-2">
-      <div {...attributes} {...listeners} className="cursor-grab flex items-center justify-center px-2 py-4 hover:bg-muted rounded-lg select-none">
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab flex items-center justify-center px-2 py-4 hover:bg-muted rounded-lg select-none"
+        style={{ touchAction: 'none' }}
+      >
         <GripVertical className="h-4 w-4" />
       </div>
       <Card className={`relative ${getCategoryColorClasses(category.color)} w-full`}>
