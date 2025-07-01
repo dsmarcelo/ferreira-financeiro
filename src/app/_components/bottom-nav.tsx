@@ -6,7 +6,6 @@ import {
   House,
   User,
   Store,
-  PackagePlus,
   BanknoteArrowDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
