@@ -14,6 +14,7 @@ import {
 import { Trash2 } from "lucide-react";
 import { removeCategoryAction } from "@/server/actions/category-actions";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface DeleteCategoryButtonProps {
   categoryId: number;
@@ -21,6 +22,7 @@ interface DeleteCategoryButtonProps {
 }
 
 export function DeleteCategoryButton({ categoryId, categoryName }: DeleteCategoryButtonProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -31,6 +33,7 @@ export function DeleteCategoryButton({ categoryId, categoryName }: DeleteCategor
       if (result.success) {
         toast.success(result.message);
         setOpen(false);
+        router.push("/categorias");
       } else {
         toast.error(result.message);
       }
