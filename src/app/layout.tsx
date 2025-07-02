@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import BottomNav from "@/app/_components/bottom-nav";
 
 export const metadata: Metadata = {
-  title: "Ferreiro Controle Financeiro",
+  title: "Ferreira Controle Financeiro",
   description: "Controle Financeiro",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
