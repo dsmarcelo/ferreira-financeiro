@@ -9,6 +9,7 @@ import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from "@d
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import type { DragEndEvent } from "@dnd-kit/core";
+import Link from "next/link";
 
 interface CategoryEditListProps {
   categories: ExpenseCategory[];
@@ -91,7 +92,9 @@ function SortableItem({ id, category }: SortableItemProps) {
       >
         <GripVertical className="h-4 w-4" />
       </div>
-      <Card className={`relative ${getCategoryColorClasses(category.color)} w-full`}>
+
+      <Link href={`/categorias/editar/${category.id}`} className="w-full">
+      <Card className={`relative ${getCategoryColorClasses(category.color)} w-full hover:bg-muted hover:shadow-lg`}>
         <div className="absolute top-4 right-4 flex items-center gap-2">
           <Edit className="h-3 w-3" />
         </div>
@@ -109,6 +112,7 @@ function SortableItem({ id, category }: SortableItemProps) {
           </div>
         </CardHeader>
       </Card>
+      </Link>
     </div>
   );
 }
