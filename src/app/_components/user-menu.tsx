@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, KeyRound, User, Tag } from 'lucide-react'
+import { LogOut, KeyRound, Tag, Settings } from 'lucide-react'
 import { signout } from '@/app/login/actions'
 import Link from 'next/link'
 
@@ -21,7 +21,7 @@ export default function UserMenu() {
           size="sm"
           className="flex items-center gap-2"
         >
-          <User size={16} />
+          <Settings size={16} />
           <span className="hidden sm:inline">Conta</span>
         </Button>
       </DropdownMenuTrigger>

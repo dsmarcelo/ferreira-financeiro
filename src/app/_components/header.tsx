@@ -13,7 +13,6 @@ import {
   BanknoteArrowDown,
   User,
   Store,
-  PackagePlus,
 } from "lucide-react";
 export default function Header({
   children,
