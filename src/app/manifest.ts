@@ -2,13 +2,14 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Prime Controle Financeiro",
-    short_name: "Prime Controle Financeiro",
+    name: "Ferreira Controle Financeiro",
+    short_name: "Controle Financeiro",
     description: "Controle Financeiro",
     start_url: "/",
     display: "standalone",
+    orientation: "portrait",
     background_color: "#ffffff",
-    theme_color: "#000000",
+    theme_color: "#ffffff",
     icons: [
       {
         src: "/icon-192x192.png",
