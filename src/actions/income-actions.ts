@@ -9,6 +9,7 @@ import {
   sumIncomesByDateRange,
   sumProfitAmountsByDateRange,
   sumTotalProfitByDateRange,
+  createIncomeAndDecrementStock,
 } from "@/server/queries/income-queries";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -19,6 +20,7 @@ const incomeInsertSchema = z.object({
   time: z.string({ message: "Hora inválida" }),
   value: z.number().min(0, { message: "Valor inválido" }),
   profitMargin: z.number().min(0).max(100, { message: "Margem de lucro deve estar entre 0% e 100%" }),
+  soldItemsJson: z.string().optional(),
 });
 
 // Define a common ActionResponse interface for form actions
@@ -47,9 +49,10 @@ export async function actionCreateIncome(
   const profitMarginStr = formData.get("profitMargin");
   const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
+  const soldItemsJson = formData.get("soldItemsJson");
 
   // Validate using Zod, passing raw values
-  const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin });
+  const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin, soldItemsJson });
   if (!result.success) {
     // Return field-level errors and a general message
     return {
@@ -68,12 +71,35 @@ export async function actionCreateIncome(
     const dbValue = value !== undefined ? value.toFixed(2) : undefined;
     const dbProfitMargin = profitMargin !== undefined ? profitMargin.toFixed(2) : undefined;
 
-    await createIncome({
-      description: description as string,
-      dateTime: dateTime,
-      value: dbValue!,
-      profitMargin: dbProfitMargin!
-    });
+    const items: Array<{ productId: number; quantity: number }> = [];
+    if (typeof soldItemsJson === "string" && soldItemsJson.trim().length > 0) {
+      try {
+        const parsed = JSON.parse(soldItemsJson) as Array<{ productId: number; quantity: number }>;
+        for (const it of parsed) {
+          if (typeof it.productId === "number" && typeof it.quantity === "number" && it.quantity > 0) {
+            items.push({ productId: it.productId, quantity: it.quantity });
+          }
+        }
+      } catch {
+        // ignore bad json
+      }
+    }
+
+    if (items.length > 0) {
+      await createIncomeAndDecrementStock({
+        description: description as string,
+        dateTime: dateTime,
+        value: dbValue!,
+        profitMargin: dbProfitMargin!,
+      }, items);
+    } else {
+      await createIncome({
+        description: description as string,
+        dateTime: dateTime,
+        value: dbValue!,
+        profitMargin: dbProfitMargin!
+      });
+    }
     revalidatePath("/caixa");
     return { success: true, message: "Receita adicionada com sucesso!" };
   } catch (error) {

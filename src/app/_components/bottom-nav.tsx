@@ -7,6 +7,7 @@ import {
   User,
   Store,
   BanknoteArrowDown,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,12 +36,12 @@ const navItems = [
     icon: Store,
     testId: "nav-loja",
   },
-  // {
-  //   label: "Compras Produtos",
-  //   href: "/compras-produtos",
-  //   icon: PackagePlus,
-  //   testId: "nav-produtos",
-  // },
+  {
+    label: "Estoque",
+    href: "/estoque",
+    icon: Package,
+    testId: "nav-estoque",
+  },
 ];
 
 export default function BottomNav() {

@@ -2,6 +2,7 @@
 
 import { db } from "../db";
 import { incomes } from "../db/schema/incomes-schema";
+import { products } from "../db/schema/products";
 import type {
   Income,
   IncomeInsert,
@@ -132,4 +133,29 @@ export async function sumTotalProfitByDateRange(
   }, { totalIncome: 0, totalProfitAmount: 0, totalBaseValue: 0 });
 
   return totals;
+}
+
+// Create income and decrement stock atomically
+export async function createIncomeAndDecrementStock(
+  data: IncomeInsert,
+  items: Array<{ productId: number; quantity: number }>,
+): Promise<Income> {
+  return db.transaction(async (tx) => {
+    // Decrement stock
+    for (const item of items) {
+      const [row] = await tx.select().from(products).where(eq(products.id, item.productId));
+      if (!row) throw new Error("Produto não encontrado");
+      const newQty = (row.quantity ?? 0) - item.quantity;
+      if (newQty < 0) {
+        throw new Error(
+          `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
+        );
+      }
+      await tx.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
+    }
+
+    const [created] = await tx.insert(incomes).values(data).returning();
+    if (!created) throw new Error("Falha ao criar a entrada de receita.");
+    return created;
+  });
 }
