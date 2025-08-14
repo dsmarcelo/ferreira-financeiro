@@ -1,0 +1,228 @@
+---
+alwaysApply: true
+---
+
+## Rule: Ferreira Financeiro Architecture and Contribution Guide
+
+This project is a Next.js 15 App Router application using React 19, TypeScript, Drizzle ORM (PostgreSQL), and Auth.js (NextAuth v5) credentials login. Use this rule to navigate the codebase, implement features, and keep patterns consistent.
+
+### High-level flow
+
+- UI in `src/app/**` (routes, pages, and shared components)
+- Server Actions in `src/actions/**` or colocated `actions.ts` under a route
+- Query layer in `src/server/queries/**` (all DB logic)
+- Database schema in `src/server/db/schema/**` (Drizzle tables & enums)
+- Drizzle client in `src/server/db/index.ts`
+
+### Directory map (what lives where)
+
+- `src/app/`
+  - Route pages: `.../page.tsx`
+  - Shared UI: `src/app/_components/**` (forms, sheets, lists, dialogs)
+  - API routes: `src/app/api/**/route.ts`
+  - Auth pages and actions: `src/app/login/**`, `src/app/admin/criar-conta/**`, `src/app/alterar-senha/**`
+- `src/actions/`
+  - Global server actions for main entities: `expense-actions.ts`, `income-actions.ts`, `cash-register-actions.ts`
+- `src/server/db/schema/`
+  - Tables: `expense.ts`, `expense-category.ts`, `incomes-schema.ts`, `cash-register.ts`, `auth-schema.ts`
+  - Register new tables in `schema/index.ts` if needed
+- `src/server/queries/`
+  - DB reads/writes per entity: `expense-queries.ts`, `income-queries.ts`, `cash-register-queries.ts`, `expense-category-queries.ts`, `summary-queries.ts`
+- `src/auth.ts`
+  - Auth.js (NextAuth) Credentials provider using `auth_users` table
+- `src/middleware.ts`
+  - Route protection and redirects; update `publicRoutes`/`adminRoutes` when adding new public/admin paths
+- `src/lib/pdf/**`
+  - PDF generation modules for cash register, expenses, purchases, and summary
+- `src/lib/utils.ts`
+  - Formatting utilities (currency, dates) and UI helpers
+
+### Authentication & route protection
+
+- Auth is handled in `src/auth.ts` (Credentials provider; JWT session). Login logic is in `src/app/login/actions.ts`.
+- Global protection via `src/middleware.ts`. Unauthenticated users are redirected to `/login`.
+- `/admin/criar-conta` is protected by `ADMIN_PASSWORD` (env) and writes new users to `auth_users`.
+- `/alterar-senha` allows a logged-in user to update their password.
+
+### Expenses model and behavior
+
+- Table `expense` supports types: `one_time`, `installment`, `recurring`, `recurring_occurrence` and sources: `personal`, `store`, `product_purchase`.
+- Recurrence metadata: `recurrenceType`, `recurrenceInterval`, `recurrenceEndDate`, `originalRecurringExpenseId`.
+- Category is optional; defaults to `DEFAULT_CATEGORY` if not provided.
+- `src/server/queries/expense-queries.ts` expands recurring series for listings and provides CRUD/sums.
+- Actions in `src/actions/expense-actions.ts` validate with Zod and call queries. Toggling `isPaid` on `recurring` uses `recurring_occurrence` records to track payments by date.
+
+### Incomes and cash register
+
+- `src/server/db/schema/incomes-schema.ts`: incomes with `value`, `profitMargin`, `dateTime`.
+- `src/server/queries/income-queries.ts`: CRUD, list by period, profit computations.
+- `src/server/db/schema/cash-register.ts` and `src/server/queries/cash-register-queries.ts`: daily cash register values and sums.
+- Summary utilities in `src/server/queries/summary-queries.ts` aggregate across modules.
+
+### Categories
+
+- `expense_category` with `sortOrder`, `color`, `emoji`. CRUD in `expense-category-queries.ts`.
+- Client can reorder categories via `POST /api/categorias/update-order`.
+
+### Server actions pattern
+
+- Keep server-side form handling in `src/actions/**` or page-local `actions.ts`.
+- Validate all inputs with Zod.
+- Return `{ success, message, errors? }` for client UI feedback.
+- After writes, call `revalidatePath()` for affected routes.
+
+### UI patterns
+
+- Use shared forms under `src/app/_components/forms/**` (e.g., `add-expense-form.tsx` has tabs for one-time/parcelled/recurring).
+- Use responsive drawers/sheets from `src/app/_components/responsive-sheet.tsx` and `mobile-drawer.tsx` for mobile-friendly UX.
+- For notifications, use `sonner` to show success/error toasts from form states.
+
+### Adding a new feature (standard workflow)
+
+1. Schema: Add a Drizzle table in `src/server/db/schema/<name>.ts` and export it from `schema/index.ts` if needed.
+2. Queries: Create `src/server/queries/<name>-queries.ts` for reads/writes/business rules.
+3. Actions: Create `src/actions/<name>-actions.ts` (or a local `actions.ts` in the page folder) with Zod validation and `revalidatePath()`.
+4. UI: Build pages and forms in `src/app/<route>/**`; wire the form `action` to the server action.
+5. Routing: If route should be public/admin-only, update `src/middleware.ts` accordingly.
+6. PDF (optional): Add a generator in `src/lib/pdf/` if the feature needs export.
+
+### Conventions & tips
+
+- TypeScript: Prefer explicit types for exported APIs and function signatures.
+- Naming: Use descriptive names (no 1–2 character identifiers). Functions are verbs; variables are nouns.
+- Control flow: Early returns; handle edge cases first; avoid deep nesting.
+- Errors: Do not catch without meaningful handling; return actionable messages to clients.
+- Formatting: Follow existing style; Tailwind classes for UI; avoid reformatting unrelated code.
+- Dates/currency: Use helpers in `src/lib/utils.ts` for consistency (`formatCurrency`, `formatShortDate`).
+- Env: All env vars are validated in `src/env.js`. Add new vars there if needed.
+
+### Scripts
+
+- `pnpm dev` – start dev server
+- `pnpm build` – build
+- `pnpm preview` – build + start
+- `pnpm typecheck`, `pnpm lint`, `pnpm lint:fix`
+- `pnpm db:push` / `db:generate` / `db:migrate` / `db:studio`
+
+### When extending auth or adding public routes
+
+- Extend providers/pages in `src/auth.ts` as needed.
+- Update `publicRoutes` and `adminRoutes` arrays in `src/middleware.ts` when adding a new public/admin path.
+
+### Safety checks before finishing a change
+
+- Run typecheck and lint. Ensure pages that display modified data are revalidated.
+- For DB changes, ensure migrations are generated/applied and schema exports are wired in `schema/index.ts`.
+
+## Rule: Ferreira Financeiro Architecture and Contribution Guide
+
+This project is a Next.js 15 App Router application using React 19, TypeScript, Drizzle ORM (PostgreSQL), and Auth.js (NextAuth v5) credentials login. Use this rule to navigate the codebase, implement features, and keep patterns consistent.
+
+### High-level flow
+
+- UI in `src/app/**` (routes, pages, and shared components)
+- Server Actions in `src/actions/**` or colocated `actions.ts` under a route
+- Query layer in `src/server/queries/**` (all DB logic)
+- Database schema in `src/server/db/schema/**` (Drizzle tables & enums)
+- Drizzle client in `src/server/db/index.ts`
+
+### Directory map (what lives where)
+
+- `src/app/`
+  - Route pages: `.../page.tsx`
+  - Shared UI: `src/app/_components/**` (forms, sheets, lists, dialogs)
+  - API routes: `src/app/api/**/route.ts`
+  - Auth pages and actions: `src/app/login/**`, `src/app/admin/criar-conta/**`, `src/app/alterar-senha/**`
+- `src/actions/`
+  - Global server actions for main entities: `expense-actions.ts`, `income-actions.ts`, `cash-register-actions.ts`
+- `src/server/db/schema/`
+  - Tables: `expense.ts`, `expense-category.ts`, `incomes-schema.ts`, `cash-register.ts`, `auth-schema.ts`
+  - Register new tables in `schema/index.ts` if needed
+- `src/server/queries/`
+  - DB reads/writes per entity: `expense-queries.ts`, `income-queries.ts`, `cash-register-queries.ts`, `expense-category-queries.ts`, `summary-queries.ts`
+- `src/auth.ts`
+  - Auth.js (NextAuth) Credentials provider using `auth_users` table
+- `src/middleware.ts`
+  - Route protection and redirects; update `publicRoutes`/`adminRoutes` when adding new public/admin paths
+- `src/lib/pdf/**`
+  - PDF generation modules for cash register, expenses, purchases, and summary
+- `src/lib/utils.ts`
+  - Formatting utilities (currency, dates) and UI helpers
+
+### Authentication & route protection
+
+- Auth is handled in `src/auth.ts` (Credentials provider; JWT session). Login logic is in `src/app/login/actions.ts`.
+- Global protection via `src/middleware.ts`. Unauthenticated users are redirected to `/login`.
+- `/admin/criar-conta` is protected by `ADMIN_PASSWORD` (env) and writes new users to `auth_users`.
+- `/alterar-senha` allows a logged-in user to update their password.
+
+### Expenses model and behavior
+
+- Table `expense` supports types: `one_time`, `installment`, `recurring`, `recurring_occurrence` and sources: `personal`, `store`, `product_purchase`.
+- Recurrence metadata: `recurrenceType`, `recurrenceInterval`, `recurrenceEndDate`, `originalRecurringExpenseId`.
+- Category is optional; defaults to `DEFAULT_CATEGORY` if not provided.
+- `src/server/queries/expense-queries.ts` expands recurring series for listings and provides CRUD/sums.
+- Actions in `src/actions/expense-actions.ts` validate with Zod and call queries. Toggling `isPaid` on `recurring` uses `recurring_occurrence` records to track payments by date.
+
+### Incomes and cash register
+
+- `src/server/db/schema/incomes-schema.ts`: incomes with `value`, `profitMargin`, `dateTime`.
+- `src/server/queries/income-queries.ts`: CRUD, list by period, profit computations.
+- `src/server/db/schema/cash-register.ts` and `src/server/queries/cash-register-queries.ts`: daily cash register values and sums.
+- Summary utilities in `src/server/queries/summary-queries.ts` aggregate across modules.
+
+### Categories
+
+- `expense_category` with `sortOrder`, `color`, `emoji`. CRUD in `expense-category-queries.ts`.
+- Client can reorder categories via `POST /api/categorias/update-order`.
+
+### Server actions pattern
+
+- Keep server-side form handling in `src/actions/**` or page-local `actions.ts`.
+- Validate all inputs with Zod.
+- Return `{ success, message, errors? }` for client UI feedback.
+- After writes, call `revalidatePath()` for affected routes.
+
+### UI patterns
+
+- Use shared forms under `src/app/_components/forms/**` (e.g., `add-expense-form.tsx` has tabs for one-time/parcelled/recurring).
+- Use responsive drawers/sheets from `src/app/_components/responsive-sheet.tsx` and `mobile-drawer.tsx` for mobile-friendly UX.
+- For notifications, use `sonner` to show success/error toasts from form states.
+
+### Adding a new feature (standard workflow)
+
+1. Schema: Add a Drizzle table in `src/server/db/schema/<name>.ts` and export it from `schema/index.ts` if needed.
+2. Queries: Create `src/server/queries/<name>-queries.ts` for reads/writes/business rules.
+3. Actions: Create `src/actions/<name>-actions.ts` (or a local `actions.ts` in the page folder) with Zod validation and `revalidatePath()`.
+4. UI: Build pages and forms in `src/app/<route>/**`; wire the form `action` to the server action.
+5. Routing: If route should be public/admin-only, update `src/middleware.ts` accordingly.
+6. PDF (optional): Add a generator in `src/lib/pdf/` if the feature needs export.
+
+### Conventions & tips
+
+- TypeScript: Prefer explicit types for exported APIs and function signatures.
+- Naming: Use descriptive names (no 1–2 character identifiers). Functions are verbs; variables are nouns.
+- Control flow: Early returns; handle edge cases first; avoid deep nesting.
+- Errors: Do not catch without meaningful handling; return actionable messages to clients.
+- Formatting: Follow existing style; Tailwind classes for UI; avoid reformatting unrelated code.
+- Dates/currency: Use helpers in `src/lib/utils.ts` for consistency (`formatCurrency`, `formatShortDate`).
+- Env: All env vars are validated in `src/env.js`. Add new vars there if needed.
+
+### Scripts
+
+- `pnpm dev` – start dev server
+- `pnpm build` – build
+- `pnpm preview` – build + start
+- `pnpm typecheck`, `pnpm lint`, `pnpm lint:fix`
+- `pnpm db:push` / `db:generate` / `db:migrate` / `db:studio`
+
+### When extending auth or adding public routes
+
+- Extend providers/pages in `src/auth.ts` as needed.
+- Update `publicRoutes` and `adminRoutes` arrays in `src/middleware.ts` when adding a new public/admin path.
+
+### Safety checks before finishing a change
+
+- Run typecheck and lint. Ensure pages that display modified data are revalidated.
+- For DB changes, ensure migrations are generated/applied and schema exports are wired in `schema/index.ts`.
+
