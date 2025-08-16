@@ -3,6 +3,7 @@
 import { db } from "../db";
 import { incomes } from "../db/schema/incomes-schema";
 import { products } from "../db/schema/products";
+import { incomeItem } from "../db/schema/income-items";
 import type {
   Income,
   IncomeInsert,
@@ -156,6 +157,42 @@ export async function createIncomeAndDecrementStock(
 
     const [created] = await tx.insert(incomes).values(data).returning();
     if (!created) throw new Error("Falha ao criar a entrada de receita.");
+    // Optionally record items when provided with price
+    // For existing callers, unitPrice is not provided here; keep backwards compatibility
+    return created;
+  });
+}
+
+export async function createIncomeWithItems(
+  data: IncomeInsert,
+  items: Array<{ productId: number; quantity: number; unitPrice: string }>,
+): Promise<Income> {
+  return db.transaction(async (tx) => {
+    // Decrement stock and verify availability
+    for (const item of items) {
+      const [row] = await tx.select().from(products).where(eq(products.id, item.productId));
+      if (!row) throw new Error("Produto não encontrado");
+      const newQty = (row.quantity ?? 0) - item.quantity;
+      if (newQty < 0) {
+        throw new Error(
+          `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
+        );
+      }
+      await tx.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
+    }
+
+    const [created] = await tx.insert(incomes).values(data).returning();
+    if (!created) throw new Error("Falha ao criar a entrada de receita.");
+
+    for (const item of items) {
+      await tx.insert(incomeItem).values({
+        incomeId: created.id,
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      });
+    }
+
     return created;
   });
 }

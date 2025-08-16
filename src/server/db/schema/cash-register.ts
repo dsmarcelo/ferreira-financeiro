@@ -8,6 +8,7 @@ import { serial, decimal, date, timestamp } from "drizzle-orm/pg-core";
 export const cashRegister = createTable("cash_register", {
   id: serial("id").primaryKey(),
   value: decimal("value", { precision: 15, scale: 2 }).notNull(),
+  extraValue: decimal("extra_value", { precision: 15, scale: 2 }).default("0").notNull(),
   date: date("date").notNull(),
   createdAt: timestamp("createdAt", { withTimezone: true })
     .default(sql`CURRENT_TIMESTAMP`)

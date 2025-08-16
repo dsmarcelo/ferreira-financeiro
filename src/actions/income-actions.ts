@@ -10,6 +10,7 @@ import {
   sumProfitAmountsByDateRange,
   sumTotalProfitByDateRange,
   createIncomeAndDecrementStock,
+  createIncomeWithItems,
 } from "@/server/queries/income-queries";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -21,6 +22,9 @@ const incomeInsertSchema = z.object({
   value: z.number().min(0, { message: "Valor inválido" }),
   profitMargin: z.number().min(0).max(100, { message: "Margem de lucro deve estar entre 0% e 100%" }),
   soldItemsJson: z.string().optional(),
+  discountType: z.enum(["percent", "fixed"]).optional(),
+  discountValue: z.number().min(0).optional(),
+  customerId: z.number().int().optional(),
 });
 
 // Define a common ActionResponse interface for form actions
@@ -50,9 +54,14 @@ export async function actionCreateIncome(
   const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
   const soldItemsJson = formData.get("soldItemsJson");
+  const discountType = formData.get("discountType");
+  const discountValueStr = formData.get("discountValue");
+  const customerIdStr = formData.get("customerId");
+  const discountValue = typeof discountValueStr === "string" ? Number(discountValueStr) : undefined;
+  const customerId = typeof customerIdStr === "string" && customerIdStr.length > 0 ? Number(customerIdStr) : undefined;
 
   // Validate using Zod, passing raw values
-  const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin, soldItemsJson });
+  const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin, soldItemsJson, discountType, discountValue, customerId });
   if (!result.success) {
     // Return field-level errors and a general message
     return {
@@ -86,18 +95,24 @@ export async function actionCreateIncome(
     }
 
     if (items.length > 0) {
-      await createIncomeAndDecrementStock({
+      await createIncomeWithItems({
         description: description as string,
         dateTime: dateTime,
         value: dbValue!,
         profitMargin: dbProfitMargin!,
-      }, items);
+        discountType: typeof discountType === "string" ? discountType : undefined,
+        discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
+        customerId: customerId,
+      }, items.map((it) => ({ ...it, unitPrice: (it as any).unitPrice ?? "0.00" })));
     } else {
       await createIncome({
         description: description as string,
         dateTime: dateTime,
         value: dbValue!,
-        profitMargin: dbProfitMargin!
+        profitMargin: dbProfitMargin!,
+        discountType: typeof discountType === "string" ? discountType : undefined,
+        discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
+        customerId: customerId,
       });
     }
     revalidatePath("/caixa");

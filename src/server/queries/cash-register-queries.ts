@@ -2,6 +2,8 @@
 
 import { db } from "../db";
 import { cashRegister } from "../db/schema/cash-register";
+import { cashRegisterItem } from "../db/schema/cash-register-items";
+import { products } from "../db/schema/products";
 import type {
   CashRegister,
   CashRegisterInsert,
@@ -16,6 +18,45 @@ export async function createCashRegister(
   const [created] = await db.insert(cashRegister).values(data).returning();
   if (!created) throw new Error("Falha ao criar o registro de caixa.");
   return created;
+}
+
+export async function createCashRegisterWithItems(
+  data: CashRegisterInsert,
+  items: Array<{ productId: number; quantity: number; unitPrice: string }>,
+): Promise<CashRegister> {
+  return db.transaction(async (tx) => {
+    // Insert cash register entry first
+    const [created] = await tx.insert(cashRegister).values(data).returning();
+    if (!created) throw new Error("Falha ao criar o registro de caixa.");
+
+    // Insert items and decrement stock
+    for (const item of items) {
+      const [row] = await tx.select().from(products).where(eq(products.id, item.productId));
+      if (!row) throw new Error("Produto não encontrado");
+      const newQty = (row.quantity ?? 0) - item.quantity;
+      if (newQty < 0) {
+        throw new Error(
+          `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
+        );
+      }
+      await tx.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
+      await tx.insert(cashRegisterItem).values({
+        cashRegisterId: created.id,
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      });
+    }
+
+    return created;
+  });
+}
+
+export async function listItemsForCashRegister(cashRegisterId: number) {
+  return db
+    .select()
+    .from(cashRegisterItem)
+    .where(eq(cashRegisterItem.cashRegisterId, cashRegisterId));
 }
 
 // Get a cash register entry by ID
