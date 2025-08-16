@@ -263,12 +263,17 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
                     <div className="flex flex-col">
                       <span className="font-medium">{p.name}</span>
                       <span className="text-xs text-slate-500">
-                        Preço {formatCurrency(Number(p.price))} • Estoque {available}
+                        Preço {formatCurrency(Number(p.price))} • Estoque - {available}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Input type="number" step="0.01" min={0} className="w-24" value={selectedData.unitPrice}
-                        onChange={(e) => setSelected((prev) => ({ ...prev, [p.id]: { quantity: selectedData.quantity, unitPrice: Number(e.target.value || 0) } }))}
+                      <CurrencyInput
+                        name={`unitPrice-${p.id}`}
+                        value={selectedData.unitPrice}
+                        onValueChange={(value) => setSelected((prev) => ({ ...prev, [p.id]: { quantity: selectedData.quantity, unitPrice: value ?? 0 } }))}
+                        className="w-24"
+                        min={0}
+                        defaultValue={Number(p.price)}
                       />
                       <Button type="button" size="icon" variant="outline" onClick={() => removeItem(p.id)} disabled={selectedData.quantity === 0} aria-label="Remover">
                         -
