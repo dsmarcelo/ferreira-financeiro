@@ -49,9 +49,13 @@ export async function actionCreateIncome(
   const description = formData.get("description");
   const date = formData.get("date");
   const time = formData.get("time");
-  const valueStr = formData.get("value");
+  const valueStr = formData.get("value"); // This is the extra value
+  const totalValueStr = formData.get("totalValue"); // This is the calculated total
   const profitMarginStr = formData.get("profitMargin");
-  const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
+  const extraValue = typeof valueStr === "string" ? Number(valueStr) : 0;
+  const totalValue = typeof totalValueStr === "string" ? Number(totalValueStr) : undefined;
+  // Use totalValue if available, otherwise fall back to value for backward compatibility
+  const value = totalValue !== undefined ? totalValue : (typeof valueStr === "string" ? Number(valueStr) : undefined);
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
   const soldItemsJson = formData.get("soldItemsJson");
   const discountType = formData.get("discountType");
@@ -80,13 +84,14 @@ export async function actionCreateIncome(
     const dbValue = value !== undefined ? value.toFixed(2) : undefined;
     const dbProfitMargin = profitMargin !== undefined ? profitMargin.toFixed(2) : undefined;
 
-    const items: Array<{ productId: number; quantity: number }> = [];
+    const items: Array<{ productId: number; quantity: number; unitPrice: string }> = [];
     if (typeof soldItemsJson === "string" && soldItemsJson.trim().length > 0) {
       try {
-        const parsed = JSON.parse(soldItemsJson) as Array<{ productId: number; quantity: number }>;
+        const parsed = JSON.parse(soldItemsJson) as Array<{ productId: number; quantity: number; unitPrice: number }>;
         for (const it of parsed) {
           if (typeof it.productId === "number" && typeof it.quantity === "number" && it.quantity > 0) {
-            items.push({ productId: it.productId, quantity: it.quantity });
+            const unitPrice = typeof it.unitPrice === "number" ? it.unitPrice.toFixed(2) : "0.00";
+            items.push({ productId: it.productId, quantity: it.quantity, unitPrice });
           }
         }
       } catch {
@@ -103,7 +108,7 @@ export async function actionCreateIncome(
         discountType: typeof discountType === "string" ? discountType : undefined,
         discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
         customerId: customerId,
-      }, items.map((it) => ({ ...it, unitPrice: (it as any).unitPrice ?? "0.00" })));
+      }, items);
     } else {
       await createIncome({
         description: description as string,

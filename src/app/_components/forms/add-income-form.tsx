@@ -49,11 +49,15 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   const [customerId, setCustomerId] = useState<string>("");
   const [addCustomerOpen, setAddCustomerOpen] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState("");
+  const [extraValue, setExtraValue] = useState<number>(0);
 
   // Handle success/error toasts and navigation
   useEffect(() => {
     if (state.success === true && state.message) {
       toast.success(state.message);
+      // Clear localStorage on successful submission
+      localStorage.removeItem("income-selected-products");
+
       if (onSuccess) {
         onSuccess();
       } else {
@@ -122,6 +126,32 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     })();
   }, []);
 
+    // Load saved product selections from localStorage
+  useEffect(() => {
+    const savedSelection = localStorage.getItem("income-selected-products");
+
+    if (savedSelection) {
+      try {
+        const parsed = JSON.parse(savedSelection) as unknown;
+        if (parsed && typeof parsed === "object") {
+          const validSelection: Record<number, { quantity: number; unitPrice: number }> = {};
+          for (const [key, value] of Object.entries(parsed)) {
+            const productId = Number(key);
+            if (Number.isFinite(productId) && value && typeof value === "object") {
+              const obj = value as Record<string, unknown>;
+              const quantity = typeof obj.quantity === "number" ? obj.quantity : 0;
+              const unitPrice = typeof obj.unitPrice === "number" ? obj.unitPrice : 0;
+              if (quantity > 0) {
+                validSelection[productId] = { quantity, unitPrice };
+              }
+            }
+          }
+          setSelected(validSelection);
+        }
+      } catch {}
+    }
+  }, []);
+
   const itemsTotal = useMemo(() => {
     return Object.entries(selected).reduce((acc, [_productId, data]) => {
       const unit = data.unitPrice ?? 0;
@@ -141,26 +171,9 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     return Math.max(0, itemsTotal - discountAmount);
   }, [itemsTotal, discountAmount]);
 
-  const addItem = (productId: number, unitPrice: number) => {
-    setSelected((prev) => {
-      const current = prev[productId]?.quantity ?? 0;
-      const product = products.find((p) => p.id === productId);
-      const maxQty = product ? product.quantity : 0;
-      const next = Math.min(current + 1, maxQty);
-      return { ...prev, [productId]: { quantity: next, unitPrice } };
-    });
-  };
-
-  const removeItem = (productId: number) => {
-    setSelected((prev) => {
-      const current = prev[productId]?.quantity ?? 0;
-      const next = Math.max(current - 1, 0);
-      const unitPrice = prev[productId]?.unitPrice ?? 0;
-      const clone: typeof prev = { ...prev, [productId]: { quantity: next, unitPrice } };
-      if (next === 0) delete clone[productId];
-      return clone;
-    });
-  };
+  const finalTotal = useMemo(() => {
+    return totalSelectedValue + extraValue;
+  }, [totalSelectedValue, extraValue]);
 
   return (
     <div className="space-y-4">
@@ -214,19 +227,39 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="value">Receita Total</Label>
+          <Label htmlFor="value">Valor Extra</Label>
           <CurrencyInput
             id="value"
             name="value"
             step="0.01"
             min={0}
-            required
+            value={extraValue}
+            onValueChange={(value) => setExtraValue(value ?? 0)}
           />
           {errors.value && (
             <p className="mt-1 text-sm text-red-500" aria-live="polite">
               {errors.value[0]}
             </p>
           )}
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>Produtos</Label>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push('/caixa/adicionar/produtos')}
+            >
+              Adicionar Produtos
+            </Button>
+          </div>
+          <div className="text-sm text-slate-600">
+            Produtos selecionados: <span className="font-medium">{formatCurrency(totalSelectedValue)}</span>
+          </div>
+          <div className="text-sm font-medium text-slate-800">
+            Total da Receita: <span className="font-bold">{formatCurrency(finalTotal)}</span>
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -249,45 +282,33 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
           )}
         </div>
 
-        {products.length > 0 && (
+                {Object.keys(selected).length > 0 && (
           <div className="space-y-3">
-            <Label>Itens vendidos (define preço unitário e aplica desconto opcional)</Label>
+            <Label>Produtos selecionados</Label>
             <div className="grid grid-cols-1 gap-2">
-              {products.map((p) => {
-                const selectedData = selected[p.id] ?? { quantity: 0, unitPrice: Number(p.price) };
-                const available = p.quantity;
-                const canAdd = selectedData.quantity < available;
-                return (
-                  <div key={p.id} className={cn("flex items-center justify-between rounded-md border p-2", selectedData.quantity > 0 ? "bg-slate-50" : "")}
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-medium">{p.name}</span>
-                      <span className="text-xs text-slate-500">
-                        Preço {formatCurrency(Number(p.price))} • Estoque - {available}
-                      </span>
+              {products
+                .filter((p) => selected[p.id]?.quantity > 0)
+                .map((p) => {
+                  const selectedData = selected[p.id];
+                  const available = p.quantity;
+                  return (
+                    <div key={p.id} className="flex items-center justify-between rounded-md border p-1 px-3 bg-slate-50">
+                      <div className="flex flex-col">
+                        <div className="flex items-center">
+                          <p className="font-medium">
+                            {selectedData.quantity} x {p.name}
+                          </p>
+                        </div>
+                        <span className="text-xs text-slate-500">
+                          Preço {formatCurrency(Number(selectedData.unitPrice))} • Em estoque: {available}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <CurrencyInput
-                        name={`unitPrice-${p.id}`}
-                        value={selectedData.unitPrice}
-                        onValueChange={(value) => setSelected((prev) => ({ ...prev, [p.id]: { quantity: selectedData.quantity, unitPrice: value ?? 0 } }))}
-                        className="w-24"
-                        min={0}
-                        defaultValue={Number(p.price)}
-                      />
-                      <Button type="button" size="icon" variant="outline" onClick={() => removeItem(p.id)} disabled={selectedData.quantity === 0} aria-label="Remover">
-                        -
-                      </Button>
-                      <span className="w-6 text-center tabular-nums">{selectedData.quantity}</span>
-                      <Button type="button" size="icon" onClick={() => addItem(p.id, selectedData.unitPrice)} disabled={!canAdd} aria-label="Adicionar">
-                        +
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
             <input type="hidden" name="soldItemsJson" value={JSON.stringify(Object.entries(selected).map(([id, data]) => ({ productId: Number(id), quantity: data.quantity, unitPrice: data.unitPrice })))} />
+            <input type="hidden" name="totalValue" value={finalTotal} />
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="discountType">Tipo de Desconto</Label>
@@ -349,7 +370,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
                 </Dialog>
               </div>
             </div>
-            <div className="text-sm text-slate-600">Total dos itens selecionados: <span className="font-medium">{formatCurrency(totalSelectedValue)}</span></div>
+            <div className="text-sm text-slate-600">Total: <span className="font-medium">{formatCurrency(totalSelectedValue)}</span></div>
           </div>
         )}
 
