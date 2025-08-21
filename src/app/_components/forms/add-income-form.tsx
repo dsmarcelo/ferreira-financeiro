@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
 import { Input } from "@/components/ui/input";
-import { cn, formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import {
   Dialog,
   DialogClose,
@@ -23,6 +23,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AddIncomeFormProps {
   id?: string;
@@ -50,6 +57,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   const [addCustomerOpen, setAddCustomerOpen] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState("");
   const [extraValue, setExtraValue] = useState<number>(0);
+  const [profitMargin, setProfitMargin] = useState<number>(28);
 
   // Handle success/error toasts and navigation
   useEffect(() => {
@@ -171,7 +179,12 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     return Math.max(0, itemsTotal - discountAmount);
   }, [itemsTotal, discountAmount]);
 
+  const profitAmount = useMemo(() => {
+    return extraValue * (profitMargin / 100);
+  }, [extraValue, profitMargin]);
+
   const finalTotal = useMemo(() => {
+    // Total must NOT include profit. It is products total + extra value only.
     return totalSelectedValue + extraValue;
   }, [totalSelectedValue, extraValue]);
 
@@ -244,6 +257,27 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="profitMargin">Margem de Lucro (%)</Label>
+          <Input
+            id="profitMargin"
+            name="profitMargin"
+            type="number"
+            inputMode="numeric"
+            step="0.01"
+            min={0}
+            max={100}
+            value={profitMargin}
+            onChange={(e) => setProfitMargin(Number(e.target.value) || 0)}
+            required
+          />
+          {errors.profitMargin && (
+            <p className="mt-1 text-sm text-red-500" aria-live="polite">
+              {errors.profitMargin[0]}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label>Produtos</Label>
             <Button
@@ -257,29 +291,39 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
           <div className="text-sm text-slate-600">
             Produtos selecionados: <span className="font-medium">{formatCurrency(totalSelectedValue)}</span>
           </div>
+          <div className="text-sm text-slate-600">
+            Valor extra: <span className="font-medium">{formatCurrency(extraValue)}</span>
+          </div>
+          <div className="text-sm text-slate-600">
+            Lucro sobre extra ({profitMargin}%): <span className="font-medium">{formatCurrency(profitAmount)}</span>
+          </div>
           <div className="text-sm font-medium text-slate-800">
             Total da Receita: <span className="font-bold">{formatCurrency(finalTotal)}</span>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="profitMargin">Margem de Lucro (%)</Label>
-          <Input
-            id="profitMargin"
-            name="profitMargin"
-            type="number"
-            inputMode="numeric"
-            step="0.01"
-            min={0}
-            max={100}
-            defaultValue="28"
-            required
-          />
-          {errors.profitMargin && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.profitMargin[0]}
-            </p>
-          )}
+          <Label htmlFor="customerId">Cliente</Label>
+          <Select
+            value={customerId}
+            onValueChange={(val) => {
+              if (val === "__new__") {
+                setAddCustomerOpen(true);
+                return;
+              }
+              setCustomerId(val);
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecione um cliente" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__new__">Novo Cliente</SelectItem>
+              {customers.map((c) => (
+                <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
                 {Object.keys(selected).length > 0 && (
@@ -287,9 +331,10 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
             <Label>Produtos selecionados</Label>
             <div className="grid grid-cols-1 gap-2">
               {products
-                .filter((p) => selected[p.id]?.quantity > 0)
+                .filter((p) => selected[p.id] && selected[p.id]!.quantity > 0)
                 .map((p) => {
                   const selectedData = selected[p.id];
+                  if (!selectedData) return null;
                   const available = p.quantity;
                   return (
                     <div key={p.id} className="flex items-center justify-between rounded-md border p-1 px-3 bg-slate-50">
@@ -307,8 +352,6 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
                   );
                 })}
             </div>
-            <input type="hidden" name="soldItemsJson" value={JSON.stringify(Object.entries(selected).map(([id, data]) => ({ productId: Number(id), quantity: data.quantity, unitPrice: data.unitPrice })))} />
-            <input type="hidden" name="totalValue" value={finalTotal} />
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="discountType">Tipo de Desconto</Label>
@@ -323,56 +366,49 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
                 <Input id="discountValue" name="discountValue" type="number" min={0} step="0.01" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="customerId">Cliente</Label>
-              <div className="flex items-center gap-2">
-                <select id="customerId" name="customerId" className="w-full rounded-md border p-2" value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
-                  <option value="">Sem cliente</option>
-                  {customers.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-                <Dialog open={addCustomerOpen} onOpenChange={setAddCustomerOpen}>
-                  <DialogTrigger asChild>
-                    <Button type="button" variant="outline">Novo</Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[420px]">
-                    <DialogHeader>
-                      <DialogTitle>Novo Cliente</DialogTitle>
-                      <DialogDescription className="hidden" aria-hidden="true" />
-                    </DialogHeader>
-                    <div className="space-y-2 py-2">
-                      <Label htmlFor="newCustomerName">Nome</Label>
-                      <Input id="newCustomerName" value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} placeholder="Nome do cliente" />
-                    </div>
-                    <DialogFooter className="gap-2">
-                      <DialogClose asChild>
-                        <Button type="button" variant="outline">Cancelar</Button>
-                      </DialogClose>
-                      <Button
-                        type="button"
-                        onClick={async () => {
-                          const name = newCustomerName.trim();
-                          if (!name) return;
-                          try {
-                            const res = await fetch("/api/clientes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
-                            if (!res.ok) return;
-                            const created = (await res.json()) as { id: number; name: string };
-                            setCustomers((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
-                            setCustomerId(String(created.id));
-                            setNewCustomerName("");
-                            setAddCustomerOpen(false);
-                          } catch {}
-                        }}
-                      >Salvar</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
+            {/* Customer selector moved outside; dialog remains here for reuse */}
+            <Dialog open={addCustomerOpen} onOpenChange={setAddCustomerOpen}>
+              <DialogContent className="sm:max-w-[420px]">
+                <DialogHeader>
+                  <DialogTitle>Novo Cliente</DialogTitle>
+                  <DialogDescription className="hidden" aria-hidden="true" />
+                </DialogHeader>
+                <div className="space-y-2 py-2">
+                  <Label htmlFor="newCustomerName">Nome</Label>
+                  <Input id="newCustomerName" value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} placeholder="Nome do cliente" />
+                </div>
+                <DialogFooter className="gap-2">
+                  <DialogClose asChild>
+                    <Button type="button" variant="outline">Cancelar</Button>
+                  </DialogClose>
+                  <Button
+                    type="button"
+                    onClick={async () => {
+                      const name = newCustomerName.trim();
+                      if (!name) return;
+                      try {
+                        const res = await fetch("/api/clientes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
+                        if (!res.ok) return;
+                        const created = (await res.json()) as { id: number; name: string };
+                        setCustomers((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+                        setCustomerId(String(created.id));
+                        setNewCustomerName("");
+                        setAddCustomerOpen(false);
+                      } catch {}
+                    }}
+                  >Salvar</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <div className="text-sm text-slate-600">Total: <span className="font-medium">{formatCurrency(totalSelectedValue)}</span></div>
           </div>
         )}
+
+        {/* Hidden inputs for form data */}
+        <input type="hidden" name="soldItemsJson" value={JSON.stringify(Object.entries(selected).map(([id, data]) => ({ productId: Number(id), quantity: data.quantity, unitPrice: data.unitPrice })))} />
+        <input type="hidden" name="totalValue" value={finalTotal} />
+        <input type="hidden" name="extraValue" value={extraValue} />
+        <input type="hidden" name="customerId" value={customerId} />
 
         {!id && (
           <Button type="submit" disabled={pending} className="w-full">

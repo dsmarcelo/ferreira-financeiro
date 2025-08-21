@@ -9,7 +9,6 @@ import {
   sumIncomesByDateRange,
   sumProfitAmountsByDateRange,
   sumTotalProfitByDateRange,
-  createIncomeAndDecrementStock,
   createIncomeWithItems,
 } from "@/server/queries/income-queries";
 import { revalidatePath } from "next/cache";
@@ -19,7 +18,7 @@ const incomeInsertSchema = z.object({
   description: z.string().min(1, { message: "Descrição é obrigatória" }),
   date: z.string({ message: "Data inválida" }),
   time: z.string({ message: "Hora inválida" }),
-  value: z.number().min(0, { message: "Valor inválido" }),
+  value: z.number().min(0, { message: "Valor inválido" }).optional(),
   profitMargin: z.number().min(0).max(100, { message: "Margem de lucro deve estar entre 0% e 100%" }),
   soldItemsJson: z.string().optional(),
   discountType: z.enum(["percent", "fixed"]).optional(),
@@ -49,20 +48,25 @@ export async function actionCreateIncome(
   const description = formData.get("description");
   const date = formData.get("date");
   const time = formData.get("time");
-  const valueStr = formData.get("value"); // This is the extra value
-  const totalValueStr = formData.get("totalValue"); // This is the calculated total
+  const extraValueStr = formData.get("extraValue"); // This is the extra value (without profit)
+  const totalValueStr = formData.get("totalValue"); // This is the calculated total (with profit)
   const profitMarginStr = formData.get("profitMargin");
-  const extraValue = typeof valueStr === "string" ? Number(valueStr) : 0;
+  const extraValue = typeof extraValueStr === "string" ? Number(extraValueStr) : 0;
   const totalValue = typeof totalValueStr === "string" ? Number(totalValueStr) : undefined;
-  // Use totalValue if available, otherwise fall back to value for backward compatibility
-  const value = totalValue !== undefined ? totalValue : (typeof valueStr === "string" ? Number(valueStr) : undefined);
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
+
+  // Total should NOT include profit: use provided totalValue if present, otherwise fall back to extraValue
+  const value = totalValue ?? extraValue;
   const soldItemsJson = formData.get("soldItemsJson");
-  const discountType = formData.get("discountType");
+  const discountTypeRaw = formData.get("discountType");
   const discountValueStr = formData.get("discountValue");
   const customerIdStr = formData.get("customerId");
   const discountValue = typeof discountValueStr === "string" ? Number(discountValueStr) : undefined;
   const customerId = typeof customerIdStr === "string" && customerIdStr.length > 0 ? Number(customerIdStr) : undefined;
+
+  // Normalize discount type: treat empty string or invalid as undefined
+  const discountType: "percent" | "fixed" | undefined =
+    discountTypeRaw === "percent" || discountTypeRaw === "fixed" ? (discountTypeRaw as "percent" | "fixed") : undefined;
 
   // Validate using Zod, passing raw values
   const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin, soldItemsJson, discountType, discountValue, customerId });
@@ -72,6 +76,15 @@ export async function actionCreateIncome(
       success: false,
       message: "Por favor, corrija os erros no formulário.",
       errors: result.error.flatten().fieldErrors,
+    };
+  }
+
+  // Ensure we have a valid value
+  if (value === undefined || isNaN(value)) {
+    return {
+      success: false,
+      message: "Valor total é obrigatório.",
+      errors: { value: ["Valor total é obrigatório"] },
     };
   }
 
@@ -105,7 +118,7 @@ export async function actionCreateIncome(
         dateTime: dateTime,
         value: dbValue!,
         profitMargin: dbProfitMargin!,
-        discountType: typeof discountType === "string" ? discountType : undefined,
+        discountType: discountType,
         discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
         customerId: customerId,
       }, items);
@@ -115,7 +128,7 @@ export async function actionCreateIncome(
         dateTime: dateTime,
         value: dbValue!,
         profitMargin: dbProfitMargin!,
-        discountType: typeof discountType === "string" ? discountType : undefined,
+        discountType: discountType,
         discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
         customerId: customerId,
       });
@@ -158,17 +171,26 @@ export async function actionUpdateIncome(
     };
   }
 
+  // Ensure we have a valid value for updates
+  if (value === undefined || isNaN(value)) {
+    return {
+      success: false,
+      message: "Valor é obrigatório.",
+      errors: { value: ["Valor é obrigatório"] },
+    };
+  }
+
   try {
     // Combine date and time into a single DateTime object
     const dateTimeString = `${date as string}T${time as string}:00`;
     const dateTime = new Date(dateTimeString);
 
-    await updateIncome(id, {
-      description: description as string,
-      dateTime: dateTime,
-      value: value!.toFixed(2),
-      profitMargin: profitMargin!.toFixed(2),
-    });
+            await updateIncome(id, {
+          description: description as string,
+          dateTime: dateTime,
+          value: value.toFixed(2),
+          profitMargin: profitMargin?.toFixed(2) ?? "0",
+        });
     revalidatePath("/caixa");
     return { success: true, message: "Receita atualizada com sucesso!" };
   } catch (error) {
