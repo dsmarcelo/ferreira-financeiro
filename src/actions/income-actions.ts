@@ -158,11 +158,19 @@ export async function actionUpdateIncome(
   const time = formData.get("time");
   const valueStr = formData.get("value");
   const profitMarginStr = formData.get("profitMargin");
+  const discountTypeRaw = formData.get("discountType");
+  const discountValueStr = formData.get("discountValue");
+  const customerIdStr = formData.get("customerId");
   const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
+  const discountValue = typeof discountValueStr === "string" ? Number(discountValueStr) : undefined;
+  const customerId = typeof customerIdStr === "string" && customerIdStr.length > 0 ? Number(customerIdStr) : undefined;
+
+  const discountType: "percent" | "fixed" | undefined =
+    discountTypeRaw === "percent" || discountTypeRaw === "fixed" ? (discountTypeRaw as "percent" | "fixed") : undefined;
 
   // Validate using Zod, passing raw values
-  const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin });
+  const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin, discountType, discountValue, customerId });
   if (!result.success) {
     return {
       success: false,
@@ -185,12 +193,15 @@ export async function actionUpdateIncome(
     const dateTimeString = `${date as string}T${time as string}:00`;
     const dateTime = new Date(dateTimeString);
 
-            await updateIncome(id, {
-          description: description as string,
-          dateTime: dateTime,
-          value: value.toFixed(2),
-          profitMargin: profitMargin?.toFixed(2) ?? "0",
-        });
+    await updateIncome(id, {
+      description: description as string,
+      dateTime: dateTime,
+      value: value.toFixed(2),
+      profitMargin: profitMargin?.toFixed(2) ?? "0",
+      discountType,
+      discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
+      customerId,
+    });
     revalidatePath("/caixa");
     return { success: true, message: "Receita atualizada com sucesso!" };
   } catch (error) {

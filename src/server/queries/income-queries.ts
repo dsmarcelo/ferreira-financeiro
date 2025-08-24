@@ -196,3 +196,17 @@ export async function createIncomeWithItems(
     return created;
   });
 }
+
+// List items sold for a specific income (with product name)
+export async function listItemsForIncome(incomeId: number) {
+  return db
+    .select({
+      productId: incomeItem.productId,
+      quantity: incomeItem.quantity,
+      unitPrice: incomeItem.unitPrice,
+      name: products.name,
+    })
+    .from(incomeItem)
+    .leftJoin(products, eq(products.id, incomeItem.productId))
+    .where(eq(incomeItem.incomeId, incomeId));
+}

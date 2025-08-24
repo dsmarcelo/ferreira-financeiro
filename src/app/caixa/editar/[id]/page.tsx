@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getIncomeById } from "@/server/queries/income-queries";
+import { getIncomeById, listItemsForIncome } from "@/server/queries/income-queries";
 import EditIncomeForm from "@/app/_components/forms/edit-income-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -38,14 +38,14 @@ export default async function EditIncomePage({ params }: { params: Promise<{ id:
     return <p className="text-center text-4xl font-bold mt-12">Receita não encontrada</p>;
   }
 
+  const items = await listItemsForIncome(income.id);
+
   return (
     <div className="">
       <SubPageHeader title="Editar Entrada" />
       <div className="mx-auto mt-4 container max-w-3xl px-5">
         <Suspense fallback={<LoadingSkeleton />}>
-          <EditIncomeForm
-            income={income}
-          />
+          <EditIncomeForm income={income} items={items} />
         </Suspense>
       </div>
     </div>
