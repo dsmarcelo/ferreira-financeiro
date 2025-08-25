@@ -8,6 +8,9 @@ import {
 } from "@/actions/income-actions";
 import { Label } from "@/components/ui/label";
 import CurrencyInput from "@/components/inputs/currency-input";
+import DiscountSelect, {
+  type DiscountType,
+} from "@/app/_components/inputs/discount-select";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { DatePicker } from "@/components/inputs/date-picker";
@@ -48,11 +51,19 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     initialState,
   );
 
-  const [products, setProducts] = useState<Array<{ id: number; name: string; price: string; quantity: number }>>([]);
-  const [selected, setSelected] = useState<Record<number, { quantity: number; unitPrice: number }>>({});
-  const [discountType, setDiscountType] = useState<"percent" | "fixed" | "">("");
-  const [discountValue, setDiscountValue] = useState<string>("0");
-  const [customers, setCustomers] = useState<Array<{ id: number; name: string }>>([]);
+  const [products, setProducts] = useState<
+    Array<{ id: number; name: string; price: string; quantity: number }>
+  >([]);
+  const [selected, setSelected] = useState<
+    Record<number, { quantity: number; unitPrice: number }>
+  >({});
+  const [discountType, setDiscountType] = useState<DiscountType | "">("");
+  const [discountValue, setDiscountValue] = useState<number | undefined>(
+    undefined,
+  );
+  const [customers, setCustomers] = useState<
+    Array<{ id: number; name: string }>
+  >([]);
   const [customerId, setCustomerId] = useState<string>("");
   const [addCustomerOpen, setAddCustomerOpen] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState("");
@@ -80,15 +91,15 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   const errors = state?.errors ?? {};
 
   // Get today's date and current time in local timezone
-  const today = new Date().toLocaleDateString('en-CA', {
-    timeZone: 'America/Sao_Paulo'
+  const today = new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/Sao_Paulo",
   });
 
-  const currentTime = new Date().toLocaleTimeString('pt-BR', {
+  const currentTime = new Date().toLocaleTimeString("pt-BR", {
     hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'America/Sao_Paulo'
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
   });
 
   useEffect(() => {
@@ -106,12 +117,19 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
               if (typeof obj.name === "string") name = obj.name;
               let price = "0";
               if (typeof obj.price === "string") price = obj.price;
-              else if (typeof obj.price === "number") price = obj.price.toFixed(2);
-              const quantity = typeof obj.quantity === "number" ? obj.quantity : Number(obj.quantity ?? 0);
+              else if (typeof obj.price === "number")
+                price = obj.price.toFixed(2);
+              const quantity =
+                typeof obj.quantity === "number"
+                  ? obj.quantity
+                  : Number(obj.quantity ?? 0);
               return { id, name, price, quantity };
             })
             .filter(
-              (p) => Number.isFinite(p.id) && p.name.length > 0 && Number.isFinite(p.quantity),
+              (p) =>
+                Number.isFinite(p.id) &&
+                p.name.length > 0 &&
+                Number.isFinite(p.quantity),
             );
           setProducts(safe);
         } else {
@@ -134,7 +152,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     })();
   }, []);
 
-    // Load saved product selections from localStorage
+  // Load saved product selections from localStorage
   useEffect(() => {
     const savedSelection = localStorage.getItem("income-selected-products");
 
@@ -142,13 +160,22 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
       try {
         const parsed = JSON.parse(savedSelection) as unknown;
         if (parsed && typeof parsed === "object") {
-          const validSelection: Record<number, { quantity: number; unitPrice: number }> = {};
+          const validSelection: Record<
+            number,
+            { quantity: number; unitPrice: number }
+          > = {};
           for (const [key, value] of Object.entries(parsed)) {
             const productId = Number(key);
-            if (Number.isFinite(productId) && value && typeof value === "object") {
+            if (
+              Number.isFinite(productId) &&
+              value &&
+              typeof value === "object"
+            ) {
               const obj = value as Record<string, unknown>;
-              const quantity = typeof obj.quantity === "number" ? obj.quantity : 0;
-              const unitPrice = typeof obj.unitPrice === "number" ? obj.unitPrice : 0;
+              const quantity =
+                typeof obj.quantity === "number" ? obj.quantity : 0;
+              const unitPrice =
+                typeof obj.unitPrice === "number" ? obj.unitPrice : 0;
               if (quantity > 0) {
                 validSelection[productId] = { quantity, unitPrice };
               }
@@ -169,8 +196,8 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   }, [selected]);
 
   const discountAmount = useMemo(() => {
-    const dv = Number(discountValue || 0);
-    if (discountType === "percent") return (itemsTotal * dv) / 100;
+    const dv = discountValue ?? 0;
+    if (discountType === "percentage") return (itemsTotal * dv) / 100;
     if (discountType === "fixed") return dv;
     return 0;
   }, [discountType, discountValue, itemsTotal]);
@@ -189,7 +216,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   }, [totalSelectedValue, extraValue]);
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="w-full space-y-4">
       <form id={id} action={formAction} className="space-y-4 text-base">
         <div className="space-y-2">
           <Label htmlFor="description">Descrição</Label>
@@ -207,39 +234,39 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
           )}
         </div>
 
-<div className="flex items-center gap-2 w-full">
-        <div className="space-y-2">
-          <Label htmlFor="date">Data</Label>
-          <DatePicker
-            id="date"
-            name="date"
-            required
-            defaultValue={today}
-            className="w-fit"
-          />
-          {errors.date && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.date?.[0]}
-            </p>
-          )}
-        </div>
+        <div className="flex w-full items-center gap-2">
+          <div className="space-y-2">
+            <Label htmlFor="date">Data</Label>
+            <DatePicker
+              id="date"
+              name="date"
+              required
+              defaultValue={today}
+              className="w-fit"
+            />
+            {errors.date && (
+              <p className="mt-1 text-sm text-red-500" aria-live="polite">
+                {errors.date?.[0]}
+              </p>
+            )}
+          </div>
 
-        <div className="space-y-2 w-full">
-          <Label htmlFor="time">Hora</Label>
-          <input
-            id="time"
-            name="time"
-            type="time"
-            defaultValue={currentTime}
-            className="rounded-md border shadow-sm px-2 py-0 h-9 w-fit"
-            required
-          />
-          {errors.time && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.time?.[0]}
-            </p>
-          )}
-        </div>
+          <div className="w-full space-y-2">
+            <Label htmlFor="time">Hora</Label>
+            <input
+              id="time"
+              name="time"
+              type="time"
+              defaultValue={currentTime}
+              className="h-9 w-fit rounded-md border px-2 py-0 shadow-sm"
+              required
+            />
+            {errors.time && (
+              <p className="mt-1 text-sm text-red-500" aria-live="polite">
+                {errors.time?.[0]}
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -286,9 +313,11 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push('/caixa/adicionar/produtos')}
+              onClick={() => router.push("/caixa/adicionar/produtos")}
             >
-              {Object.keys(selected).length > 0 ? "Editar Produtos" : "Adicionar Produtos"}
+              {Object.keys(selected).length > 0
+                ? "Editar Produtos"
+                : "Adicionar Produtos"}
             </Button>
           </div>
 
@@ -301,7 +330,10 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
                   if (!selectedData) return null;
                   const available = p.quantity;
                   return (
-                    <div key={p.id} className="flex items-center justify-between rounded-md border p-1 px-3 bg-slate-50">
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between rounded-md border bg-slate-50 p-1 px-3"
+                    >
                       <div className="flex flex-col">
                         <div className="flex items-center">
                           <p className="font-medium">
@@ -309,14 +341,15 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
                           </p>
                         </div>
                         <span className="text-xs text-slate-500">
-                          Preço {formatCurrency(Number(selectedData.unitPrice))} • Em estoque: {available}
+                          Preço {formatCurrency(Number(selectedData.unitPrice))}{" "}
+                          • Em estoque: {available}
                         </span>
                       </div>
                     </div>
                   );
                 })}
-          </div>
-        )}
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -337,84 +370,124 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
             <SelectContent>
               <SelectItem value="__new__">Novo Cliente</SelectItem>
               {customers.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                <SelectItem key={c.id} value={String(c.id)}>
+                  {c.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-          <div className="space-y-3">
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <div className="space-y-1">
-                <Label htmlFor="discountType">Tipo de Desconto</Label>
-                <select id="discountType" name="discountType" className="w-full rounded-md border p-2" value={discountType} onChange={(e) => setDiscountType(e.target.value as "" | "percent" | "fixed")}>
-                  <option value="">Sem desconto</option>
-                  <option value="percent">Percentual (%)</option>
-                  <option value="fixed">Valor fixo</option>
-                </select>
+        <div className="space-y-3">
+          <DiscountSelect
+            name="discount"
+            discountType={discountType === "" ? "percentage" : discountType}
+            onDiscountTypeChange={(type) => setDiscountType(type)}
+            value={discountValue}
+            onValueChange={setDiscountValue}
+            placeholder="0"
+            label="Desconto"
+            showLabel={true}
+          />
+          {/* Customer selector moved outside; dialog remains here for reuse */}
+          <Dialog open={addCustomerOpen} onOpenChange={setAddCustomerOpen}>
+            <DialogContent className="sm:max-w-[420px]">
+              <DialogHeader>
+                <DialogTitle>Novo Cliente</DialogTitle>
+                <DialogDescription className="hidden" aria-hidden="true" />
+              </DialogHeader>
+              <div className="space-y-2 py-2">
+                <Label htmlFor="newCustomerName">Nome</Label>
+                <Input
+                  id="newCustomerName"
+                  value={newCustomerName}
+                  onChange={(e) => setNewCustomerName(e.target.value)}
+                  placeholder="Nome do cliente"
+                />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="discountValue">Valor do Desconto</Label>
-                <Input id="discountValue" name="discountValue" type="number" min={0} step="0.01" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} />
-              </div>
-            </div>
-            {/* Customer selector moved outside; dialog remains here for reuse */}
-            <Dialog open={addCustomerOpen} onOpenChange={setAddCustomerOpen}>
-              <DialogContent className="sm:max-w-[420px]">
-                <DialogHeader>
-                  <DialogTitle>Novo Cliente</DialogTitle>
-                  <DialogDescription className="hidden" aria-hidden="true" />
-                </DialogHeader>
-                <div className="space-y-2 py-2">
-                  <Label htmlFor="newCustomerName">Nome</Label>
-                  <Input id="newCustomerName" value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} placeholder="Nome do cliente" />
-                </div>
-                <DialogFooter className="gap-2">
-                  <DialogClose asChild>
-                    <Button type="button" variant="outline">Cancelar</Button>
-                  </DialogClose>
-                  <Button
-                    type="button"
-                    onClick={async () => {
-                      const name = newCustomerName.trim();
-                      if (!name) return;
-                      try {
-                        const res = await fetch("/api/clientes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
-                        if (!res.ok) return;
-                        const created = (await res.json()) as { id: number; name: string };
-                        setCustomers((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
-                        setCustomerId(String(created.id));
-                        setNewCustomerName("");
-                        setAddCustomerOpen(false);
-                      } catch {}
-                    }}
-                  >Salvar</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            <div className="text-sm text-slate-600">Total: <span className="font-medium">{formatCurrency(totalSelectedValue)}</span></div>
+              <DialogFooter className="gap-2">
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">
+                    Cancelar
+                  </Button>
+                </DialogClose>
+                <Button
+                  type="button"
+                  onClick={async () => {
+                    const name = newCustomerName.trim();
+                    if (!name) return;
+                    try {
+                      const res = await fetch("/api/clientes", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name }),
+                      });
+                      if (!res.ok) return;
+                      const created = (await res.json()) as {
+                        id: number;
+                        name: string;
+                      };
+                      setCustomers((prev) =>
+                        [...prev, created].sort((a, b) =>
+                          a.name.localeCompare(b.name),
+                        ),
+                      );
+                      setCustomerId(String(created.id));
+                      setNewCustomerName("");
+                      setAddCustomerOpen(false);
+                    } catch {}
+                  }}
+                >
+                  Salvar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <div className="text-sm text-slate-600">
+            Total:{" "}
+            <span className="font-medium">
+              {formatCurrency(totalSelectedValue)}
+            </span>
           </div>
+        </div>
 
-         <div className="flex flex-col gap-2">
-            <div className="text-sm text-slate-600">
-              Produtos selecionados: <span className="font-medium">{formatCurrency(totalSelectedValue)}</span>
-            </div>
-            <div className="text-sm text-slate-600">
-              Valor extra: <span className="font-medium">{formatCurrency(extraValue)}</span>
-            </div>
-            <div className="text-sm text-slate-600">
-              Lucro sobre extra ({profitMargin}%): <span className="font-medium">{formatCurrency(profitAmount)}</span>
-            </div>
-            <div className="text-base font-medium text-slate-800">
-              Total da Venda: <span className="font-bold">{formatCurrency(finalTotal)}</span>
-            </div>
-         </div>
+        <div className="flex flex-col gap-2">
+          <div className="text-sm text-slate-600">
+            Produtos selecionados:{" "}
+            <span className="font-medium">
+              {formatCurrency(totalSelectedValue)}
+            </span>
+          </div>
+          <div className="text-sm text-slate-600">
+            Valor extra:{" "}
+            <span className="font-medium">{formatCurrency(extraValue)}</span>
+          </div>
+          <div className="text-sm text-slate-600">
+            Lucro sobre extra ({profitMargin}%):{" "}
+            <span className="font-medium">{formatCurrency(profitAmount)}</span>
+          </div>
+          <div className="text-base font-medium text-slate-800">
+            Total da Venda:{" "}
+            <span className="font-bold">{formatCurrency(finalTotal)}</span>
+          </div>
+        </div>
 
         {/* Hidden inputs for form data */}
-        <input type="hidden" name="soldItemsJson" value={JSON.stringify(Object.entries(selected).map(([id, data]) => ({ productId: Number(id), quantity: data.quantity, unitPrice: data.unitPrice })))} />
+        <input
+          type="hidden"
+          name="soldItemsJson"
+          value={JSON.stringify(
+            Object.entries(selected).map(([id, data]) => ({
+              productId: Number(id),
+              quantity: data.quantity,
+              unitPrice: data.unitPrice,
+            })),
+          )}
+        />
         <input type="hidden" name="totalValue" value={finalTotal} />
         <input type="hidden" name="extraValue" value={extraValue} />
         <input type="hidden" name="customerId" value={customerId} />
+        {/* Discount data will be handled by DiscountSelect component's hidden inputs */}
 
         {!id && (
           <Button type="submit" disabled={pending} className="w-full">

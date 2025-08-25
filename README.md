@@ -155,6 +155,9 @@ Form submissions call server actions which validate inputs (Zod), call the query
 
 - Core pages in `src/app/*/page.tsx`.
 - Shared forms in `src/app/_components/forms/*` (e.g., `add-expense-form.tsx` with tabs for one-time/parcelled/recurring).
+- Shared input components in `src/app/_components/inputs/*`:
+  - `currency-input.tsx` - Currency input with formatting and validation
+  - `discount-select.tsx` - Discount selector with percentage or fixed value modes
 - Responsive drawers/sheets: `src/app/_components/responsive-sheet.tsx` and `mobile-drawer.tsx`.
 - Lists and item components render entities and actions.
 
