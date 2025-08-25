@@ -203,7 +203,7 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
               <SelectValue placeholder="Sem desconto" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Sem desconto</SelectItem>
+              <SelectItem value="_none_">Sem desconto</SelectItem>
               <SelectItem value="percent">Percentual (%)</SelectItem>
               <SelectItem value="fixed">Valor fixo</SelectItem>
             </SelectContent>
@@ -252,7 +252,7 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
               <SelectValue placeholder="Selecione um cliente" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Sem cliente</SelectItem>
+              <SelectItem value="_none_">Sem cliente</SelectItem>
               <SelectItem value="__new__">Novo Cliente</SelectItem>
               {customers.map((c) => (
                 <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>

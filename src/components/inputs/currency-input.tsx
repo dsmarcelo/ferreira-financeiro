@@ -65,7 +65,7 @@ export default function CurrencyInput({
             name={`${name}-formatted`}
             placeholder={placeholder ?? "R$ 0,00"}
             className={cn(
-              "border-input focus-visible:border-primary bg-background placeholder:text-muted-foreground h-9 w-full rounded-md border px-2 text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:border focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+              "border-input shadow-xs focus-visible:border-primary bg-background placeholder:text-muted-foreground h-9 w-full rounded-md border px-2 text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:border focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
               className,
             )}
             disabled={disabled}

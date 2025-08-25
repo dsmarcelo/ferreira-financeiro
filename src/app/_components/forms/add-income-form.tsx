@@ -189,8 +189,8 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   }, [totalSelectedValue, extraValue]);
 
   return (
-    <div className="space-y-4">
-      <form id={id} action={formAction} className="space-y-4">
+    <div className="space-y-4 w-full">
+      <form id={id} action={formAction} className="space-y-4 text-base">
         <div className="space-y-2">
           <Label htmlFor="description">Descrição</Label>
           <Input
@@ -207,6 +207,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
           )}
         </div>
 
+<div className="flex items-center gap-2 w-full">
         <div className="space-y-2">
           <Label htmlFor="date">Data</Label>
           <DatePicker
@@ -214,6 +215,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
             name="date"
             required
             defaultValue={today}
+            className="w-fit"
           />
           {errors.date && (
             <p className="mt-1 text-sm text-red-500" aria-live="polite">
@@ -222,14 +224,14 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 w-full">
           <Label htmlFor="time">Hora</Label>
-          <Input
+          <input
             id="time"
             name="time"
             type="time"
             defaultValue={currentTime}
-            className="rounded-md"
+            className="rounded-md border shadow-sm px-2 py-0 h-9 w-fit"
             required
           />
           {errors.time && (
@@ -237,6 +239,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
               {errors.time?.[0]}
             </p>
           )}
+        </div>
         </div>
 
         <div className="space-y-2">
@@ -285,21 +288,35 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
               variant="outline"
               onClick={() => router.push('/caixa/adicionar/produtos')}
             >
-              Adicionar Produtos
+              {Object.keys(selected).length > 0 ? "Editar Produtos" : "Adicionar Produtos"}
             </Button>
           </div>
-          <div className="text-sm text-slate-600">
-            Produtos selecionados: <span className="font-medium">{formatCurrency(totalSelectedValue)}</span>
+
+          {Object.keys(selected).length > 0 && (
+            <div className="grid grid-cols-1 gap-2">
+              {products
+                .filter((p) => selected[p.id] && selected[p.id]!.quantity > 0)
+                .map((p) => {
+                  const selectedData = selected[p.id];
+                  if (!selectedData) return null;
+                  const available = p.quantity;
+                  return (
+                    <div key={p.id} className="flex items-center justify-between rounded-md border p-1 px-3 bg-slate-50">
+                      <div className="flex flex-col">
+                        <div className="flex items-center">
+                          <p className="font-medium">
+                            {selectedData.quantity} x {p.name}
+                          </p>
+                        </div>
+                        <span className="text-xs text-slate-500">
+                          Preço {formatCurrency(Number(selectedData.unitPrice))} • Em estoque: {available}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
           </div>
-          <div className="text-sm text-slate-600">
-            Valor extra: <span className="font-medium">{formatCurrency(extraValue)}</span>
-          </div>
-          <div className="text-sm text-slate-600">
-            Lucro sobre extra ({profitMargin}%): <span className="font-medium">{formatCurrency(profitAmount)}</span>
-          </div>
-          <div className="text-sm font-medium text-slate-800">
-            Total da Receita: <span className="font-bold">{formatCurrency(finalTotal)}</span>
-          </div>
+        )}
         </div>
 
         <div className="space-y-2">
@@ -326,33 +343,8 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
           </Select>
         </div>
 
-                {Object.keys(selected).length > 0 && (
           <div className="space-y-3">
-            <Label>Produtos selecionados</Label>
-            <div className="grid grid-cols-1 gap-2">
-              {products
-                .filter((p) => selected[p.id] && selected[p.id]!.quantity > 0)
-                .map((p) => {
-                  const selectedData = selected[p.id];
-                  if (!selectedData) return null;
-                  const available = p.quantity;
-                  return (
-                    <div key={p.id} className="flex items-center justify-between rounded-md border p-1 px-3 bg-slate-50">
-                      <div className="flex flex-col">
-                        <div className="flex items-center">
-                          <p className="font-medium">
-                            {selectedData.quantity} x {p.name}
-                          </p>
-                        </div>
-                        <span className="text-xs text-slate-500">
-                          Preço {formatCurrency(Number(selectedData.unitPrice))} • Em estoque: {available}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="discountType">Tipo de Desconto</Label>
                 <select id="discountType" name="discountType" className="w-full rounded-md border p-2" value={discountType} onChange={(e) => setDiscountType(e.target.value as "" | "percent" | "fixed")}>
@@ -402,7 +394,21 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
             </Dialog>
             <div className="text-sm text-slate-600">Total: <span className="font-medium">{formatCurrency(totalSelectedValue)}</span></div>
           </div>
-        )}
+
+         <div className="flex flex-col gap-2">
+            <div className="text-sm text-slate-600">
+              Produtos selecionados: <span className="font-medium">{formatCurrency(totalSelectedValue)}</span>
+            </div>
+            <div className="text-sm text-slate-600">
+              Valor extra: <span className="font-medium">{formatCurrency(extraValue)}</span>
+            </div>
+            <div className="text-sm text-slate-600">
+              Lucro sobre extra ({profitMargin}%): <span className="font-medium">{formatCurrency(profitAmount)}</span>
+            </div>
+            <div className="text-base font-medium text-slate-800">
+              Total da Venda: <span className="font-bold">{formatCurrency(finalTotal)}</span>
+            </div>
+         </div>
 
         {/* Hidden inputs for form data */}
         <input type="hidden" name="soldItemsJson" value={JSON.stringify(Object.entries(selected).map(([id, data]) => ({ productId: Number(id), quantity: data.quantity, unitPrice: data.unitPrice })))} />
