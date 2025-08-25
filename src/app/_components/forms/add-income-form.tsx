@@ -53,7 +53,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   const [products, setProducts] = useState<
     Array<{ id: number; name: string; price: string; quantity: number }>
   >([]);
-  const [selected, setSelected] = useState<
+  const [selected] = useState<
     Record<number, { quantity: number; unitPrice: number }>
   >({});
   const [discountType, setDiscountType] = useState<DiscountType | "">("");
@@ -76,9 +76,6 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   useEffect(() => {
     if (state.success === true && state.message) {
       toast.success(state.message);
-      // Clear localStorage on successful submission
-      localStorage.removeItem("income-selected-products");
-      localStorage.removeItem("add-income-form-draft");
 
       if (onSuccess) {
         onSuccess();
@@ -111,57 +108,6 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     if (!timeStr) setTimeStr(currentTime);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Load persisted draft
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("add-income-form-draft");
-      if (!raw) return;
-      const draft = JSON.parse(raw) as Record<string, unknown>;
-      if (typeof draft.description === "string")
-        setDescription(draft.description);
-      if (typeof draft.dateStr === "string") setDateStr(draft.dateStr);
-      if (typeof draft.timeStr === "string") setTimeStr(draft.timeStr);
-      if (typeof draft.extraValue === "number") setExtraValue(draft.extraValue);
-      if (typeof draft.profitMargin === "number")
-        setProfitMargin(draft.profitMargin);
-      if (
-        draft.discountType === "percentage" ||
-        draft.discountType === "fixed" ||
-        draft.discountType === ""
-      )
-        setDiscountType(draft.discountType as DiscountType | "");
-      if (typeof draft.discountValue === "number")
-        setDiscountValue(draft.discountValue);
-      if (typeof draft.customerId === "string") setCustomerId(draft.customerId);
-    } catch {}
-  }, []);
-
-  // Persist draft on change
-  useEffect(() => {
-    try {
-      const draft = {
-        description,
-        dateStr,
-        timeStr,
-        extraValue,
-        profitMargin,
-        discountType,
-        discountValue,
-        customerId,
-      };
-      localStorage.setItem("add-income-form-draft", JSON.stringify(draft));
-    } catch {}
-  }, [
-    description,
-    dateStr,
-    timeStr,
-    extraValue,
-    profitMargin,
-    discountType,
-    discountValue,
-    customerId,
-  ]);
 
   useEffect(() => {
     void (async () => {
@@ -211,41 +157,6 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
         if (Array.isArray(list)) setCustomers(list);
       } catch {}
     })();
-  }, []);
-
-  // Load saved product selections from localStorage
-  useEffect(() => {
-    const savedSelection = localStorage.getItem("income-selected-products");
-
-    if (savedSelection) {
-      try {
-        const parsed = JSON.parse(savedSelection) as unknown;
-        if (parsed && typeof parsed === "object") {
-          const validSelection: Record<
-            number,
-            { quantity: number; unitPrice: number }
-          > = {};
-          for (const [key, value] of Object.entries(parsed)) {
-            const productId = Number(key);
-            if (
-              Number.isFinite(productId) &&
-              value &&
-              typeof value === "object"
-            ) {
-              const obj = value as Record<string, unknown>;
-              const quantity =
-                typeof obj.quantity === "number" ? obj.quantity : 0;
-              const unitPrice =
-                typeof obj.unitPrice === "number" ? obj.unitPrice : 0;
-              if (quantity > 0) {
-                validSelection[productId] = { quantity, unitPrice };
-              }
-            }
-          }
-          setSelected(validSelection);
-        }
-      } catch {}
-    }
   }, []);
 
   const itemsTotal = useMemo(() => {
@@ -305,6 +216,8 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
               name="date"
               required
               defaultValue={today}
+              value={dateStr}
+              onChange={(d) => setDateStr(d ?? "")}
               className="w-fit"
             />
             {errors.date && (
@@ -320,7 +233,8 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
               id="time"
               name="time"
               type="time"
-              defaultValue={currentTime}
+              value={timeStr}
+              onChange={(e) => setTimeStr(e.target.value)}
               className="h-9 w-fit rounded-md border px-2 py-0 shadow-sm"
               required
             />
