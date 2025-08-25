@@ -24,7 +24,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -69,6 +68,9 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   const [newCustomerName, setNewCustomerName] = useState("");
   const [extraValue, setExtraValue] = useState<number>(0);
   const [profitMargin, setProfitMargin] = useState<number>(28);
+  const [dateStr, setDateStr] = useState<string>("");
+  const [timeStr, setTimeStr] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
 
   // Handle success/error toasts and navigation
   useEffect(() => {
@@ -76,6 +78,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
       toast.success(state.message);
       // Clear localStorage on successful submission
       localStorage.removeItem("income-selected-products");
+      localStorage.removeItem("add-income-form-draft");
 
       if (onSuccess) {
         onSuccess();
@@ -101,6 +104,64 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     minute: "2-digit",
     timeZone: "America/Sao_Paulo",
   });
+
+  // Initialize default date/time on first render
+  useEffect(() => {
+    if (!dateStr) setDateStr(today);
+    if (!timeStr) setTimeStr(currentTime);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Load persisted draft
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("add-income-form-draft");
+      if (!raw) return;
+      const draft = JSON.parse(raw) as Record<string, unknown>;
+      if (typeof draft.description === "string")
+        setDescription(draft.description);
+      if (typeof draft.dateStr === "string") setDateStr(draft.dateStr);
+      if (typeof draft.timeStr === "string") setTimeStr(draft.timeStr);
+      if (typeof draft.extraValue === "number") setExtraValue(draft.extraValue);
+      if (typeof draft.profitMargin === "number")
+        setProfitMargin(draft.profitMargin);
+      if (
+        draft.discountType === "percentage" ||
+        draft.discountType === "fixed" ||
+        draft.discountType === ""
+      )
+        setDiscountType(draft.discountType as DiscountType | "");
+      if (typeof draft.discountValue === "number")
+        setDiscountValue(draft.discountValue);
+      if (typeof draft.customerId === "string") setCustomerId(draft.customerId);
+    } catch {}
+  }, []);
+
+  // Persist draft on change
+  useEffect(() => {
+    try {
+      const draft = {
+        description,
+        dateStr,
+        timeStr,
+        extraValue,
+        profitMargin,
+        discountType,
+        discountValue,
+        customerId,
+      };
+      localStorage.setItem("add-income-form-draft", JSON.stringify(draft));
+    } catch {}
+  }, [
+    description,
+    dateStr,
+    timeStr,
+    extraValue,
+    profitMargin,
+    discountType,
+    discountValue,
+    customerId,
+  ]);
 
   useEffect(() => {
     void (async () => {
@@ -226,6 +287,8 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
             type="text"
             placeholder="Descrição da receita"
             required
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
           />
           {errors.description && (
             <p className="mt-1 text-sm text-red-500" aria-live="polite">
