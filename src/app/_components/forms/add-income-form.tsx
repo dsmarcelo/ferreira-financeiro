@@ -53,7 +53,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   const [products, setProducts] = useState<
     Array<{ id: number; name: string; price: string; quantity: number }>
   >([]);
-  const [selected] = useState<
+  const [selected, setSelected] = useState<
     Record<number, { quantity: number; unitPrice: number }>
   >({});
   const [discountType, setDiscountType] = useState<DiscountType | "">("");
@@ -102,12 +102,122 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     timeZone: "America/Sao_Paulo",
   });
 
-  // Initialize default date/time on first render
+  // Load persisted form state from localStorage (and set sensible defaults)
   useEffect(() => {
-    if (!dateStr) setDateStr(today);
-    if (!timeStr) setTimeStr(currentTime);
+    try {
+      const savedDescription = localStorage.getItem("income-form-description");
+      const savedDate = localStorage.getItem("income-form-date");
+      const savedTime = localStorage.getItem("income-form-time");
+      const savedExtra = localStorage.getItem("income-form-extraValue");
+      const savedProfit = localStorage.getItem("income-form-profitMargin");
+      const savedDiscountType = localStorage.getItem(
+        "income-form-discountType",
+      );
+      const savedDiscountValue = localStorage.getItem(
+        "income-form-discountValue",
+      );
+      const savedCustomerId = localStorage.getItem("income-form-customerId");
+
+      if (savedDescription !== null) setDescription(savedDescription);
+      // Defaults to today/current time if nothing saved
+      setDateStr(savedDate ?? today);
+      setTimeStr(savedTime ?? currentTime);
+      if (savedExtra !== null) setExtraValue(Number(savedExtra) || 0);
+      if (savedProfit !== null) setProfitMargin(Number(savedProfit) || 0);
+      if (savedDiscountType === "percentage" || savedDiscountType === "fixed") {
+        setDiscountType(savedDiscountType);
+      }
+      if (savedDiscountValue !== null)
+        setDiscountValue(
+          savedDiscountValue === "" ? undefined : Number(savedDiscountValue),
+        );
+      if (savedCustomerId !== null) setCustomerId(savedCustomerId);
+
+      // Load previously selected products for summary and submission
+      const savedSelection = localStorage.getItem("income-selected-products");
+      if (savedSelection) {
+        try {
+          const parsed = JSON.parse(savedSelection) as unknown;
+          if (parsed && typeof parsed === "object") {
+            const validSelection: Record<
+              number,
+              { quantity: number; unitPrice: number }
+            > = {};
+            for (const [key, value] of Object.entries(
+              parsed as Record<string, unknown>,
+            )) {
+              const productId = Number(key);
+              if (
+                Number.isFinite(productId) &&
+                value &&
+                typeof value === "object"
+              ) {
+                const obj = value as Record<string, unknown>;
+                const quantity =
+                  typeof obj.quantity === "number" ? obj.quantity : 0;
+                const unitPrice =
+                  typeof obj.unitPrice === "number" ? obj.unitPrice : 0;
+                if (quantity > 0)
+                  validSelection[productId] = { quantity, unitPrice };
+              }
+            }
+            setSelected(validSelection);
+          }
+        } catch {}
+      }
+    } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Persist form state to localStorage on changes
+  useEffect(() => {
+    try {
+      localStorage.setItem("income-form-description", description);
+    } catch {}
+  }, [description]);
+  useEffect(() => {
+    try {
+      localStorage.setItem("income-form-date", dateStr);
+    } catch {}
+  }, [dateStr]);
+  useEffect(() => {
+    try {
+      localStorage.setItem("income-form-time", timeStr);
+    } catch {}
+  }, [timeStr]);
+  useEffect(() => {
+    try {
+      localStorage.setItem("income-form-extraValue", String(extraValue));
+    } catch {}
+  }, [extraValue]);
+  useEffect(() => {
+    try {
+      localStorage.setItem("income-form-profitMargin", String(profitMargin));
+    } catch {}
+  }, [profitMargin]);
+  useEffect(() => {
+    try {
+      if (discountType)
+        localStorage.setItem("income-form-discountType", discountType);
+      else localStorage.removeItem("income-form-discountType");
+    } catch {}
+  }, [discountType]);
+  useEffect(() => {
+    try {
+      if (discountValue === undefined)
+        localStorage.removeItem("income-form-discountValue");
+      else
+        localStorage.setItem(
+          "income-form-discountValue",
+          String(discountValue),
+        );
+    } catch {}
+  }, [discountValue]);
+  useEffect(() => {
+    try {
+      localStorage.setItem("income-form-customerId", customerId);
+    } catch {}
+  }, [customerId]);
 
   useEffect(() => {
     void (async () => {
@@ -187,6 +297,23 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     return totalSelectedValue + extraValue;
   }, [totalSelectedValue, extraValue]);
 
+  // Clear persisted state after successful submission
+  useEffect(() => {
+    if (state.success === true) {
+      try {
+        localStorage.removeItem("income-form-description");
+        localStorage.removeItem("income-form-date");
+        localStorage.removeItem("income-form-time");
+        localStorage.removeItem("income-form-extraValue");
+        localStorage.removeItem("income-form-profitMargin");
+        localStorage.removeItem("income-form-discountType");
+        localStorage.removeItem("income-form-discountValue");
+        localStorage.removeItem("income-form-customerId");
+        localStorage.removeItem("income-selected-products");
+      } catch {}
+    }
+  }, [state.success]);
+
   return (
     <div className="w-full space-y-4">
       <form id={id} action={formAction} className="space-y-4 text-base">
@@ -235,7 +362,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
               type="time"
               value={timeStr}
               onChange={(e) => setTimeStr(e.target.value)}
-              className="h-9 w-fit rounded-md border px-2 py-0 shadow-sm"
+              className="border-input shadow-xs h-9 w-fit rounded-md border px-2 py-0"
               required
             />
             {errors.time && (
