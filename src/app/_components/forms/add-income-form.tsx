@@ -21,7 +21,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -326,7 +325,42 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
           </Select>
         </div>
 
-                {Object.keys(selected).length > 0 && (
+        {/* Add Customer Dialog - Always available */}
+        <Dialog open={addCustomerOpen} onOpenChange={setAddCustomerOpen}>
+          <DialogContent className="sm:max-w-[420px]">
+            <DialogHeader>
+              <DialogTitle>Novo Cliente</DialogTitle>
+              <DialogDescription className="hidden" aria-hidden="true" />
+            </DialogHeader>
+            <div className="space-y-2 py-2">
+              <Label htmlFor="newCustomerName">Nome</Label>
+              <Input id="newCustomerName" value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} placeholder="Nome do cliente" />
+            </div>
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Cancelar</Button>
+              </DialogClose>
+              <Button
+                type="button"
+                onClick={async () => {
+                  const name = newCustomerName.trim();
+                  if (!name) return;
+                  try {
+                    const res = await fetch("/api/clientes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
+                    if (!res.ok) return;
+                    const created = (await res.json()) as { id: number; name: string };
+                    setCustomers((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+                    setCustomerId(String(created.id));
+                    setNewCustomerName("");
+                    setAddCustomerOpen(false);
+                  } catch {}
+                }}
+              >Salvar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {Object.keys(selected).length > 0 && (
           <div className="space-y-3">
             <Label>Produtos selecionados</Label>
             <div className="grid grid-cols-1 gap-2">
@@ -366,40 +400,6 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
                 <Input id="discountValue" name="discountValue" type="number" min={0} step="0.01" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} />
               </div>
             </div>
-            {/* Customer selector moved outside; dialog remains here for reuse */}
-            <Dialog open={addCustomerOpen} onOpenChange={setAddCustomerOpen}>
-              <DialogContent className="sm:max-w-[420px]">
-                <DialogHeader>
-                  <DialogTitle>Novo Cliente</DialogTitle>
-                  <DialogDescription className="hidden" aria-hidden="true" />
-                </DialogHeader>
-                <div className="space-y-2 py-2">
-                  <Label htmlFor="newCustomerName">Nome</Label>
-                  <Input id="newCustomerName" value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} placeholder="Nome do cliente" />
-                </div>
-                <DialogFooter className="gap-2">
-                  <DialogClose asChild>
-                    <Button type="button" variant="outline">Cancelar</Button>
-                  </DialogClose>
-                  <Button
-                    type="button"
-                    onClick={async () => {
-                      const name = newCustomerName.trim();
-                      if (!name) return;
-                      try {
-                        const res = await fetch("/api/clientes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
-                        if (!res.ok) return;
-                        const created = (await res.json()) as { id: number; name: string };
-                        setCustomers((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
-                        setCustomerId(String(created.id));
-                        setNewCustomerName("");
-                        setAddCustomerOpen(false);
-                      } catch {}
-                    }}
-                  >Salvar</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
             <div className="text-sm text-slate-600">Total: <span className="font-medium">{formatCurrency(totalSelectedValue)}</span></div>
           </div>
         )}
