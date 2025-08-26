@@ -39,26 +39,27 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   const incomeForm = useIncomeFormStore();
   const { products, customers, createCustomer } = useIncomeData();
 
-  // Ensure we only render selects after Zustand store has rehydrated
+  // Wait for hydration to complete before rendering selects
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
-    const unsubHydrate = useIncomeFormStore.persist.onHydrate(() =>
-      setHydrated(false),
-    );
-    const unsubFinishHydration = useIncomeFormStore.persist.onFinishHydration(
-      () => setHydrated(true),
-    );
-    setHydrated(useIncomeFormStore.persist.hasHydrated());
-    return () => {
-      unsubHydrate();
-      unsubFinishHydration();
-    };
+    // Use a simple timeout to ensure hydration is complete
+    const timer = setTimeout(() => setHydrated(true), 50);
+    return () => clearTimeout(timer);
   }, []);
+
+  // Prevent state updates during form submission to avoid infinite loops
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Handle form submission to prevent infinite loops
+  const handleFormSubmit = () => {
+    setIsSubmitting(true);
+  };
 
   // Handle success/error toasts and navigation
   useEffect(() => {
     if (state.success === true && state.message) {
       toast.success(state.message);
+      setIsSubmitting(false);
 
       if (onSuccess) {
         onSuccess();
@@ -67,6 +68,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
       }
     } else if (state.success === false && state.message) {
       toast.error(state.message);
+      setIsSubmitting(false);
     }
   }, [state, onSuccess, router]);
 
@@ -115,7 +117,12 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
 
   return (
     <div className="w-full space-y-4">
-      <form id={id} action={formAction} className="space-y-4 text-base">
+      <form
+        id={id}
+        action={formAction}
+        onSubmit={handleFormSubmit}
+        className="space-y-4 text-base"
+      >
         <IncomeBasicFields
           description={incomeForm.description}
           dateStr={incomeForm.dateStr}
@@ -141,6 +148,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
             customerId={incomeForm.customerId}
             onCustomerIdChange={incomeForm.setCustomerId}
             onCustomerCreate={createCustomer}
+            disabled={isSubmitting}
           />
         )}
 
@@ -151,6 +159,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
             totalSelectedValue={totalSelectedValue}
             onDiscountTypeChange={incomeForm.setDiscountType}
             onDiscountValueChange={incomeForm.setDiscountValue}
+            disabled={isSubmitting}
           />
         )}
 

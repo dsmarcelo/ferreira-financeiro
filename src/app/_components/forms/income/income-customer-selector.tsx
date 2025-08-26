@@ -25,6 +25,7 @@ interface IncomeCustomerSelectorProps {
   customerId: string;
   onCustomerIdChange: (value: string) => void;
   onCustomerCreate: (name: string) => Promise<Customer | null>;
+  disabled?: boolean;
 }
 
 export function IncomeCustomerSelector({
@@ -32,6 +33,7 @@ export function IncomeCustomerSelector({
   customerId,
   onCustomerIdChange,
   onCustomerCreate,
+  disabled = false,
 }: IncomeCustomerSelectorProps) {
   const [addCustomerOpen, setAddCustomerOpen] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState("");
@@ -60,8 +62,10 @@ export function IncomeCustomerSelector({
     <div className="space-y-2">
       <Label htmlFor="customerId">Cliente</Label>
       <Select
+        key={customerId ? "has-value" : "no-value"}
         value={customerId && customerId.length > 0 ? customerId : undefined}
         onValueChange={handleCustomerSelect}
+        disabled={disabled}
       >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Selecione um cliente" />

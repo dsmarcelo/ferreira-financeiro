@@ -9,6 +9,7 @@ interface IncomeDiscountSectionProps {
   totalSelectedValue: number;
   onDiscountTypeChange: (type: DiscountType) => void;
   onDiscountValueChange: (value: number | undefined) => void;
+  disabled?: boolean;
 }
 
 export function IncomeDiscountSection({
@@ -17,6 +18,7 @@ export function IncomeDiscountSection({
   totalSelectedValue,
   onDiscountTypeChange,
   onDiscountValueChange,
+  disabled = false,
 }: IncomeDiscountSectionProps) {
   return (
     <div className="space-y-3">
@@ -29,6 +31,7 @@ export function IncomeDiscountSection({
         placeholder="0"
         label="Desconto"
         showLabel={true}
+        disabled={disabled}
       />
 
       <div className="text-sm text-slate-600">

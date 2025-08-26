@@ -132,6 +132,7 @@ export default function DiscountSelect({
 
       <div className="flex gap-3">
         <Select
+          key={`discount-${effectiveType}`}
           value={effectiveType}
           onValueChange={handleTypeChange}
           disabled={disabled}
