@@ -15,6 +15,8 @@ export interface IncomeFormData {
 }
 
 interface IncomeFormStore extends IncomeFormData {
+  // Hydration flag for persisted store
+  hasHydrated: boolean;
   // Setters
   setDescription: (value: string) => void;
   setDateStr: (value: string) => void;
@@ -60,6 +62,7 @@ export const useIncomeFormStore = create<IncomeFormStore>()(
   persist(
     (set, _get) => ({
       ...getDefaultValues(),
+      hasHydrated: false,
 
       setDescription: (value) => set({ description: value }),
       setDateStr: (value) => set({ dateStr: value }),
@@ -92,6 +95,12 @@ export const useIncomeFormStore = create<IncomeFormStore>()(
         customerId: state.customerId,
         selectedProducts: state.selectedProducts,
       }),
+      onRehydrateStorage: () => (state, _error) => {
+        // Mark store as hydrated so UI can safely read persisted values
+        if (state) {
+          state.hasHydrated = true;
+        }
+      },
     }
   )
 );

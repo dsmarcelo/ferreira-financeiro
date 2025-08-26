@@ -155,8 +155,19 @@ export default function DiscountSelect({
         </div>
       </div>
 
-      {/* Hidden input to store the discount type for form submission */}
+      {/* Hidden inputs for form submission (server expects discountType/discountValue) */}
+      {/* Preserve legacy field names too for compatibility */}
       <input type="hidden" name={`${name}-type`} value={effectiveType} />
+      <input
+        type="hidden"
+        name="discountType"
+        value={effectiveType === "percentage" ? "percent" : "fixed"}
+      />
+      <input
+        type="hidden"
+        name="discountValue"
+        value={value === undefined ? "" : String(value)}
+      />
     </div>
   );
 }

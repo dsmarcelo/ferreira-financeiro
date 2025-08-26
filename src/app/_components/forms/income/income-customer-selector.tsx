@@ -60,7 +60,7 @@ export function IncomeCustomerSelector({
     <div className="space-y-2">
       <Label htmlFor="customerId">Cliente</Label>
       <Select
-        value={customerId || undefined}
+        value={customerId && customerId.length > 0 ? customerId : undefined}
         onValueChange={handleCustomerSelect}
       >
         <SelectTrigger className="w-full">
@@ -68,11 +68,13 @@ export function IncomeCustomerSelector({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="__new__">Novo Cliente</SelectItem>
-          {customers.map((c) => (
-            <SelectItem key={c.id} value={String(c.id)}>
-              {c.name}
-            </SelectItem>
-          ))}
+          {customers.map((c) => {
+            return (
+              <SelectItem key={c.id} value={String(c.id)}>
+                {c.name}
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
 

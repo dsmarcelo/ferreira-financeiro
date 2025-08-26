@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   actionCreateIncome,
@@ -38,6 +38,22 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   // Use Zustand store for form state
   const incomeForm = useIncomeFormStore();
   const { products, customers, createCustomer } = useIncomeData();
+
+  // Ensure we only render selects after Zustand store has rehydrated
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    const unsubHydrate = useIncomeFormStore.persist.onHydrate(() =>
+      setHydrated(false),
+    );
+    const unsubFinishHydration = useIncomeFormStore.persist.onFinishHydration(
+      () => setHydrated(true),
+    );
+    setHydrated(useIncomeFormStore.persist.hasHydrated());
+    return () => {
+      unsubHydrate();
+      unsubFinishHydration();
+    };
+  }, []);
 
   // Handle success/error toasts and navigation
   useEffect(() => {
@@ -119,20 +135,24 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
           selectedProducts={incomeForm.selectedProducts}
         />
 
-        <IncomeCustomerSelector
-          customers={customers}
-          customerId={incomeForm.customerId}
-          onCustomerIdChange={incomeForm.setCustomerId}
-          onCustomerCreate={createCustomer}
-        />
+        {hydrated && (
+          <IncomeCustomerSelector
+            customers={customers}
+            customerId={incomeForm.customerId}
+            onCustomerIdChange={incomeForm.setCustomerId}
+            onCustomerCreate={createCustomer}
+          />
+        )}
 
-        <IncomeDiscountSection
-          discountType={incomeForm.discountType}
-          discountValue={incomeForm.discountValue}
-          totalSelectedValue={totalSelectedValue}
-          onDiscountTypeChange={incomeForm.setDiscountType}
-          onDiscountValueChange={incomeForm.setDiscountValue}
-        />
+        {hydrated && (
+          <IncomeDiscountSection
+            discountType={incomeForm.discountType}
+            discountValue={incomeForm.discountValue}
+            totalSelectedValue={totalSelectedValue}
+            onDiscountTypeChange={incomeForm.setDiscountType}
+            onDiscountValueChange={incomeForm.setDiscountValue}
+          />
+        )}
 
         <IncomeSummary
           totalSelectedValue={totalSelectedValue}

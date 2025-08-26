@@ -228,7 +228,7 @@ Hook up a form in a page/component and use a server action as the form `action`.
 
 ### Income form state (Zustand)
 
-The Add Income form (`src/app/_components/forms/add-income-form.tsx`) now uses a persisted Zustand store instead of direct `localStorage`.
+The Add Income form (`src/app/_components/forms/add-income-form.tsx`) uses a persisted Zustand store instead of direct `localStorage`.
 
 - Store: `src/stores/income-form-store.ts` holds description, date/time, extra value, profit margin, discount (type/value), customer, and selected products.
 - The products page (`src/app/caixa/adicionar/produtos/page.tsx`) reads/updates `selectedProducts` via the same store.
@@ -243,13 +243,14 @@ The Add Income form has been refactored into smaller, reusable mini components f
 
 - `src/stores/income-form-store.ts` - Zustand store (persisted) for income form state
 - `src/hooks/use-income-data.ts` - Handles data fetching for products and customers
+  - The store exposes `hasHydrated` to ensure UI reads persisted values after hydration.
 
 **Mini Components (in `src/app/_components/forms/income/`):**
 
 - `income-basic-fields.tsx` - Description, date, time, extra value, profit margin fields
 - `income-product-selection.tsx` - Product selection display and navigation
 - `income-customer-selector.tsx` - Customer selection with add customer dialog
-- `income-discount-section.tsx` - Discount selection and calculation display
+- `income-discount-section.tsx` - Discount selection and calculation display (persists type/value)
 - `income-summary.tsx` - Totals calculation and display breakdown
 - `income-form-actions.tsx` - Hidden form inputs and submit button
 - `index.ts` - Clean exports for all components
@@ -262,7 +263,7 @@ The Add Income form has been refactored into smaller, reusable mini components f
 - Cleaner separation of concerns
 - Easier to debug and modify specific functionality
 
-The main `AddIncomeForm` now orchestrates these mini components while maintaining the same functionality and user experience.
+The main `AddIncomeForm` gates the Customer and Discount sections until the store has hydrated to avoid default values overwriting persisted ones. The discount component also posts `discountType`/`discountValue` fields expected by the action while preserving legacy field names for compatibility.
 
 ## Scripts
 
