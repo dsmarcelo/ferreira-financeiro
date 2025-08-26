@@ -238,6 +238,35 @@ Keys used:
 
 - `income-form-description`, `income-form-date`, `income-form-time`, `income-form-extraValue`, `income-form-profitMargin`, `income-form-discountType`, `income-form-discountValue`, `income-form-customerId`, `income-selected-products`.
 
+### Income form components refactoring
+
+The Add Income form has been refactored into smaller, reusable mini components following good code practices:
+
+**Custom Hooks:**
+
+- `src/hooks/use-income-form-persistence.ts` - Manages form state persistence to localStorage
+- `src/hooks/use-income-data.ts` - Handles data fetching for products and customers
+
+**Mini Components (in `src/app/_components/forms/income/`):**
+
+- `income-basic-fields.tsx` - Description, date, time, extra value, profit margin fields
+- `income-product-selection.tsx` - Product selection display and navigation
+- `income-customer-selector.tsx` - Customer selection with add customer dialog
+- `income-discount-section.tsx` - Discount selection and calculation display
+- `income-summary.tsx` - Totals calculation and display breakdown
+- `income-form-actions.tsx` - Hidden form inputs and submit button
+- `index.ts` - Clean exports for all components
+
+**Benefits:**
+
+- Improved maintainability with single responsibility principle
+- Better testability of individual components
+- Reusable components across different forms
+- Cleaner separation of concerns
+- Easier to debug and modify specific functionality
+
+The main `AddIncomeForm` now orchestrates these mini components while maintaining the same functionality and user experience.
+
 ## Scripts
 
 - `pnpm dev` – start app in dev mode
