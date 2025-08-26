@@ -56,7 +56,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   const [selected, setSelected] = useState<
     Record<number, { quantity: number; unitPrice: number }>
   >({});
-  const [discountType, setDiscountType] = useState<DiscountType | "">("");
+  const [discountType, setDiscountType] = useState<DiscountType>("percentage");
   const [discountValue, setDiscountValue] = useState<number | undefined>(
     undefined,
   );
@@ -71,6 +71,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   const [dateStr, setDateStr] = useState<string>("");
   const [timeStr, setTimeStr] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [customersLoaded, setCustomersLoaded] = useState(false);
 
   // Handle success/error toasts and navigation
   useEffect(() => {
@@ -116,7 +117,6 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
       const savedDiscountValue = localStorage.getItem(
         "income-form-discountValue",
       );
-      const savedCustomerId = localStorage.getItem("income-form-customerId");
 
       if (savedDescription !== null) setDescription(savedDescription);
       // Defaults to today/current time if nothing saved
@@ -124,14 +124,19 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
       setTimeStr(savedTime ?? currentTime);
       if (savedExtra !== null) setExtraValue(Number(savedExtra) || 0);
       if (savedProfit !== null) setProfitMargin(Number(savedProfit) || 0);
-      if (savedDiscountType === "percentage" || savedDiscountType === "fixed") {
-        setDiscountType(savedDiscountType);
+      // Load discount type and map legacy value "percent" to "percentage"
+      if (savedDiscountType === "fixed") {
+        setDiscountType("fixed");
+      } else if (savedDiscountType === "percent") {
+        setDiscountType("percentage");
+      } else if (savedDiscountType === "percentage") {
+        setDiscountType("percentage");
       }
+      // If savedDiscountType is null/undefined, keep the default "percentage"
       if (savedDiscountValue !== null)
         setDiscountValue(
           savedDiscountValue === "" ? undefined : Number(savedDiscountValue),
         );
-      if (savedCustomerId !== null) setCustomerId(savedCustomerId);
 
       // Load previously selected products for summary and submission
       const savedSelection = localStorage.getItem("income-selected-products");
@@ -197,9 +202,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   }, [profitMargin]);
   useEffect(() => {
     try {
-      if (discountType)
-        localStorage.setItem("income-form-discountType", discountType);
-      else localStorage.removeItem("income-form-discountType");
+      localStorage.setItem("income-form-discountType", discountType);
     } catch {}
   }, [discountType]);
   useEffect(() => {
@@ -214,10 +217,16 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     } catch {}
   }, [discountValue]);
   useEffect(() => {
-    try {
-      localStorage.setItem("income-form-customerId", customerId);
-    } catch {}
-  }, [customerId]);
+    if (customersLoaded) {
+      try {
+        if (customerId) {
+          localStorage.setItem("income-form-customerId", customerId);
+        } else {
+          localStorage.removeItem("income-form-customerId");
+        }
+      } catch {}
+    }
+  }, [customerId, customersLoaded]);
 
   useEffect(() => {
     void (async () => {
@@ -264,10 +273,27 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
         const res = await fetch("/api/clientes", { cache: "no-store" });
         if (!res.ok) return;
         const list = (await res.json()) as Array<{ id: number; name: string }>;
-        if (Array.isArray(list)) setCustomers(list);
-      } catch {}
+        if (Array.isArray(list)) {
+          setCustomers(list);
+          setCustomersLoaded(true);
+        }
+      } catch {
+        setCustomersLoaded(true); // Still mark as loaded even on error
+      }
     })();
   }, []);
+
+  // Set customer ID from localStorage only after customers are loaded
+  useEffect(() => {
+    if (customersLoaded) {
+      try {
+        const savedCustomerId = localStorage.getItem("income-form-customerId");
+        if (savedCustomerId !== null) {
+          setCustomerId(savedCustomerId);
+        }
+      } catch {}
+    }
+  }, [customersLoaded]);
 
   const itemsTotal = useMemo(() => {
     return Object.entries(selected).reduce((acc, [_productId, data]) => {
@@ -362,7 +388,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
               type="time"
               value={timeStr}
               onChange={(e) => setTimeStr(e.target.value)}
-              className="border-input shadow-xs h-9 w-fit rounded-md border px-2 py-0"
+              className="border-input h-9 w-fit rounded-md border px-2 py-0 shadow-xs"
               required
             />
             {errors.time && (
@@ -485,7 +511,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
         <div className="space-y-3">
           <DiscountSelect
             name="discount"
-            discountType={discountType === "" ? "percentage" : discountType}
+            discountType={discountType}
             onDiscountTypeChange={(type) => setDiscountType(type)}
             value={discountValue}
             onValueChange={setDiscountValue}

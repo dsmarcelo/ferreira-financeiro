@@ -32,7 +32,7 @@ pnpm install
 
 Create `.env.local` at the project root with at least:
 
-   ```env
+```env
 # Database
 DATABASE_URL="postgres://user:password@host:5432/dbname"
 
@@ -175,11 +175,11 @@ Form submissions call server actions which validate inputs (Zod), call the query
 
 Most features follow this pattern:
 
-1) Data: add/modify a table in `src/server/db/schema/` and run migrations.
-2) Queries: create functions in `src/server/queries/<feature>-queries.ts`.
-3) Actions: expose server actions in `src/actions/<feature>-actions.ts` or a page `actions.ts`.
-4) UI: build or update pages/components in `src/app/**` and wire up forms to actions.
-5) Revalidation: ensure affected routes call `revalidatePath()` after writes.
+1. Data: add/modify a table in `src/server/db/schema/` and run migrations.
+2. Queries: create functions in `src/server/queries/<feature>-queries.ts`.
+3. Actions: expose server actions in `src/actions/<feature>-actions.ts` or a page `actions.ts`.
+4. UI: build or update pages/components in `src/app/**` and wire up forms to actions.
+5. Revalidation: ensure affected routes call `revalidatePath()` after writes.
 
 Minimal examples:
 
@@ -225,6 +225,18 @@ Hook up a form in a page/component and use a server action as the form `action`.
 - Default profit margin: change `NEXT_PUBLIC_DEFAULT_PROFIT_MARGIN` in `.env.local`.
 - Currency/locale formatting: see helpers in `src/lib/utils.ts`.
 - Category ordering: POST to `/api/categorias/update-order` with `order: number[]`.
+
+### Income form persistence
+
+The Add Income form (`src/app/_components/forms/add-income-form.tsx`) now persists inputs to `localStorage` and auto-fills on refresh/navigation:
+
+- Description, date, time, extra value, profit margin, discount (type/value), and selected customer are saved as you type.
+- Selected products are saved from the products page using the `income-selected-products` key and reflected back in the form summary.
+- Keys are cleared only after a successful submission.
+
+Keys used:
+
+- `income-form-description`, `income-form-date`, `income-form-time`, `income-form-extraValue`, `income-form-profitMargin`, `income-form-discountType`, `income-form-discountValue`, `income-form-customerId`, `income-selected-products`.
 
 ## Scripts
 
