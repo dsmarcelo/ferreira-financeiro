@@ -59,7 +59,10 @@ export function IncomeCustomerSelector({
   return (
     <div className="space-y-2">
       <Label htmlFor="customerId">Cliente</Label>
-      <Select value={customerId} onValueChange={handleCustomerSelect}>
+      <Select
+        value={customerId || undefined}
+        onValueChange={handleCustomerSelect}
+      >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Selecione um cliente" />
         </SelectTrigger>

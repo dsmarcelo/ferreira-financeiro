@@ -29,7 +29,6 @@ export function IncomeDiscountSection({
         placeholder="0"
         label="Desconto"
         showLabel={true}
-        defaultValue={discountType}
       />
 
       <div className="text-sm text-slate-600">

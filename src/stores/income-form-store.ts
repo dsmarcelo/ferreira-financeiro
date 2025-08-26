@@ -58,7 +58,7 @@ const getDefaultValues = () => {
 
 export const useIncomeFormStore = create<IncomeFormStore>()(
   persist(
-    (set, get) => ({
+    (set, _get) => ({
       ...getDefaultValues(),
 
       setDescription: (value) => set({ description: value }),

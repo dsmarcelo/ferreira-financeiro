@@ -31,7 +31,7 @@
  * - discount-value: the numeric value
  */
 
-import React, { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -59,7 +59,6 @@ interface DiscountSelectProps {
   max?: number;
   showLabel?: boolean;
   label?: string;
-  defaultValue?: DiscountType;
 }
 
 export default function DiscountSelect({
@@ -75,21 +74,14 @@ export default function DiscountSelect({
   max,
   showLabel = true,
   label = "Desconto",
-  defaultValue,
 }: DiscountSelectProps) {
-  // Internal state to support uncontrolled usage via defaultValue
-  const [uncontrolledType, setUncontrolledType] = useState<DiscountType>(
-    defaultValue ?? "percentage",
-  );
-
-  // Resolve the effective type: prefer controlled prop, fallback to internal
+  // Resolve the effective type (controlled)
   const effectiveType: DiscountType = useMemo(() => {
-    return (discountType ?? uncontrolledType);
-  }, [discountType, uncontrolledType]);
+    return discountType ?? "percentage";
+  }, [discountType]);
 
   const handleTypeChange = (val: string) => {
     const newType = val as DiscountType;
-    setUncontrolledType(newType);
     onDiscountTypeChange?.(newType);
   };
 
@@ -140,7 +132,6 @@ export default function DiscountSelect({
 
       <div className="flex gap-3">
         <Select
-          defaultValue={defaultValue}
           value={effectiveType}
           onValueChange={handleTypeChange}
           disabled={disabled}
