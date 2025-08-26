@@ -31,7 +31,7 @@
  * - discount-value: the numeric value
  */
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -59,6 +59,7 @@ interface DiscountSelectProps {
   max?: number;
   showLabel?: boolean;
   label?: string;
+  defaultValue?: DiscountType;
 }
 
 export default function DiscountSelect({
@@ -74,14 +75,26 @@ export default function DiscountSelect({
   max,
   showLabel = true,
   label = "Desconto",
+  defaultValue,
 }: DiscountSelectProps) {
-  const handleTypeChange = (value: string) => {
-    const newType = value as DiscountType;
+  // Internal state to support uncontrolled usage via defaultValue
+  const [uncontrolledType, setUncontrolledType] = useState<DiscountType>(
+    defaultValue ?? "percentage",
+  );
+
+  // Resolve the effective type: prefer controlled prop, fallback to internal
+  const effectiveType: DiscountType = useMemo(() => {
+    return (discountType ?? uncontrolledType);
+  }, [discountType, uncontrolledType]);
+
+  const handleTypeChange = (val: string) => {
+    const newType = val as DiscountType;
+    setUncontrolledType(newType);
     onDiscountTypeChange?.(newType);
   };
 
   const renderInput = () => {
-    if (discountType === "fixed") {
+    if (effectiveType === "fixed") {
       return (
         <CurrencyInput
           name={`${name}-value`}
@@ -127,7 +140,8 @@ export default function DiscountSelect({
 
       <div className="flex gap-3">
         <Select
-          value={discountType}
+          defaultValue={defaultValue}
+          value={effectiveType}
           onValueChange={handleTypeChange}
           disabled={disabled}
         >
@@ -142,7 +156,7 @@ export default function DiscountSelect({
 
         <div className="relative flex-1">
           {renderInput()}
-          {discountType === "percentage" && (
+          {effectiveType === "percentage" && (
             <span className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm">
               %
             </span>
@@ -151,7 +165,7 @@ export default function DiscountSelect({
       </div>
 
       {/* Hidden input to store the discount type for form submission */}
-      <input type="hidden" name={`${name}-type`} value={discountType} />
+      <input type="hidden" name={`${name}-type`} value={effectiveType} />
     </div>
   );
 }

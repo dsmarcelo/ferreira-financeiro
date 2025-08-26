@@ -72,6 +72,8 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   const [timeStr, setTimeStr] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [customersLoaded, setCustomersLoaded] = useState(false);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+  const [customerHydrated, setCustomerHydrated] = useState(false);
 
   // Handle success/error toasts and navigation
   useEffect(() => {
@@ -127,16 +129,18 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
       // Load discount type and map legacy value "percent" to "percentage"
       if (savedDiscountType === "fixed") {
         setDiscountType("fixed");
-      } else if (savedDiscountType === "percent") {
-        setDiscountType("percentage");
-      } else if (savedDiscountType === "percentage") {
+      } else if (savedDiscountType === "percent" || savedDiscountType === "percentage") {
         setDiscountType("percentage");
       }
-      // If savedDiscountType is null/undefined, keep the default "percentage"
-      if (savedDiscountValue !== null)
-        setDiscountValue(
-          savedDiscountValue === "" ? undefined : Number(savedDiscountValue),
-        );
+      // If savedDiscountType is null/undefined or invalid, keep the default "percentage"
+
+      // Load discount value with validation
+      if (savedDiscountValue !== null && savedDiscountValue !== "") {
+        const numericValue = Number(savedDiscountValue);
+        if (!isNaN(numericValue) && numericValue >= 0) {
+          setDiscountValue(numericValue);
+        }
+      }
 
       // Load previously selected products for summary and submission
       const savedSelection = localStorage.getItem("income-selected-products");
@@ -171,6 +175,8 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
         } catch {}
       }
     } catch {}
+    // Mark initial data as loaded after attempting to load all data
+    setInitialDataLoaded(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -201,11 +207,15 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     } catch {}
   }, [profitMargin]);
   useEffect(() => {
+    // Only persist discount type after initial hydration
+    if (!initialDataLoaded) return;
     try {
       localStorage.setItem("income-form-discountType", discountType);
     } catch {}
-  }, [discountType]);
+  }, [discountType, initialDataLoaded]);
   useEffect(() => {
+    // Only persist discount value after initial hydration
+    if (!initialDataLoaded) return;
     try {
       if (discountValue === undefined)
         localStorage.removeItem("income-form-discountValue");
@@ -215,18 +225,17 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
           String(discountValue),
         );
     } catch {}
-  }, [discountValue]);
+  }, [discountValue, initialDataLoaded]);
   useEffect(() => {
-    if (customersLoaded) {
-      try {
-        if (customerId) {
-          localStorage.setItem("income-form-customerId", customerId);
-        } else {
-          localStorage.removeItem("income-form-customerId");
-        }
-      } catch {}
-    }
-  }, [customerId, customersLoaded]);
+    // Only persist after hydration to avoid clearing saved value on load
+    if (!customersLoaded || !customerHydrated) return;
+    try {
+      if (customerId) {
+        localStorage.setItem("income-form-customerId", customerId);
+      }
+      // If customerId is empty, do not remove LS; preserve any saved value
+    } catch {}
+  }, [customerId, customersLoaded, customerHydrated]);
 
   useEffect(() => {
     void (async () => {
@@ -283,17 +292,20 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     })();
   }, []);
 
-  // Set customer ID from localStorage only after customers are loaded
+  // Hydrate customer ID from localStorage once, after customers are loaded
   useEffect(() => {
-    if (customersLoaded) {
-      try {
-        const savedCustomerId = localStorage.getItem("income-form-customerId");
-        if (savedCustomerId !== null) {
+    if (!customersLoaded || customerHydrated) return;
+    try {
+      const savedCustomerId = localStorage.getItem("income-form-customerId");
+      if (savedCustomerId !== null && savedCustomerId !== "") {
+        const customerExists = customers.some((c) => String(c.id) === savedCustomerId);
+        if (customerExists) {
           setCustomerId(savedCustomerId);
         }
-      } catch {}
-    }
-  }, [customersLoaded]);
+      }
+    } catch {}
+    setCustomerHydrated(true);
+  }, [customersLoaded, customers, customerHydrated]);
 
   const itemsTotal = useMemo(() => {
     return Object.entries(selected).reduce((acc, [_productId, data]) => {
@@ -518,6 +530,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
             placeholder="0"
             label="Desconto"
             showLabel={true}
+            defaultValue={discountType}
           />
           {/* Customer selector moved outside; dialog remains here for reuse */}
           <Dialog open={addCustomerOpen} onOpenChange={setAddCustomerOpen}>
