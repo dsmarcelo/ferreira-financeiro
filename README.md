@@ -226,25 +226,22 @@ Hook up a form in a page/component and use a server action as the form `action`.
 - Currency/locale formatting: see helpers in `src/lib/utils.ts`.
 - Category ordering: POST to `/api/categorias/update-order` with `order: number[]`.
 
-### Income form persistence
+### Income form state (Zustand)
 
-The Add Income form (`src/app/_components/forms/add-income-form.tsx`) now persists inputs to `localStorage` and auto-fills on refresh/navigation:
+The Add Income form (`src/app/_components/forms/add-income-form.tsx`) now uses a persisted Zustand store instead of direct `localStorage`.
 
-- Description, date, time, extra value, profit margin, discount (type/value), and selected customer are saved as you type.
-- Selected products are saved from the products page using the `income-selected-products` key and reflected back in the form summary.
-- Keys are cleared only after a successful submission.
-
-Keys used:
-
-- `income-form-description`, `income-form-date`, `income-form-time`, `income-form-extraValue`, `income-form-profitMargin`, `income-form-discountType`, `income-form-discountValue`, `income-form-customerId`, `income-selected-products`.
+- Store: `src/stores/income-form-store.ts` holds description, date/time, extra value, profit margin, discount (type/value), customer, and selected products.
+- The products page (`src/app/caixa/adicionar/produtos/page.tsx`) reads/updates `selectedProducts` via the same store.
+- No direct `localStorage` reads/writes in components; persistence is handled by the store.
+- After a successful submission, the form calls `clearFormData()` to reset state.
 
 ### Income form components refactoring
 
 The Add Income form has been refactored into smaller, reusable mini components following good code practices:
 
-**Custom Hooks:**
+**State Store and Hooks:**
 
-- `src/hooks/use-income-form-persistence.ts` - Manages form state persistence to localStorage
+- `src/stores/income-form-store.ts` - Zustand store (persisted) for income form state
 - `src/hooks/use-income-data.ts` - Handles data fetching for products and customers
 
 **Mini Components (in `src/app/_components/forms/income/`):**

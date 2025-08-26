@@ -7,7 +7,7 @@ import {
   type ActionResponse,
 } from "@/actions/income-actions";
 import { toast } from "sonner";
-import { useIncomeFormPersistence } from "@/hooks/use-income-form-persistence";
+import { useIncomeFormStore } from "@/stores/income-form-store";
 import { useIncomeData } from "@/hooks/use-income-data";
 import {
   IncomeBasicFields,
@@ -35,10 +35,9 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     initialState,
   );
 
-  // Use custom hooks for data management
-  const formPersistence = useIncomeFormPersistence();
-  const { products, customers, createCustomer, customersLoading } =
-    useIncomeData();
+  // Use Zustand store for form state
+  const incomeForm = useIncomeFormStore();
+  const { products, customers, createCustomer } = useIncomeData();
 
   // Handle success/error toasts and navigation
   useEffect(() => {
@@ -58,24 +57,16 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
 
-  // Hydrate customer ID from localStorage once, after customers are loaded
-  useEffect(() => {
-    if (!customersLoading) {
-      formPersistence.setCustomersLoaded(true);
-      formPersistence.hydrateCustomerId(customers);
-    }
-  }, [customersLoading, customers, formPersistence]);
-
-  // Clear persisted state after successful submission
+  // Clear form state after successful submission
   useEffect(() => {
     if (state.success === true) {
-      formPersistence.clearPersistedData();
+      incomeForm.clearFormData();
     }
-  }, [state.success, formPersistence]);
+  }, [state.success, incomeForm]);
 
   // Calculations
   const itemsTotal = useMemo(() => {
-    return Object.entries(formPersistence.selectedProducts).reduce(
+    return Object.entries(incomeForm.selectedProducts).reduce(
       (acc, [_productId, data]) => {
         const unit = data.unitPrice ?? 0;
         const qty = data.quantity ?? 0;
@@ -83,81 +74,81 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
       },
       0,
     );
-  }, [formPersistence.selectedProducts]);
+  }, [incomeForm.selectedProducts]);
 
   const discountAmount = useMemo(() => {
-    const dv = formPersistence.discountValue ?? 0;
-    if (formPersistence.discountType === "percentage")
+    const dv = incomeForm.discountValue ?? 0;
+    if (incomeForm.discountType === "percentage")
       return (itemsTotal * dv) / 100;
-    if (formPersistence.discountType === "fixed") return dv;
+    if (incomeForm.discountType === "fixed") return dv;
     return 0;
-  }, [formPersistence.discountType, formPersistence.discountValue, itemsTotal]);
+  }, [incomeForm.discountType, incomeForm.discountValue, itemsTotal]);
 
   const totalSelectedValue = useMemo(() => {
     return Math.max(0, itemsTotal - discountAmount);
   }, [itemsTotal, discountAmount]);
 
   const profitAmount = useMemo(() => {
-    return formPersistence.extraValue * (formPersistence.profitMargin / 100);
-  }, [formPersistence.extraValue, formPersistence.profitMargin]);
+    return incomeForm.extraValue * (incomeForm.profitMargin / 100);
+  }, [incomeForm.extraValue, incomeForm.profitMargin]);
 
   const finalTotal = useMemo(() => {
     // Total must NOT include profit. It is products total + extra value only.
-    return totalSelectedValue + formPersistence.extraValue;
-  }, [totalSelectedValue, formPersistence.extraValue]);
+    return totalSelectedValue + incomeForm.extraValue;
+  }, [totalSelectedValue, incomeForm.extraValue]);
 
   return (
     <div className="w-full space-y-4">
       <form id={id} action={formAction} className="space-y-4 text-base">
         <IncomeBasicFields
-          description={formPersistence.description}
-          dateStr={formPersistence.dateStr}
-          timeStr={formPersistence.timeStr}
-          extraValue={formPersistence.extraValue}
-          profitMargin={formPersistence.profitMargin}
-          onDescriptionChange={formPersistence.setDescription}
-          onDateChange={formPersistence.setDateStr}
-          onTimeChange={formPersistence.setTimeStr}
-          onExtraValueChange={formPersistence.setExtraValue}
-          onProfitMarginChange={formPersistence.setProfitMargin}
+          description={incomeForm.description}
+          dateStr={incomeForm.dateStr}
+          timeStr={incomeForm.timeStr}
+          extraValue={incomeForm.extraValue}
+          profitMargin={incomeForm.profitMargin}
+          onDescriptionChange={incomeForm.setDescription}
+          onDateChange={incomeForm.setDateStr}
+          onTimeChange={incomeForm.setTimeStr}
+          onExtraValueChange={incomeForm.setExtraValue}
+          onProfitMarginChange={incomeForm.setProfitMargin}
           errors={errors}
         />
 
         <IncomeProductSelection
           products={products}
-          selectedProducts={formPersistence.selectedProducts}
+          selectedProducts={incomeForm.selectedProducts}
         />
 
         <IncomeCustomerSelector
           customers={customers}
-          customerId={formPersistence.customerId}
-          onCustomerIdChange={formPersistence.setCustomerId}
+          customerId={incomeForm.customerId}
+          onCustomerIdChange={incomeForm.setCustomerId}
           onCustomerCreate={createCustomer}
         />
 
         <IncomeDiscountSection
-          discountType={formPersistence.discountType}
-          discountValue={formPersistence.discountValue}
+          discountType={incomeForm.discountType}
+          discountValue={incomeForm.discountValue}
           totalSelectedValue={totalSelectedValue}
-          onDiscountTypeChange={formPersistence.setDiscountType}
-          onDiscountValueChange={formPersistence.setDiscountValue}
+          onDiscountTypeChange={incomeForm.setDiscountType}
+          onDiscountValueChange={incomeForm.setDiscountValue}
         />
 
         <IncomeSummary
           totalSelectedValue={totalSelectedValue}
-          extraValue={formPersistence.extraValue}
+          extraValue={incomeForm.extraValue}
           profitAmount={profitAmount}
           finalTotal={finalTotal}
-          profitMargin={formPersistence.profitMargin}
+          profitMargin={incomeForm.profitMargin}
         />
 
         <IncomeFormActions
           formId={id}
           pending={pending}
-          selectedProducts={formPersistence.selectedProducts}
+          selectedProducts={incomeForm.selectedProducts}
           finalTotal={finalTotal}
-          extraValue={formPersistence.extraValue}
-          customerId={formPersistence.customerId}
+          extraValue={incomeForm.extraValue}
+          customerId={incomeForm.customerId}
         />
 
         {state.message && (
