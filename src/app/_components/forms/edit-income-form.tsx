@@ -27,7 +27,12 @@ import {
 interface EditIncomeFormProps {
   id?: string;
   income: Income;
-  items?: Array<{ productId: number; quantity: number; unitPrice: string; name?: string | null }>;
+  items?: Array<{
+    productId: number;
+    quantity: number;
+    unitPrice: string;
+    name?: string | null;
+  }>;
   onSuccess?: () => void;
   onClose?: () => void;
 }
@@ -37,7 +42,13 @@ const initialState: ActionResponse = {
   message: "",
 };
 
-export default function EditIncomeForm({ id, income, items = [], onSuccess, onClose }: EditIncomeFormProps) {
+export default function EditIncomeForm({
+  id,
+  income,
+  items = [],
+  onSuccess,
+  onClose,
+}: EditIncomeFormProps) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionUpdateIncome,
@@ -55,10 +66,14 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
   }, []);
 
   // Local form state (aligned with new Add flow)
-  const [description, setDescription] = useState<string>(income.description ?? "");
+  const [description, setDescription] = useState<string>(
+    income.description ?? "",
+  );
   const [dateStr, setDateStr] = useState<string>(
     income.dateTime
-      ? new Date(income.dateTime).toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })
+      ? new Date(income.dateTime).toLocaleDateString("en-CA", {
+          timeZone: "America/Sao_Paulo",
+        })
       : "",
   );
   const [timeStr, setTimeStr] = useState<string>(
@@ -71,8 +86,12 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
         })
       : "12:00",
   );
-  const [profitMargin, setProfitMargin] = useState<number>(Number(income.profitMargin) || 0);
-  const [customerId, setCustomerId] = useState<string>(income.customerId ? String(income.customerId) : "");
+  const [profitMargin, setProfitMargin] = useState<number>(
+    Number(income.profitMargin) || 0,
+  );
+  const [customerId, setCustomerId] = useState<string>(
+    income.customerId ? String(income.customerId) : "",
+  );
 
   // Discount state (UI uses "percentage" | "fixed"); DB uses "percent" | "fixed")
   const [discountType, setDiscountType] = useState<"percentage" | "fixed">(
@@ -83,24 +102,46 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
   );
 
   // Compute items total from provided items
-  const itemsTotal = useMemo(() => {
-    return items.reduce((acc, it) => acc + Number(it.unitPrice) * Number(it.quantity), 0);
+  const itemsTotal = useMemo((): number => {
+    return items.reduce(
+      (acc, it) => acc + Number(it.unitPrice) * Number(it.quantity),
+      0,
+    );
   }, [items]);
 
-  // Compute discount amount from current state
-  const discountAmount = useMemo(() => {
-    if (!discountValue || discountValue <= 0) return 0;
-    if (discountType === "percentage") return (itemsTotal * discountValue) / 100;
-    return discountValue;
-  }, [discountType, discountValue, itemsTotal]);
-
-  // Derive initial extraValue from DB (value = itemsTotal - discount + extraValue)
-  const computedInitialExtra = useMemo(() => {
-    const baseAfterDiscount = Math.max(0, itemsTotal - discountAmount);
+  // Derive initial extraValue from DB using reverse calculation
+  // Since discount is now applied to whole amount: finalTotal = (itemsTotal + extraValue) - discountAmount
+  // So: income.value = itemsTotal + extraValue - discountAmount
+  // Therefore: extraValue = income.value - itemsTotal + discountAmount
+  // But discountAmount depends on (itemsTotal + extraValue), so we need to solve this equation
+  const computedInitialExtra = useMemo((): number => {
     const dbValue = Number(income.value);
-    const extra = dbValue - baseAfterDiscount;
+    const it = itemsTotal;
+    const dv = discountValue ?? 0;
+
+    if (!dv || dv <= 0) {
+      // No discount: extraValue = income.value - itemsTotal
+      return Math.max(0, dbValue - it);
+    }
+
+    if (discountType === "fixed") {
+      // Fixed discount: extraValue = income.value - itemsTotal + discountValue
+      return Math.max(0, dbValue - it + dv);
+    }
+
+    // Percentage discount: this creates a quadratic equation
+    // Let x = extraValue, d = discountValue / 100
+    // income.value = itemsTotal + x - d * (itemsTotal + x)
+    // income.value = itemsTotal + x - d*itemsTotal - d*x
+    // income.value = (itemsTotal - d*itemsTotal) + x - d*x
+    // income.value = itemsTotal*(1-d) + x*(1-d)
+    // income.value = (itemsTotal + x) * (1-d)
+    // x = (income.value / (1-d)) - itemsTotal
+    const discountPercent = dv / 100;
+    const subtotal = dbValue / (1 - discountPercent);
+    const extra = subtotal - it;
     return Math.max(0, Number.isFinite(extra) ? extra : 0);
-  }, [income.value, itemsTotal, discountAmount]);
+  }, [income.value, itemsTotal, discountType, discountValue]);
 
   const [extraValue, setExtraValue] = useState<number>(computedInitialExtra);
   useEffect(() => {
@@ -113,10 +154,30 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
     });
   }, [computedInitialExtra]);
 
+  // Now compute subtotal and discount amount based on current state
+  const subtotal = useMemo((): number => {
+    return itemsTotal + extraValue;
+  }, [itemsTotal, extraValue]);
+
+  const discountAmount = useMemo((): number => {
+    if (!discountValue || discountValue <= 0) return 0;
+    if (discountType === "percentage") return (subtotal * discountValue) / 100;
+    return discountValue;
+  }, [discountType, discountValue, subtotal]);
+
   // Totals
-  const totalSelectedValue = useMemo(() => Math.max(0, itemsTotal - discountAmount), [itemsTotal, discountAmount]);
-  const profitAmount = useMemo(() => extraValue * (profitMargin / 100), [extraValue, profitMargin]);
-  const finalTotal = useMemo(() => totalSelectedValue + extraValue, [totalSelectedValue, extraValue]);
+  const totalSelectedValue = useMemo(
+    (): number => Math.max(0, subtotal - discountAmount),
+    [subtotal, discountAmount],
+  );
+  const profitAmount = useMemo(
+    (): number => extraValue * (profitMargin / 100),
+    [extraValue, profitMargin],
+  );
+  const finalTotal = useMemo(
+    (): number => totalSelectedValue,
+    [totalSelectedValue],
+  );
 
   // Handle success/error toasts and navigation
   useEffect(() => {
@@ -154,7 +215,10 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
   };
 
   // Build selectedProducts map for hidden inputs in IncomeFormActions
-  const selectedProducts = useMemo(() => {
+  const selectedProducts = useMemo((): Record<
+    number,
+    { quantity: number; unitPrice: number }
+  > => {
     const map: Record<number, { quantity: number; unitPrice: number }> = {};
     for (const it of items) {
       const pid = Number(it.productId);
@@ -201,7 +265,13 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
           <IncomeDiscountSection
             discountType={discountType}
             discountValue={discountValue}
-            totalSelectedValue={Math.max(0, itemsTotal - (discountType === "percentage" ? ((itemsTotal * (discountValue ?? 0)) / 100) : (discountValue ?? 0)))}
+            totalSelectedValue={Math.max(
+              0,
+              itemsTotal -
+                (discountType === "percentage"
+                  ? (itemsTotal * (discountValue ?? 0)) / 100
+                  : (discountValue ?? 0)),
+            )}
             onDiscountTypeChange={setDiscountType}
             onDiscountValueChange={setDiscountValue}
           />
@@ -222,7 +292,10 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
             <Label>Produtos vendidos</Label>
             <div className="grid grid-cols-1 gap-2">
               {items.map((it, idx) => (
-                <div key={`${it.productId}-${idx}`} className="flex items-center justify-between rounded-md border p-1 px-3 bg-slate-50">
+                <div
+                  key={`${it.productId}-${idx}`}
+                  className="flex items-center justify-between rounded-md border bg-slate-50 p-1 px-3"
+                >
                   <div className="flex flex-col">
                     <div className="flex items-center">
                       <p className="font-medium">
@@ -230,7 +303,11 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
                       </p>
                     </div>
                     <span className="text-xs text-slate-500">
-                      Preço {Number(it.unitPrice).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                      Preço{" "}
+                      {Number(it.unitPrice).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
                     </span>
                   </div>
                 </div>
@@ -250,7 +327,7 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
         />
 
         {!id && (
-          <div className="w-full flex justify-between gap-2 pt-2">
+          <div className="flex w-full justify-between gap-2 pt-2">
             <DeleteDialog
               onConfirm={handleDelete}
               triggerText={<TrashIcon className="h-4 w-4 text-red-500" />}

@@ -84,7 +84,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   }, [state.success, clearFormData]);
 
   // Calculations
-  const itemsTotal = useMemo(() => {
+  const itemsTotal = useMemo((): number => {
     return Object.entries(incomeForm.selectedProducts).reduce(
       (acc, [_productId, data]) => {
         const unit = data.unitPrice ?? 0;
@@ -95,26 +95,29 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     );
   }, [incomeForm.selectedProducts]);
 
-  const discountAmount = useMemo(() => {
+  const subtotal = useMemo((): number => {
+    return itemsTotal + incomeForm.extraValue;
+  }, [itemsTotal, incomeForm.extraValue]);
+
+  const discountAmount = useMemo((): number => {
     const dv = incomeForm.discountValue ?? 0;
-    if (incomeForm.discountType === "percentage")
-      return (itemsTotal * dv) / 100;
+    if (incomeForm.discountType === "percentage") return (subtotal * dv) / 100;
     if (incomeForm.discountType === "fixed") return dv;
     return 0;
-  }, [incomeForm.discountType, incomeForm.discountValue, itemsTotal]);
+  }, [incomeForm.discountType, incomeForm.discountValue, subtotal]);
 
-  const totalSelectedValue = useMemo(() => {
-    return Math.max(0, itemsTotal - discountAmount);
-  }, [itemsTotal, discountAmount]);
+  const totalSelectedValue = useMemo((): number => {
+    return Math.max(0, subtotal - discountAmount);
+  }, [subtotal, discountAmount]);
 
-  const profitAmount = useMemo(() => {
+  const profitAmount = useMemo((): number => {
     return incomeForm.extraValue * (incomeForm.profitMargin / 100);
   }, [incomeForm.extraValue, incomeForm.profitMargin]);
 
-  const finalTotal = useMemo(() => {
-    // Total must NOT include profit. It is products total + extra value only.
-    return totalSelectedValue + incomeForm.extraValue;
-  }, [totalSelectedValue, incomeForm.extraValue]);
+  const finalTotal = useMemo((): number => {
+    // Total must NOT include profit. It is subtotal - discount.
+    return totalSelectedValue;
+  }, [totalSelectedValue]);
 
   return (
     <div className="w-full space-y-4">
