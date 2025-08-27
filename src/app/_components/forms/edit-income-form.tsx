@@ -22,6 +22,7 @@ import {
   IncomeDiscountSection,
   IncomeSummary,
   IncomeFormActions,
+  IncomeProductEditor,
 } from "./income";
 
 interface EditIncomeFormProps {
@@ -56,7 +57,7 @@ export default function EditIncomeForm({
   );
 
   // Load data helpers
-  const { customers, createCustomer } = useIncomeData();
+  const { products, customers, createCustomer } = useIncomeData();
 
   // Hydration gate for selects
   const [hydrated, setHydrated] = useState(false);
@@ -101,13 +102,80 @@ export default function EditIncomeForm({
     income.discountValue ? Number(income.discountValue) : undefined,
   );
 
-  // Compute items total from provided items
+  // Editable selected products state (initialized from provided items)
+  const [selectedProducts, setSelectedProducts] = useState<
+    Record<number, { quantity: number; unitPrice: number }>
+  >(() => {
+    const map: Record<number, { quantity: number; unitPrice: number }> = {};
+    for (const it of items) {
+      const pid = Number(it.productId);
+      if (!Number.isFinite(pid)) continue;
+      const qty = Number(it.quantity) || 0;
+      const price = Number(it.unitPrice) || 0;
+      if (qty > 0) map[pid] = { quantity: qty, unitPrice: price };
+    }
+    return map;
+  });
+
+  // Hydrate items from server to ensure latest linkage when opening the form
+  useEffect(() => {
+    const incomeId = income.id;
+    if (!incomeId) return;
+    void (async () => {
+      try {
+        const res = await fetch(`/api/receitas/${incomeId}/itens`, {
+          cache: "no-store",
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as Array<{
+          productId: number;
+          quantity: number;
+          unitPrice: string | number;
+          name?: string | null;
+        }>;
+        if (!Array.isArray(data)) return;
+        const map: Record<number, { quantity: number; unitPrice: number }> = {};
+        for (const it of data) {
+          const pid = Number(it.productId);
+          if (!Number.isFinite(pid)) continue;
+          const qty = Number(it.quantity) || 0;
+          const price = Number(it.unitPrice) || 0;
+          if (qty > 0) map[pid] = { quantity: qty, unitPrice: price };
+        }
+        setSelectedProducts((prev) => {
+          // If user already modified, do not clobber; merge new keys, keep edited ones
+          const next = { ...map, ...prev };
+          return next;
+        });
+      } catch {
+        // ignore
+      }
+    })();
+  }, [income.id]);
+
+  // Original quantities for this income to compute available stock in edit mode
+  const originalQuantities = useMemo(() => {
+    const map: Record<number, number> = {};
+    for (const it of items) {
+      const pid = Number(it.productId);
+      if (!Number.isFinite(pid)) continue;
+      const qty = Number(it.quantity) || 0;
+      map[pid] = (map[pid] ?? 0) + qty;
+    }
+    return map;
+  }, [items]);
+
+  // Compute items total from editable selected products
   const itemsTotal = useMemo((): number => {
-    return items.reduce(
-      (acc, it) => acc + Number(it.unitPrice) * Number(it.quantity),
+    return Object.entries(selectedProducts).reduce(
+      (acc, [_productId, data]) => {
+        const unit = data.unitPrice ?? 0;
+        const qty = data.quantity ?? 0;
+        return acc + unit * qty;
+      },
       0,
     );
-  }, [items]);
+  }, [selectedProducts]);
 
   // Derive initial extraValue from DB using reverse calculation
   // Since discount is now applied to whole amount: finalTotal = (itemsTotal + extraValue) - discountAmount
@@ -214,21 +282,7 @@ export default function EditIncomeForm({
     }
   };
 
-  // Build selectedProducts map for hidden inputs in IncomeFormActions
-  const selectedProducts = useMemo((): Record<
-    number,
-    { quantity: number; unitPrice: number }
-  > => {
-    const map: Record<number, { quantity: number; unitPrice: number }> = {};
-    for (const it of items) {
-      const pid = Number(it.productId);
-      if (!Number.isFinite(pid)) continue;
-      const qty = Number(it.quantity) || 0;
-      const price = Number(it.unitPrice) || 0;
-      if (qty > 0) map[pid] = { quantity: qty, unitPrice: price };
-    }
-    return map;
-  }, [items]);
+  // selectedProducts comes from local state above and is editable
 
   return (
     <div className="space-y-4">
@@ -265,13 +319,7 @@ export default function EditIncomeForm({
           <IncomeDiscountSection
             discountType={discountType}
             discountValue={discountValue}
-            totalSelectedValue={Math.max(
-              0,
-              itemsTotal -
-                (discountType === "percentage"
-                  ? (itemsTotal * (discountValue ?? 0)) / 100
-                  : (discountValue ?? 0)),
-            )}
+            totalSelectedValue={totalSelectedValue}
             onDiscountTypeChange={setDiscountType}
             onDiscountValueChange={setDiscountValue}
           />
@@ -286,35 +334,13 @@ export default function EditIncomeForm({
           profitMargin={profitMargin}
         />
 
-        {/* Sold items summary (read-only) */}
-        {items.length > 0 && (
-          <div className="space-y-2">
-            <Label>Produtos vendidos</Label>
-            <div className="grid grid-cols-1 gap-2">
-              {items.map((it, idx) => (
-                <div
-                  key={`${it.productId}-${idx}`}
-                  className="flex items-center justify-between rounded-md border bg-slate-50 p-1 px-3"
-                >
-                  <div className="flex flex-col">
-                    <div className="flex items-center">
-                      <p className="font-medium">
-                        {it.quantity} x {it.name ?? `#${it.productId}`}
-                      </p>
-                    </div>
-                    <span className="text-xs text-slate-500">
-                      Preço{" "}
-                      {Number(it.unitPrice).toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      })}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Editable products */}
+        <IncomeProductEditor
+          products={products}
+          selectedProducts={selectedProducts}
+          originalQuantities={originalQuantities}
+          onChange={setSelectedProducts}
+        />
 
         {/* Hidden inputs for submission (mirrors Add form) */}
         <IncomeFormActions

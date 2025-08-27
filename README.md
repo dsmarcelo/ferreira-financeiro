@@ -1,3 +1,9 @@
+### Edit Income: products and discount behavior
+
+- Edit form now fetches its items from `GET /api/receitas/:id/itens` (backed by `listItemsForIncome`) when opened, and initializes the editable product list accordingly without overwriting ongoing user edits.
+- Products can be edited in-place (quantity and unit price). Stock availability during editing is computed as `stock + originalQuantity - selectedQuantity` and enforced by the UI.
+- Discount applies over the whole amount (products + extra value).
+
 # Ferreira Financeiro
 
 A production-ready financial management app built with Next.js 15 (App Router), TypeScript, Drizzle ORM, PostgreSQL, and Auth.js (NextAuth) credentials login. It tracks incomes, cash register, expenses (personal, store, and product purchases), recurring/parcelled payments, and generates PDFs.
