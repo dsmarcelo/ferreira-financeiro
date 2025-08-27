@@ -10,6 +10,7 @@ import {
   sumProfitAmountsByDateRange,
   sumTotalProfitByDateRange,
   createIncomeWithItems,
+  updateIncomeWithItems,
 } from "@/server/queries/income-queries";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -162,6 +163,7 @@ export async function actionUpdateIncome(
   const discountTypeRaw = formData.get("discountType");
   const discountValueStr = formData.get("discountValue");
   const customerIdStr = formData.get("customerId");
+  const soldItemsJson = formData.get("soldItemsJson");
   const totalValue = typeof totalValueStr === "string" ? Number(totalValueStr) : undefined;
   const extraValue = typeof extraValueStr === "string" ? Number(extraValueStr) : undefined;
   const value = totalValue ?? extraValue; // value excludes profit, mirrors create flow
@@ -196,7 +198,7 @@ export async function actionUpdateIncome(
     const dateTimeString = `${date as string}T${time as string}:00`;
     const dateTime = new Date(dateTimeString);
 
-    await updateIncome(id, {
+    const dataToUpdate = {
       description: description as string,
       dateTime: dateTime,
       value: value.toFixed(2),
@@ -204,7 +206,29 @@ export async function actionUpdateIncome(
       discountType,
       discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
       customerId,
-    });
+    } as const;
+
+    // Parse items (if any) and update items transactionally
+    const items: Array<{ productId: number; quantity: number; unitPrice: string }> = [];
+    if (typeof soldItemsJson === "string" && soldItemsJson.trim().length > 0) {
+      try {
+        const parsed = JSON.parse(soldItemsJson) as Array<{ productId: number; quantity: number; unitPrice: number }>;
+        for (const it of parsed) {
+          if (typeof it.productId === "number" && typeof it.quantity === "number" && it.quantity > 0) {
+            const unitPrice = typeof it.unitPrice === "number" ? it.unitPrice.toFixed(2) : "0.00";
+            items.push({ productId: it.productId, quantity: it.quantity, unitPrice });
+          }
+        }
+      } catch {
+        // ignore bad json
+      }
+    }
+
+    if (items.length > 0) {
+      await updateIncomeWithItems(id, dataToUpdate, items);
+    } else {
+      await updateIncome(id, dataToUpdate);
+    }
     revalidatePath("/caixa");
     return { success: true, message: "Receita atualizada com sucesso!" };
   } catch (error) {

@@ -200,6 +200,63 @@ export async function createIncomeWithItems(
   });
 }
 
+// Update income and fully replace its items, restoring and reapplying stock
+export async function updateIncomeWithItems(
+  id: number,
+  data: Partial<IncomeInsert>,
+  items: Array<{ productId: number; quantity: number; unitPrice: string }>,
+): Promise<Income | undefined> {
+  return db.transaction(async (tx) => {
+    // Restore stock from existing items
+    const existingItems = await tx
+      .select()
+      .from(incomeItem)
+      .where(eq(incomeItem.incomeId, id));
+
+    for (const ex of existingItems) {
+      const [row] = await tx.select().from(products).where(eq(products.id, ex.productId));
+      if (!row) continue;
+      const restoredQty = (row.quantity ?? 0) + (ex.quantity ?? 0);
+      await tx.update(products).set({ quantity: restoredQty }).where(eq(products.id, ex.productId));
+    }
+
+    // Remove existing item rows
+    await tx.delete(incomeItem).where(eq(incomeItem.incomeId, id));
+
+    // Decrement stock for new items and insert them
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const [row] = await tx.select().from(products).where(eq(products.id, item.productId));
+        if (!row) throw new Error("Produto não encontrado");
+        const newQty = (row.quantity ?? 0) - item.quantity;
+        if (newQty < 0) {
+          throw new Error(
+            `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
+          );
+        }
+        await tx.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
+      }
+
+      for (const item of items) {
+        await tx.insert(incomeItem).values({
+          incomeId: id,
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+        });
+      }
+    }
+
+    // Update income itself
+    const [updated] = await tx
+      .update(incomes)
+      .set(data)
+      .where(eq(incomes.id, id))
+      .returning();
+    return updated;
+  });
+}
+
 // List items sold for a specific income (with product name)
 export async function listItemsForIncome(incomeId: number) {
   return db
