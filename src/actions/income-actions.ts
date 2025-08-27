@@ -156,12 +156,15 @@ export async function actionUpdateIncome(
   const description = formData.get("description");
   const date = formData.get("date");
   const time = formData.get("time");
-  const valueStr = formData.get("value");
+  const totalValueStr = formData.get("totalValue");
+  const extraValueStr = formData.get("extraValue");
   const profitMarginStr = formData.get("profitMargin");
   const discountTypeRaw = formData.get("discountType");
   const discountValueStr = formData.get("discountValue");
   const customerIdStr = formData.get("customerId");
-  const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
+  const totalValue = typeof totalValueStr === "string" ? Number(totalValueStr) : undefined;
+  const extraValue = typeof extraValueStr === "string" ? Number(extraValueStr) : undefined;
+  const value = totalValue ?? extraValue; // value excludes profit, mirrors create flow
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
   const discountValue = typeof discountValueStr === "string" ? Number(discountValueStr) : undefined;
   const customerId = typeof customerIdStr === "string" && customerIdStr.length > 0 ? Number(customerIdStr) : undefined;

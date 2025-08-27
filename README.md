@@ -268,9 +268,18 @@ The main `AddIncomeForm` gates the Customer and Discount sections until the stor
 ### Changes
 
 - Fix: Prevented a submit-time re-render loop ("Maximum update depth exceeded") in `src/app/_components/forms/add-income-form.tsx` by:
+
   - Selecting a stable `clearFormData` function from the Zustand store instead of referencing the whole store in effect deps.
   - Narrowing the toast/navigation effect dependencies to `state.success` and `state.message`.
   - This avoids effects retriggering due to store object identity changes after submit while preserving the same UX and behavior.
+
+- Refactor: `src/app/_components/forms/edit-income-form.tsx` now uses the shared income components in `src/app/_components/forms/income/`:
+
+  - `IncomeBasicFields`, `IncomeCustomerSelector`, `IncomeDiscountSection`, `IncomeSummary`, `IncomeFormActions`.
+  - Edit flow mirrors Add flow: `value` sent to the server is computed as `totalSelectedValue + extraValue` (does not include profit), and discount fields map UI type `percentage|fixed` to server `percent|fixed`.
+  - Items shown as read-only; hidden inputs submit the same structure used by Add.
+
+- Action: `actionUpdateIncome` accepts `totalValue`/`extraValue` and discount fields (`discountType`/`discountValue`) consistently with create. It normalizes values and updates the DB accordingly.
 
 ## Scripts
 

@@ -1,37 +1,28 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+// TODO: Refactor this to let the user edit the items
+
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   actionDeleteIncome,
   actionUpdateIncome,
   type ActionResponse,
 } from "@/actions/income-actions";
-import { Label } from "@/components/ui/label";
-import CurrencyInput from "@/components/inputs/currency-input";
 import type { Income } from "@/server/db/schema/incomes-schema";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { DatePicker } from "@/components/inputs/date-picker";
 import { TrashIcon } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { DeleteDialog } from "../dialogs/delete-dialog";
+import { Label } from "@/components/ui/label";
+import { useIncomeData } from "@/hooks/use-income-data";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  IncomeBasicFields,
+  IncomeCustomerSelector,
+  IncomeDiscountSection,
+  IncomeSummary,
+  IncomeFormActions,
+} from "./income";
 
 interface EditIncomeFormProps {
   id?: string;
@@ -53,21 +44,79 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
     initialState,
   );
 
-  const [customers, setCustomers] = useState<Array<{ id: number; name: string }>>([]);
-  const [customerId, setCustomerId] = useState<string>(income.customerId ? String(income.customerId) : "");
-  const [addCustomerOpen, setAddCustomerOpen] = useState(false);
-  const [newCustomerName, setNewCustomerName] = useState("");
+  // Load data helpers
+  const { customers, createCustomer } = useIncomeData();
 
+  // Hydration gate for selects
+  const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
-    void (async () => {
-      try {
-        const res = await fetch("/api/clientes", { cache: "no-store" });
-        if (!res.ok) return;
-        const list = (await res.json()) as Array<{ id: number; name: string }>;
-        if (Array.isArray(list)) setCustomers(list);
-      } catch {}
-    })();
+    const t = setTimeout(() => setHydrated(true), 50);
+    return () => clearTimeout(t);
   }, []);
+
+  // Local form state (aligned with new Add flow)
+  const [description, setDescription] = useState<string>(income.description ?? "");
+  const [dateStr, setDateStr] = useState<string>(
+    income.dateTime
+      ? new Date(income.dateTime).toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })
+      : "",
+  );
+  const [timeStr, setTimeStr] = useState<string>(
+    income.dateTime
+      ? new Date(income.dateTime).toLocaleTimeString("pt-BR", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "America/Sao_Paulo",
+        })
+      : "12:00",
+  );
+  const [profitMargin, setProfitMargin] = useState<number>(Number(income.profitMargin) || 0);
+  const [customerId, setCustomerId] = useState<string>(income.customerId ? String(income.customerId) : "");
+
+  // Discount state (UI uses "percentage" | "fixed"); DB uses "percent" | "fixed")
+  const [discountType, setDiscountType] = useState<"percentage" | "fixed">(
+    income.discountType === "fixed" ? "fixed" : "percentage",
+  );
+  const [discountValue, setDiscountValue] = useState<number | undefined>(
+    income.discountValue ? Number(income.discountValue) : undefined,
+  );
+
+  // Compute items total from provided items
+  const itemsTotal = useMemo(() => {
+    return items.reduce((acc, it) => acc + Number(it.unitPrice) * Number(it.quantity), 0);
+  }, [items]);
+
+  // Compute discount amount from current state
+  const discountAmount = useMemo(() => {
+    if (!discountValue || discountValue <= 0) return 0;
+    if (discountType === "percentage") return (itemsTotal * discountValue) / 100;
+    return discountValue;
+  }, [discountType, discountValue, itemsTotal]);
+
+  // Derive initial extraValue from DB (value = itemsTotal - discount + extraValue)
+  const computedInitialExtra = useMemo(() => {
+    const baseAfterDiscount = Math.max(0, itemsTotal - discountAmount);
+    const dbValue = Number(income.value);
+    const extra = dbValue - baseAfterDiscount;
+    return Math.max(0, Number.isFinite(extra) ? extra : 0);
+  }, [income.value, itemsTotal, discountAmount]);
+
+  const [extraValue, setExtraValue] = useState<number>(computedInitialExtra);
+  useEffect(() => {
+    // If discount or items change externally, recompute suggested extra only when it looks out of sync
+    // Do not force if user has already changed extraValue manually
+    setExtraValue((prev) => {
+      // If the previous value matches the old computed value, update to the new computed value
+      // Otherwise, respect user's manual override
+      return prev === computedInitialExtra ? computedInitialExtra : prev;
+    });
+  }, [computedInitialExtra]);
+
+  // Totals
+  const totalSelectedValue = useMemo(() => Math.max(0, itemsTotal - discountAmount), [itemsTotal, discountAmount]);
+  const profitAmount = useMemo(() => extraValue * (profitMargin / 100), [extraValue, profitMargin]);
+  const finalTotal = useMemo(() => totalSelectedValue + extraValue, [totalSelectedValue, extraValue]);
 
   // Handle success/error toasts and navigation
   useEffect(() => {
@@ -81,7 +130,7 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
     } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
-  }, [state, onSuccess, router]);
+  }, [state.success, state.message, onSuccess, router]);
 
   // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
@@ -104,164 +153,68 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
     }
   };
 
+  // Build selectedProducts map for hidden inputs in IncomeFormActions
+  const selectedProducts = useMemo(() => {
+    const map: Record<number, { quantity: number; unitPrice: number }> = {};
+    for (const it of items) {
+      const pid = Number(it.productId);
+      if (!Number.isFinite(pid)) continue;
+      const qty = Number(it.quantity) || 0;
+      const price = Number(it.unitPrice) || 0;
+      if (qty > 0) map[pid] = { quantity: qty, unitPrice: price };
+    }
+    return map;
+  }, [items]);
+
   return (
     <div className="space-y-4">
       <form id={id} action={formAction} className="space-y-4">
         <input type="hidden" name="id" value={income.id} />
 
-        <div className="space-y-2">
-          <Label htmlFor="description">Descrição</Label>
-          <Input
-            id="description"
-            name="description"
-            type="text"
-            placeholder="Descrição da receita"
-            defaultValue={income.description || ""}
-            required
+        {/* Unified basic fields */}
+        <IncomeBasicFields
+          description={description}
+          dateStr={dateStr}
+          timeStr={timeStr}
+          extraValue={extraValue}
+          profitMargin={profitMargin}
+          onDescriptionChange={setDescription}
+          onDateChange={setDateStr}
+          onTimeChange={setTimeStr}
+          onExtraValueChange={setExtraValue}
+          onProfitMarginChange={setProfitMargin}
+          errors={errors}
+        />
+
+        {/* Customer selector */}
+        {hydrated && (
+          <IncomeCustomerSelector
+            customers={customers}
+            customerId={customerId}
+            onCustomerIdChange={setCustomerId}
+            onCustomerCreate={createCustomer}
           />
-          {errors.description && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.description?.[0]}
-            </p>
-          )}
-        </div>
+        )}
 
-        <div className="space-y-2">
-          <Label htmlFor="date">Data</Label>
-          <DatePicker
-            id="date"
-            name="date"
-            required
-            defaultValue={
-              income.dateTime
-                ? new Date(income.dateTime).toLocaleDateString('en-CA', {
-                    timeZone: 'America/Sao_Paulo'
-                  })
-                : ""
-            }
+        {/* Discount section */}
+        {hydrated && (
+          <IncomeDiscountSection
+            discountType={discountType}
+            discountValue={discountValue}
+            totalSelectedValue={Math.max(0, itemsTotal - (discountType === "percentage" ? ((itemsTotal * (discountValue ?? 0)) / 100) : (discountValue ?? 0)))}
+            onDiscountTypeChange={setDiscountType}
+            onDiscountValueChange={setDiscountValue}
           />
-          {errors.date && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.date?.[0]}
-            </p>
-          )}
-        </div>
+        )}
 
-        <div className="space-y-2">
-          <Label htmlFor="time">Hora</Label>
-          <Input
-            id="time"
-            name="time"
-            type="time"
-            defaultValue={
-              income.dateTime
-                ? new Date(income.dateTime).toLocaleTimeString('pt-BR', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    timeZone: 'America/Sao_Paulo'
-                  })
-                : "12:00"
-            }
-            className="rounded-md"
-            required
-          />
-          {errors.time && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.time?.[0]}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="value">Valor</Label>
-          <CurrencyInput
-            id="value"
-            name="value"
-            step="0.01"
-            min={0}
-            required
-            initialValue={Number(income.value)}
-          />
-          {errors.value && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.value[0]}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="discountType">Tipo de Desconto</Label>
-          <Select
-            defaultValue={income.discountType ?? ""}
-            onValueChange={(val) => {
-              const selectEl = document.getElementById("discountType");
-              if (selectEl) (selectEl as HTMLInputElement).value = val;
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Sem desconto" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none_">Sem desconto</SelectItem>
-              <SelectItem value="percent">Percentual (%)</SelectItem>
-              <SelectItem value="fixed">Valor fixo</SelectItem>
-            </SelectContent>
-          </Select>
-          <input type="hidden" id="discountType" name="discountType" defaultValue={income.discountType ?? ""} />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="discountValue">Valor do Desconto</Label>
-          <Input id="discountValue" name="discountValue" type="number" min={0} step="0.01" defaultValue={income.discountValue ? Number(income.discountValue) : 0} />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="profitMargin">Margem de Lucro (%)</Label>
-          <Input
-            id="profitMargin"
-            name="profitMargin"
-            type="number"
-            inputMode="numeric"
-            step="0.01"
-            min={0}
-            max={100}
-            defaultValue={Number(income.profitMargin)}
-            required
-          />
-          {errors.profitMargin && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.profitMargin[0]}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="customerId">Cliente</Label>
-          <Select
-            value={customerId}
-            onValueChange={(val) => {
-              if (val === "__new__") {
-                setAddCustomerOpen(true);
-                return;
-              }
-              setCustomerId(val);
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecione um cliente" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none_">Sem cliente</SelectItem>
-              <SelectItem value="__new__">Novo Cliente</SelectItem>
-              {customers.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <input type="hidden" name="customerId" value={customerId} />
+        {/* Summary */}
+        <IncomeSummary
+          totalSelectedValue={totalSelectedValue}
+          extraValue={extraValue}
+          profitAmount={profitAmount}
+          finalTotal={finalTotal}
+          profitMargin={profitMargin}
+        />
 
         {/* Sold items summary (read-only) */}
         {items.length > 0 && (
@@ -286,40 +239,15 @@ export default function EditIncomeForm({ id, income, items = [], onSuccess, onCl
           </div>
         )}
 
-        {/* New customer dialog */}
-        <Dialog open={addCustomerOpen} onOpenChange={setAddCustomerOpen}>
-          <DialogContent className="sm:max-w-[420px]">
-            <DialogHeader>
-              <DialogTitle>Novo Cliente</DialogTitle>
-              <DialogDescription className="hidden" aria-hidden="true" />
-            </DialogHeader>
-            <div className="space-y-2 py-2">
-              <Label htmlFor="newCustomerName">Nome</Label>
-              <Input id="newCustomerName" value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} placeholder="Nome do cliente" />
-            </div>
-            <DialogFooter className="gap-2">
-              <DialogClose asChild>
-                <Button type="button" variant="outline">Cancelar</Button>
-              </DialogClose>
-              <Button
-                type="button"
-                onClick={async () => {
-                  const name = newCustomerName.trim();
-                  if (!name) return;
-                  try {
-                    const res = await fetch("/api/clientes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
-                    if (!res.ok) return;
-                    const created = (await res.json()) as { id: number; name: string };
-                    setCustomers((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
-                    setCustomerId(String(created.id));
-                    setNewCustomerName("");
-                    setAddCustomerOpen(false);
-                  } catch {}
-                }}
-              >Salvar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* Hidden inputs for submission (mirrors Add form) */}
+        <IncomeFormActions
+          formId={id}
+          pending={pending}
+          selectedProducts={selectedProducts}
+          finalTotal={finalTotal}
+          extraValue={extraValue}
+          customerId={customerId}
+        />
 
         {!id && (
           <div className="w-full flex justify-between gap-2 pt-2">
