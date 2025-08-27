@@ -1,5 +1,6 @@
 ---
-alwaysApply: true
+description: This rule shows where everything is in the project
+alwaysApply: false
 ---
 
 ## Rule: Ferreira Financeiro Architecture and Contribution Guide
@@ -213,7 +214,7 @@ This project is a Next.js 15 App Router application using React 19, TypeScript, 
 - `pnpm dev` – start dev server
 - `pnpm build` – build
 - `pnpm preview` – build + start
-- `pnpm typecheck`, `pnpm lint`, `pnpm lint:fix`
+- `pnpm lint`
 - `pnpm db:push` / `db:generate` / `db:migrate` / `db:studio`
 
 ### When extending auth or adding public routes
@@ -225,4 +226,3 @@ This project is a Next.js 15 App Router application using React 19, TypeScript, 
 
 - Run typecheck and lint. Ensure pages that display modified data are revalidated.
 - For DB changes, ensure migrations are generated/applied and schema exports are wired in `schema/index.ts`.
-

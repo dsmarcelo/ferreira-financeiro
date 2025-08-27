@@ -48,8 +48,11 @@ export async function updateIncome(
 
 // Delete an income entry by ID
 export async function deleteIncome(id: number): Promise<void> {
-  // Delete the record by its primary key
-  await db.delete(incomes).where(eq(incomes.id, id));
+  // Delete related items and the income in a single transaction
+  await db.transaction(async (tx) => {
+    await tx.delete(incomeItem).where(eq(incomeItem.incomeId, id));
+    await tx.delete(incomes).where(eq(incomes.id, id));
+  });
 }
 
 // List all income entries (by date range)
