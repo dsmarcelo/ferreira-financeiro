@@ -66,7 +66,7 @@ export async function actionCreateIncome(
 
   // Normalize discount type: treat empty string or invalid as undefined
   const discountType: "percent" | "fixed" | undefined =
-    discountTypeRaw === "percent" || discountTypeRaw === "fixed" ? (discountTypeRaw as "percent" | "fixed") : undefined;
+    discountTypeRaw === "percent" || discountTypeRaw === "fixed" ? (discountTypeRaw) : undefined;
 
   // Validate using Zod, passing raw values
   const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin, soldItemsJson, discountType, discountValue, customerId });
@@ -167,7 +167,7 @@ export async function actionUpdateIncome(
   const customerId = typeof customerIdStr === "string" && customerIdStr.length > 0 ? Number(customerIdStr) : undefined;
 
   const discountType: "percent" | "fixed" | undefined =
-    discountTypeRaw === "percent" || discountTypeRaw === "fixed" ? (discountTypeRaw as "percent" | "fixed") : undefined;
+    discountTypeRaw === "percent" || discountTypeRaw === "fixed" ? (discountTypeRaw) : undefined;
 
   // Validate using Zod, passing raw values
   const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin, discountType, discountValue, customerId });

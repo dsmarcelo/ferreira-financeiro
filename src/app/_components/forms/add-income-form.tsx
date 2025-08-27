@@ -37,6 +37,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
 
   // Use Zustand store for form state
   const incomeForm = useIncomeFormStore();
+  const clearFormData = useIncomeFormStore((s) => s.clearFormData);
   const { products, customers, createCustomer } = useIncomeData();
 
   // Wait for hydration to complete before rendering selects
@@ -70,7 +71,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
       toast.error(state.message);
       setIsSubmitting(false);
     }
-  }, [state, onSuccess, router]);
+  }, [state.success, state.message, onSuccess, router]);
 
   // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
@@ -78,9 +79,9 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   // Clear form state after successful submission
   useEffect(() => {
     if (state.success === true) {
-      incomeForm.clearFormData();
+      clearFormData();
     }
-  }, [state.success, incomeForm]);
+  }, [state.success, clearFormData]);
 
   // Calculations
   const itemsTotal = useMemo(() => {

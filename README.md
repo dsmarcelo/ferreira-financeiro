@@ -265,6 +265,13 @@ The Add Income form has been refactored into smaller, reusable mini components f
 
 The main `AddIncomeForm` gates the Customer and Discount sections until the store has hydrated to avoid default values overwriting persisted ones. The discount component also posts `discountType`/`discountValue` fields expected by the action while preserving legacy field names for compatibility.
 
+### Changes
+
+- Fix: Prevented a submit-time re-render loop ("Maximum update depth exceeded") in `src/app/_components/forms/add-income-form.tsx` by:
+  - Selecting a stable `clearFormData` function from the Zustand store instead of referencing the whole store in effect deps.
+  - Narrowing the toast/navigation effect dependencies to `state.success` and `state.message`.
+  - This avoids effects retriggering due to store object identity changes after submit while preserving the same UX and behavior.
+
 ## Scripts
 
 - `pnpm dev` – start app in dev mode
