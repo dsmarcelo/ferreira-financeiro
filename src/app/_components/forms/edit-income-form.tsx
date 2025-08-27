@@ -177,50 +177,10 @@ export default function EditIncomeForm({
     );
   }, [selectedProducts]);
 
-  // Derive initial extraValue from DB using reverse calculation
-  // Since discount is now applied to whole amount: finalTotal = (itemsTotal + extraValue) - discountAmount
-  // So: income.value = itemsTotal + extraValue - discountAmount
-  // Therefore: extraValue = income.value - itemsTotal + discountAmount
-  // But discountAmount depends on (itemsTotal + extraValue), so we need to solve this equation
-  const computedInitialExtra = useMemo((): number => {
-    const dbValue = Number(income.value);
-    const it = itemsTotal;
-    const dv = discountValue ?? 0;
-
-    if (!dv || dv <= 0) {
-      // No discount: extraValue = income.value - itemsTotal
-      return Math.max(0, dbValue - it);
-    }
-
-    if (discountType === "fixed") {
-      // Fixed discount: extraValue = income.value - itemsTotal + discountValue
-      return Math.max(0, dbValue - it + dv);
-    }
-
-    // Percentage discount: this creates a quadratic equation
-    // Let x = extraValue, d = discountValue / 100
-    // income.value = itemsTotal + x - d * (itemsTotal + x)
-    // income.value = itemsTotal + x - d*itemsTotal - d*x
-    // income.value = (itemsTotal - d*itemsTotal) + x - d*x
-    // income.value = itemsTotal*(1-d) + x*(1-d)
-    // income.value = (itemsTotal + x) * (1-d)
-    // x = (income.value / (1-d)) - itemsTotal
-    const discountPercent = dv / 100;
-    const subtotal = dbValue / (1 - discountPercent);
-    const extra = subtotal - it;
-    return Math.max(0, Number.isFinite(extra) ? extra : 0);
-  }, [income.value, itemsTotal, discountType, discountValue]);
-
-  const [extraValue, setExtraValue] = useState<number>(computedInitialExtra);
-  useEffect(() => {
-    // If discount or items change externally, recompute suggested extra only when it looks out of sync
-    // Do not force if user has already changed extraValue manually
-    setExtraValue((prev) => {
-      // If the previous value matches the old computed value, update to the new computed value
-      // Otherwise, respect user's manual override
-      return prev === computedInitialExtra ? computedInitialExtra : prev;
-    });
-  }, [computedInitialExtra]);
+  // Extra value is persisted in DB and must not change when products change
+  const [extraValue, setExtraValue] = useState<number>(
+    Number(income.extraValue) || 0,
+  );
 
   // Now compute subtotal and discount amount based on current state
   const subtotal = useMemo((): number => {
@@ -332,6 +292,7 @@ export default function EditIncomeForm({
           profitAmount={profitAmount}
           finalTotal={finalTotal}
           profitMargin={profitMargin}
+          discountAmount={discountAmount}
         />
 
         {/* Editable products */}

@@ -89,10 +89,10 @@ export function IncomeBasicFields({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="value">Valor Extra</Label>
+        <Label htmlFor="extraValue">Valor Extra</Label>
         <CurrencyInput
-          id="value"
-          name="value"
+          id="extraValue"
+          name="extraValue"
           step="0.01"
           min={0}
           value={extraValue}

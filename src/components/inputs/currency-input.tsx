@@ -33,6 +33,12 @@ export default function CurrencyInput({
     value ?? initialValue,
   );
 
+  // Keep internal hidden value in sync when parent-controlled value changes
+  React.useEffect(() => {
+    setCurrentValue(value ?? initialValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, initialValue]);
+
   // Handler for value change from react-currency-mask
   function handleChangeValue(
     _event: React.ChangeEvent<HTMLInputElement>,
@@ -43,6 +49,7 @@ export default function CurrencyInput({
       typeof originalValue === "number" ? originalValue : Number(originalValue);
     const finalValue = isNaN(numericValue) ? undefined : numericValue;
 
+    setCurrentValue(finalValue);
     setCurrentValue(finalValue);
     onValueChange?.(finalValue);
   }
@@ -65,7 +72,7 @@ export default function CurrencyInput({
             name={`${name}-formatted`}
             placeholder={placeholder ?? "R$ 0,00"}
             className={cn(
-              "border-input shadow-xs focus-visible:border-primary bg-background placeholder:text-muted-foreground h-9 w-full rounded-md border px-2 text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:border focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+              "border-input focus-visible:border-primary bg-background placeholder:text-muted-foreground h-9 w-full rounded-md border px-2 text-base shadow-xs file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:border focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
               className,
             )}
             disabled={disabled}

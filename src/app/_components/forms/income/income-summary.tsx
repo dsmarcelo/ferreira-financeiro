@@ -6,6 +6,7 @@ interface IncomeSummaryProps {
   profitAmount: number;
   finalTotal: number;
   profitMargin: number;
+  discountAmount: number;
 }
 
 export function IncomeSummary({
@@ -14,6 +15,7 @@ export function IncomeSummary({
   profitAmount,
   finalTotal,
   profitMargin,
+  discountAmount,
 }: IncomeSummaryProps) {
   return (
     <div className="flex flex-col gap-2">
@@ -22,6 +24,10 @@ export function IncomeSummary({
         <span className="font-medium">
           {formatCurrency(totalSelectedValue)}
         </span>
+      </div>
+      <div className="text-sm text-slate-600">
+        Desconto:{" "}
+        <span className="font-bold">{formatCurrency(discountAmount)}</span>
       </div>
       <div className="text-sm text-slate-600">
         Valor extra:{" "}

@@ -50,14 +50,15 @@ export async function actionCreateIncome(
   const date = formData.get("date");
   const time = formData.get("time");
   const extraValueStr = formData.get("extraValue"); // This is the extra value (without profit)
-  const totalValueStr = formData.get("totalValue"); // This is the calculated total (with profit)
+  const totalValueStr = formData.get("totalValue"); // Ignored for persistence; recomputed on server
   const profitMarginStr = formData.get("profitMargin");
   const extraValue = typeof extraValueStr === "string" ? Number(extraValueStr) : 0;
   const totalValue = typeof totalValueStr === "string" ? Number(totalValueStr) : undefined;
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
 
-  // Total should NOT include profit: use provided totalValue if present, otherwise fall back to extraValue
-  const value = totalValue ?? extraValue;
+  // We will recompute value on the server from items + extraValue - discount (without profit)
+  // Keep reading totalValue for validation fallback but do not persist it directly
+  const clientProvidedValue = totalValue;
   const soldItemsJson = formData.get("soldItemsJson");
   const discountTypeRaw = formData.get("discountType");
   const discountValueStr = formData.get("discountValue");
@@ -70,7 +71,8 @@ export async function actionCreateIncome(
     discountTypeRaw === "percent" || discountTypeRaw === "fixed" ? (discountTypeRaw) : undefined;
 
   // Validate using Zod, passing raw values
-  const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin, soldItemsJson, discountType, discountValue, customerId });
+  // Validate base fields first (value will be recomputed but allow client value for basic presence)
+  const result = incomeInsertSchema.safeParse({ description, date, time, value: clientProvidedValue ?? extraValue, profitMargin, soldItemsJson, discountType, discountValue, customerId });
   if (!result.success) {
     // Return field-level errors and a general message
     return {
@@ -80,12 +82,12 @@ export async function actionCreateIncome(
     };
   }
 
-  // Ensure we have a valid value
-  if (value === undefined || isNaN(value)) {
+  // Ensure we have a valid extra value
+  if (extraValue === undefined || isNaN(extraValue)) {
     return {
       success: false,
-      message: "Valor total é obrigatório.",
-      errors: { value: ["Valor total é obrigatório"] },
+      message: "Valor extra é obrigatório.",
+      errors: { value: ["Valor extra é obrigatório"] },
     };
   }
 
@@ -94,17 +96,17 @@ export async function actionCreateIncome(
     const dateTimeString = `${date as string}T${time as string}:00`;
     const dateTime = new Date(dateTimeString);
 
-    // Format values for DB (value with 2 decimals, profit margin as percentage with 2 decimals)
-    const dbValue = value !== undefined ? value.toFixed(2) : undefined;
-    const dbProfitMargin = profitMargin !== undefined ? profitMargin.toFixed(2) : undefined;
-
+    // Compute items total and final value server-side
+    let itemsTotal = 0;
     const items: Array<{ productId: number; quantity: number; unitPrice: string }> = [];
     if (typeof soldItemsJson === "string" && soldItemsJson.trim().length > 0) {
       try {
         const parsed = JSON.parse(soldItemsJson) as Array<{ productId: number; quantity: number; unitPrice: number }>;
         for (const it of parsed) {
           if (typeof it.productId === "number" && typeof it.quantity === "number" && it.quantity > 0) {
-            const unitPrice = typeof it.unitPrice === "number" ? it.unitPrice.toFixed(2) : "0.00";
+            const unitPriceNum = typeof it.unitPrice === "number" ? it.unitPrice : 0;
+            const unitPrice = unitPriceNum.toFixed(2);
+            itemsTotal += unitPriceNum * it.quantity;
             items.push({ productId: it.productId, quantity: it.quantity, unitPrice });
           }
         }
@@ -113,11 +115,23 @@ export async function actionCreateIncome(
       }
     }
 
+    const subtotal = itemsTotal + (extraValue ?? 0);
+    const discountAmount = discountType === "percent"
+      ? ((discountValue ?? 0) / 100) * subtotal
+      : (discountValue ?? 0);
+    const computedValue = Math.max(0, subtotal - discountAmount);
+
+    // Format values for DB
+    const dbValue = computedValue.toFixed(2);
+    const dbExtraValue = (extraValue ?? 0).toFixed(2);
+    const dbProfitMargin = profitMargin !== undefined ? profitMargin.toFixed(2) : undefined;
+
     if (items.length > 0) {
       await createIncomeWithItems({
         description: description as string,
         dateTime: dateTime,
         value: dbValue!,
+        extraValue: dbExtraValue!,
         profitMargin: dbProfitMargin!,
         discountType: discountType,
         discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
@@ -128,6 +142,7 @@ export async function actionCreateIncome(
         description: description as string,
         dateTime: dateTime,
         value: dbValue!,
+        extraValue: dbExtraValue!,
         profitMargin: dbProfitMargin!,
         discountType: discountType,
         discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
@@ -165,8 +180,7 @@ export async function actionUpdateIncome(
   const customerIdStr = formData.get("customerId");
   const soldItemsJson = formData.get("soldItemsJson");
   const totalValue = typeof totalValueStr === "string" ? Number(totalValueStr) : undefined;
-  const extraValue = typeof extraValueStr === "string" ? Number(extraValueStr) : undefined;
-  const value = totalValue ?? extraValue; // value excludes profit, mirrors create flow
+  const extraValue = typeof extraValueStr === "string" ? Number(extraValueStr) : 0;
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
   const discountValue = typeof discountValueStr === "string" ? Number(discountValueStr) : undefined;
   const customerId = typeof customerIdStr === "string" && customerIdStr.length > 0 ? Number(customerIdStr) : undefined;
@@ -175,7 +189,7 @@ export async function actionUpdateIncome(
     discountTypeRaw === "percent" || discountTypeRaw === "fixed" ? (discountTypeRaw) : undefined;
 
   // Validate using Zod, passing raw values
-  const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin, discountType, discountValue, customerId });
+  const result = incomeInsertSchema.safeParse({ description, date, time, value: totalValue ?? extraValue, profitMargin, discountType, discountValue, customerId });
   if (!result.success) {
     return {
       success: false,
@@ -184,12 +198,12 @@ export async function actionUpdateIncome(
     };
   }
 
-  // Ensure we have a valid value for updates
-  if (value === undefined || isNaN(value)) {
+  // Ensure we have a valid extra value for updates
+  if (extraValue === undefined || isNaN(extraValue)) {
     return {
       success: false,
-      message: "Valor é obrigatório.",
-      errors: { value: ["Valor é obrigatório"] },
+      message: "Valor extra é obrigatório.",
+      errors: { value: ["Valor extra é obrigatório"] },
     };
   }
 
@@ -198,24 +212,17 @@ export async function actionUpdateIncome(
     const dateTimeString = `${date as string}T${time as string}:00`;
     const dateTime = new Date(dateTimeString);
 
-    const dataToUpdate = {
-      description: description as string,
-      dateTime: dateTime,
-      value: value.toFixed(2),
-      profitMargin: profitMargin?.toFixed(2) ?? "0",
-      discountType,
-      discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
-      customerId,
-    } as const;
-
-    // Parse items (if any) and update items transactionally
+    // Parse items (if any) to compute new total and optionally update linkage
     const items: Array<{ productId: number; quantity: number; unitPrice: string }> = [];
+    let itemsTotal = 0;
     if (typeof soldItemsJson === "string" && soldItemsJson.trim().length > 0) {
       try {
         const parsed = JSON.parse(soldItemsJson) as Array<{ productId: number; quantity: number; unitPrice: number }>;
         for (const it of parsed) {
           if (typeof it.productId === "number" && typeof it.quantity === "number" && it.quantity > 0) {
-            const unitPrice = typeof it.unitPrice === "number" ? it.unitPrice.toFixed(2) : "0.00";
+            const unitPriceNum = typeof it.unitPrice === "number" ? it.unitPrice : 0;
+            const unitPrice = unitPriceNum.toFixed(2);
+            itemsTotal += unitPriceNum * it.quantity;
             items.push({ productId: it.productId, quantity: it.quantity, unitPrice });
           }
         }
@@ -223,6 +230,23 @@ export async function actionUpdateIncome(
         // ignore bad json
       }
     }
+
+    const subtotal = itemsTotal + (extraValue ?? 0);
+    const computedDiscount = discountType === "percent"
+      ? ((discountValue ?? 0) / 100) * subtotal
+      : (discountValue ?? 0);
+    const computedValue = Math.max(0, subtotal - computedDiscount);
+
+    const dataToUpdate = {
+      description: description as string,
+      dateTime: dateTime,
+      value: computedValue.toFixed(2),
+      extraValue: (extraValue ?? 0).toFixed(2),
+      profitMargin: profitMargin?.toFixed(2) ?? "0",
+      discountType,
+      discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
+      customerId,
+    } as const;
 
     if (items.length > 0) {
       await updateIncomeWithItems(id, dataToUpdate, items);
