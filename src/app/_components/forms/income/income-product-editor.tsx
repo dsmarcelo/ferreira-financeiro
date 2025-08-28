@@ -1,14 +1,30 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import CurrencyInput from "@/components/inputs/currency-input";
-import { formatCurrency } from "@/lib/utils";
 import { type Product } from "@/hooks/use-income-data";
-import { Trash2 } from "lucide-react";
-import { DeleteDialog } from "@/app/_components/dialogs/delete-dialog";
 import { Input } from "@/components/ui/input";
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+  DrawerClose,
+} from "@/components/ui/drawer";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { actionCreateProduct, type ActionResponse } from "@/actions/product-actions";
+import { toast } from "sonner";
 
 interface IncomeProductEditorProps {
   products: Product[];
@@ -27,183 +43,221 @@ export function IncomeProductEditor({
   onChange,
   originalQuantities,
 }: IncomeProductEditorProps) {
-  const [productToAdd, setProductToAdd] = useState<number | "">("");
+  const [open, setOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [localProducts, setLocalProducts] = useState<Product[] | null>(null);
 
-  const selectableProducts = useMemo(() => {
-    return products;
-  }, [products]);
+  const [createState, createAction, creating] = useActionState<ActionResponse, FormData>(
+    actionCreateProduct,
+    { success: false, message: "" },
+  );
 
-  const handleAddProduct = () => {
-    if (productToAdd === "") return;
-    const pid = Number(productToAdd);
-    const product = products.find((p) => p.id === pid);
-    if (!product) return;
-    const defaultPrice = Number(product.price);
-    const current = selectedProducts[pid];
-    const nextQuantity = (current?.quantity ?? 0) + 1;
-    onChange({
-      ...selectedProducts,
-      [pid]: {
-        quantity: nextQuantity,
-        unitPrice: current?.unitPrice ?? defaultPrice,
-      },
-    });
-    setProductToAdd("");
-  };
+  const selectableProducts = useMemo(() => localProducts ?? products, [localProducts, products]);
 
-  const handleRemove = (productId: number) => {
-    const { [productId]: _omit, ...rest } = selectedProducts;
-    onChange(rest);
-  };
+  // Removed handleRemove; deletion is handled by setting quantity to 0
 
   const getAvailable = (productId: number): number => {
-    const prod = products.find((p) => p.id === productId);
+    const prod = selectableProducts.find((p) => p.id === productId);
     const stock = prod ? prod.quantity : 0;
     const originalQty = originalQuantities?.[productId] ?? 0;
     const selectedQty = selectedProducts[productId]?.quantity ?? 0;
     return stock + originalQty - selectedQty;
   };
 
-  const handleQtyChange = (productId: number, delta: number) => {
-    const entry = selectedProducts[productId];
-    if (!entry) return;
-    if (delta > 0) {
-      // Enforce stock constraint
-      if (getAvailable(productId) <= 0) return;
+  const ensureEntry = (productId: number) => {
+    const product = products.find((p) => p.id === productId);
+    const defaultPrice = Number(product?.price ?? 0);
+    const current = selectedProducts[productId];
+    if (!current) {
+      return { quantity: 0, unitPrice: defaultPrice };
     }
-    const nextQty = Math.max(0, (entry.quantity ?? 0) + delta);
-    const next = { ...selectedProducts };
+    return current;
+  };
+
+  const setQuantity = (productId: number, nextQtyRaw: number) => {
+    const current = ensureEntry(productId);
+    const maxAllowed = Math.max(0, (current.quantity ?? 0) + getAvailable(productId));
+    const nextQty = Math.max(0, Math.min(nextQtyRaw, maxAllowed));
+    const next = { ...selectedProducts } as Record<number, { quantity: number; unitPrice: number }>;
     if (nextQty === 0) delete next[productId];
-    else next[productId] = { ...entry, quantity: nextQty };
+    else next[productId] = { ...current, quantity: nextQty };
     onChange(next);
+  };
+
+  const handleQtyChange = (productId: number, delta: number) => {
+    const current = ensureEntry(productId);
+    if (delta > 0 && getAvailable(productId) <= 0) return;
+    setQuantity(productId, (current.quantity ?? 0) + delta);
   };
 
   const handlePriceChange = (productId: number, price: number | undefined) => {
-    const entry = selectedProducts[productId];
-    if (!entry) return;
-    const next = {
-      ...selectedProducts,
-      [productId]: { ...entry, unitPrice: price ?? 0 },
-    };
+    const entry = ensureEntry(productId);
+    const next = { ...selectedProducts } as Record<number, { quantity: number; unitPrice: number }>;
+    if (!entry || (entry?.quantity ?? 0) === 0) {
+      // If price is changed before any quantity, start with qty 1 for convenience
+      next[productId] = { quantity: 1, unitPrice: price ?? 0 };
+    } else {
+      next[productId] = { ...entry, unitPrice: price ?? 0 };
+    }
     onChange(next);
   };
 
+  // Handle product creation result
+  useEffect(() => {
+    if (!createState) return;
+    if (createState.success) {
+      toast.success(createState.message || "Produto criado");
+      void (async () => {
+        try {
+          const res = await fetch("/api/produtos", { cache: "no-store" });
+          if (res.ok) {
+            const data = (await res.json()) as Product[];
+            setLocalProducts(data);
+          }
+        } catch {
+          // ignore
+        }
+      })();
+      setAddOpen(false);
+    } else if (createState.message) {
+      toast.error(createState.message);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createState.success, createState.message]);
+
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Label>Produtos</Label>
-        <div className="flex items-center gap-2">
-          <select
-            className="border-input focus-visible:border-primary bg-background placeholder:text-muted-foreground h-9 rounded-md border px-2 text-base shadow-xs focus-visible:border focus-visible:outline-none"
-            value={productToAdd}
-            onChange={(e) =>
-              setProductToAdd(
-                e.target.value === "" ? "" : Number(e.target.value),
-              )
-            }
-          >
-            <option value="">Selecionar produto…</option>
-            {selectableProducts.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name} — {formatCurrency(Number(p.price))}
-              </option>
-            ))}
-          </select>
-          <Button type="button" variant="outline" onClick={handleAddProduct}>
-            Adicionar
-          </Button>
-        </div>
-      </div>
+      <Label className="sr-only">Produtos</Label>
 
-      {Object.keys(selectedProducts).length > 0 && (
-        <div className="grid grid-cols-1 gap-2">
-          {products
-            .filter(
-              (p) =>
-                selectedProducts[p.id] && selectedProducts[p.id]!.quantity > 0,
-            )
-            .map((p) => {
-              const selectedData = selectedProducts[p.id];
-              if (!selectedData) return null;
-              const available = getAvailable(p.id);
-              return (
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between rounded-md border bg-slate-50 p-1 px-3"
-                >
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{p.name}</p>
-                      <span className="text-xs text-slate-500">
-                        Em estoque: {available}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleQtyChange(p.id, -1)}
-                        >
-                          -
-                        </Button>
-                        <Input
-                          type="number"
-                          min="0"
-                          max={getAvailable(p.id) + selectedData.quantity}
-                          value={selectedData.quantity}
-                          onChange={(e) => {
-                            const newQty = parseInt(e.target.value) || 0;
-                            const available =
-                              getAvailable(p.id) + selectedData.quantity;
-                            const clampedQty = Math.min(
-                              Math.max(0, newQty),
-                              available,
-                            );
-                            const next = { ...selectedProducts };
-                            if (clampedQty === 0) delete next[p.id];
-                            else
-                              next[p.id] = {
-                                ...selectedData,
-                                quantity: clampedQty,
-                              };
-                            onChange(next);
-                          }}
-                          className="border-input bg-background min-w-10 rounded-md border px-1 py-1 text-center text-sm"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => handleQtyChange(p.id, 1)}
-                          size="icon"
-                        >
-                          +
-                        </Button>
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>
+          <Button type="button" variant="outline" className="w-full justify-between">
+            <span>Produtos</span>
+            <span className="text-muted-foreground text-xs">
+              {Object.values(selectedProducts).filter((v) => (v?.quantity ?? 0) > 0).length} selecionado(s)
+            </span>
+          </Button>
+        </DrawerTrigger>
+
+        <DrawerContent className="data-[vaul-drawer-direction=bottom]:max-h-[90dvh] data-[vaul-drawer-direction=top]:max-h-[90dvh]">
+          <DrawerHeader className="flex flex-row items-center justify-between">
+            <DrawerTitle>Produtos</DrawerTitle>
+            <Button className="w-fit" type="button" variant="outline" onClick={() => setAddOpen(true)}>
+              + Novo produto
+            </Button>
+          </DrawerHeader>
+
+          <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4">
+            <div className="grid grid-cols-1 gap-2">
+              {selectableProducts.map((p) => {
+                const entry = selectedProducts[p.id];
+                const qty = entry?.quantity ?? 0;
+                const availableRemaining = getAvailable(p.id);
+                const maxAllowed = Math.max(0, qty + Math.max(0, availableRemaining));
+                return (
+                  <div
+                    key={p.id}
+                    className={`flex items-start justify-between rounded-md border p-2 ${qty > 0 ? "bg-slate-50" : "bg-background"}`}
+                  >
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-medium">{p.name}</p>
+                        <span className="text-muted-foreground text-xs">Em estoque: {availableRemaining}</span>
                       </div>
 
-                      <div className="w-40">
-                        <CurrencyInput
-                          name={`price-${p.id}-editor`}
-                          value={Number(selectedData.unitPrice)}
-                          onValueChange={(v) => handlePriceChange(p.id, v)}
-                        />
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleQtyChange(p.id, -1)}
+                            aria-label="Diminuir"
+                          >
+                            -
+                          </Button>
+                          <Input
+                            type="number"
+                            inputMode="numeric"
+                            min="0"
+                            max={maxAllowed}
+                            value={qty}
+                            onChange={(e) => {
+                              const newQty = Number.parseInt(e.target.value) || 0;
+                              setQuantity(p.id, newQty);
+                            }}
+                            className="border-input bg-background min-w-12 rounded-md border px-1 py-1 text-center text-sm"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleQtyChange(p.id, 1)}
+                            aria-label="Aumentar"
+                            disabled={availableRemaining <= 0}
+                          >
+                            +
+                          </Button>
+                        </div>
+
+                        <div className="w-36">
+                          <CurrencyInput
+                            name={`price-${p.id}-editor`}
+                            value={Number(entry?.unitPrice ?? p.price ?? 0)}
+                            onValueChange={(v) => handlePriceChange(p.id, v)}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+          </div>
 
-                  <DeleteDialog
-                    onConfirm={() => handleRemove(p.id)}
-                    title="Remover produto"
-                    description={`Tem certeza que deseja remover "${p.name}" da lista?`}
-                    confirmText="Remover"
-                    triggerText={<Trash2 className="h-4 w-4" />}
-                  />
-                </div>
-              );
-            })}
-        </div>
-      )}
+          <DrawerFooter>
+            <DrawerClose asChild>
+              <Button type="button" variant="default">Concluir</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent className="gap-3 p-4">
+          <DialogHeader>
+            <DialogTitle>Novo produto</DialogTitle>
+          </DialogHeader>
+
+          <form action={createAction} className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="name">Nome</Label>
+              <Input id="name" name="name" required placeholder="Ex: Produto" />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="price">Preço</Label>
+              <div className="w-full">
+                <CurrencyInput name="price" />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="quantity">Quantidade em estoque</Label>
+              <Input id="quantity" name="quantity" type="number" min="0" defaultValue={0} required />
+            </div>
+
+            {/* Hidden cost defaults to 0 */}
+            <input type="hidden" name="cost" value={0} />
+
+            <DialogFooter>
+              <Button type="submit" disabled={creating}>
+                {creating ? "Salvando..." : "Salvar"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

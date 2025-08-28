@@ -11,7 +11,7 @@ import { useIncomeFormStore } from "@/stores/income-form-store";
 import { useIncomeData } from "@/hooks/use-income-data";
 import {
   IncomeBasicFields,
-  IncomeProductSelection,
+  IncomeProductEditor,
   IncomeCustomerSelector,
   IncomeDiscountSection,
   IncomeSummary,
@@ -141,9 +141,10 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
           errors={errors}
         />
 
-        <IncomeProductSelection
+        <IncomeProductEditor
           products={products}
           selectedProducts={incomeForm.selectedProducts}
+          onChange={incomeForm.setSelectedProducts}
         />
 
         {hydrated && (

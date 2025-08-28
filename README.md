@@ -167,6 +167,15 @@ Form submissions call server actions which validate inputs (Zod), call the query
 - Responsive drawers/sheets: `src/app/_components/responsive-sheet.tsx` and `mobile-drawer.tsx`.
 - Lists and item components render entities and actions.
 
+### Income product editor (drawer)
+
+- The income product editor was refactored to a mobile-first drawer UI.
+- Component: `src/app/_components/forms/income/income-product-editor.tsx`.
+- Inside the drawer you can:
+  - Adjust quantities with +/- and a numeric input.
+  - Edit unit price per product.
+  - Add a new product via a dialog (name, price, stock). It uses the product create action and refreshes the list.
+
 ### API routes
 
 - Category order update: `src/app/api/categorias/update-order/route.ts` (accepts a list of IDs; updates `sortOrder`).
