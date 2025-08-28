@@ -1,12 +1,15 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import CurrencyInput from "@/components/inputs/currency-input";
 import type { Product } from "@/server/db/schema/products";
 import { useActionState } from "react";
-import { actionUpdateProduct, type ActionResponse } from "@/actions/product-actions";
+import {
+  actionUpdateProduct,
+  type ActionResponse,
+} from "@/actions/product-actions";
 import { toast } from "sonner";
 
 interface StockListProps {
@@ -15,19 +18,48 @@ interface StockListProps {
 
 export default function StockList({ products }: StockListProps) {
   const [localProducts, setLocalProducts] = useState<Product[]>(products);
-  const [editOpen, setEditOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [updateState, updateAction, updating] = useActionState<ActionResponse, FormData>(
+  const [updateState, updateAction] = useActionState<ActionResponse, FormData>(
     actionUpdateProduct,
     { success: false, message: "" },
   );
+
+  // Keep per-product debounce timers to batch quick edits
+  const debounceTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(
+    new Map(),
+  );
+
+  // Schedules a debounced save for a given product id
+  const scheduleSave = (productId: number) => {
+    const existing = debounceTimersRef.current.get(productId);
+    if (existing) clearTimeout(existing);
+    const timeoutId = setTimeout(() => {
+      const prod = localProducts.find((pp) => pp.id === productId);
+      if (!prod) return;
+      const form = new FormData();
+      form.set("id", String(prod.id));
+      form.set("name", prod.name);
+      form.set("quantity", String(Math.max(0, prod.quantity ?? 0)));
+      form.set("price", String(Number(prod.price) || 0));
+      form.set("cost", String(Number(prod.cost) || 0));
+      void updateAction(form);
+      debounceTimersRef.current.delete(productId);
+    }, 1000);
+    debounceTimersRef.current.set(productId, timeoutId);
+  };
+
+  // Clear any pending timers on unmount
+  useEffect(() => {
+    const timers = debounceTimersRef.current;
+    return () => {
+      for (const t of timers.values()) clearTimeout(t);
+      timers.clear();
+    };
+  }, []);
 
   useEffect(() => {
     if (!updateState) return;
     if (updateState.success) {
       toast.success(updateState.message || "Produto atualizado");
-      setEditOpen(false);
-      setEditingId(null);
       void (async () => {
         try {
           const res = await fetch("/api/produtos", { cache: "no-store" });
@@ -50,43 +82,106 @@ export default function StockList({ products }: StockListProps) {
     setLocalProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, quantity: nextQty } : p)),
     );
+    scheduleSave(id);
   };
 
   const handleDelta = (id: number, delta: number) => {
     setLocalProducts((prev) =>
       prev.map((p) =>
-        p.id === id ? { ...p, quantity: Math.max(0, (p.quantity ?? 0) + delta) } : p,
+        p.id === id
+          ? { ...p, quantity: Math.max(0, (p.quantity ?? 0) + delta) }
+          : p,
       ),
     );
+    scheduleSave(id);
   };
 
   return (
     <div className="divide-y rounded-md border">
       {localProducts.length === 0 ? (
-        <div className="p-4 text-sm text-slate-600">Nenhum produto cadastrado.</div>
+        <div className="p-4 text-sm text-slate-600">
+          Nenhum produto cadastrado.
+        </div>
       ) : (
         localProducts.map((p) => (
-          <div key={p.id} className="flex items-center justify-between gap-2 p-3">
+          <div
+            key={p.id}
+            className="flex items-center justify-between gap-2 p-3"
+          >
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <Input
-                defaultValue={p.name}
-                onBlur={(e) => {
-                  const form = new FormData();
-                  form.set("id", String(p.id));
-                  form.set("name", e.target.value);
-                  form.set("quantity", String(p.quantity ?? 0));
-                  form.set("price", String(Number(p.price) || 0));
-                  form.set("cost", String(Number(p.cost) || 0));
-                  void updateAction(form);
+                value={p.name}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setLocalProducts((prev) =>
+                    prev.map((pp) =>
+                      pp.id === p.id ? { ...pp, name: next } : pp,
+                    ),
+                  );
+                  scheduleSave(p.id);
                 }}
                 className="border-input bg-background w-full rounded-md border px-2 py-1 text-sm"
               />
-              <span className="text-xs text-slate-500">
-                Preço: R$ {Number(p.price).toFixed(2)} • Custo: R$ {Number(p.cost).toFixed(2)}
-              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-slate-500">Preço</label>
+                  <CurrencyInput
+                    name={`price-${p.id}`}
+                    value={Number(p.price) || 0}
+                    min={0}
+                    onValueChange={(val) => {
+                      const numeric = typeof val === "number" ? val : 0;
+                      setLocalProducts((prev) =>
+                        prev.map((pp) =>
+                          pp.id === p.id
+                            ? {
+                                ...pp,
+                                price: numeric.toFixed(
+                                  2,
+                                ) as unknown as Product["price"],
+                              }
+                            : pp,
+                        ),
+                      );
+                      scheduleSave(p.id);
+                    }}
+                    className="h-8 w-28 px-2 py-1 text-sm"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-slate-500">Custo</label>
+                  <CurrencyInput
+                    name={`cost-${p.id}`}
+                    value={Number(p.cost) || 0}
+                    min={0}
+                    onValueChange={(val) => {
+                      const numeric = typeof val === "number" ? val : 0;
+                      setLocalProducts((prev) =>
+                        prev.map((pp) =>
+                          pp.id === p.id
+                            ? {
+                                ...pp,
+                                cost: numeric.toFixed(
+                                  2,
+                                ) as unknown as Product["cost"],
+                              }
+                            : pp,
+                        ),
+                      );
+                      scheduleSave(p.id);
+                    }}
+                    className="h-8 w-28 px-2 py-1 text-sm"
+                  />
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-1">
-              <Button type="button" variant="outline" size="icon" onClick={() => handleDelta(p.id, -1)}>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => handleDelta(p.id, -1)}
+              >
                 -
               </Button>
               <Input
@@ -94,76 +189,23 @@ export default function StockList({ products }: StockListProps) {
                 inputMode="numeric"
                 min={0}
                 value={p.quantity ?? 0}
-                onChange={(e) => handleSetQuantity(p.id, Number.parseInt(e.target.value) || 0)}
-                onBlur={(e) => {
-                  const form = new FormData();
-                  form.set("id", String(p.id));
-                  form.set("name", p.name);
-                  form.set("quantity", String(Math.max(0, Number(e.target.value) || 0)));
-                  form.set("price", String(Number(p.price) || 0));
-                  form.set("cost", String(Number(p.cost) || 0));
-                  void updateAction(form);
-                }}
+                onChange={(e) =>
+                  handleSetQuantity(p.id, Number.parseInt(e.target.value) || 0)
+                }
                 className="border-input bg-background min-w-14 rounded-md border px-1 py-1 text-center text-sm"
               />
-              <Button type="button" variant="outline" size="icon" onClick={() => handleDelta(p.id, 1)}>
-                +
-              </Button>
-            </div>
-            <div className="pl-1">
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
-                onClick={() => {
-                  setEditingId(p.id);
-                  setEditOpen(true);
-                }}
+                size="icon"
+                onClick={() => handleDelta(p.id, 1)}
               >
-                Editar
+                +
               </Button>
             </div>
           </div>
         ))
       )}
-
-      <Dialog open={editOpen} onOpenChange={(v) => { setEditOpen(v); if (!v) setEditingId(null); }}>
-        <DialogContent className="gap-3 p-4">
-          <DialogHeader>
-            <DialogTitle>Editar produto</DialogTitle>
-          </DialogHeader>
-
-          {editingId != null && (() => {
-            const prod = localProducts.find((pp) => pp.id === editingId);
-            if (!prod) return null;
-            return (
-              <form action={updateAction} className="space-y-3">
-                <input type="hidden" name="id" value={prod.id} />
-                <input type="hidden" name="price" value={Number(prod.price) || 0} />
-                <input type="hidden" name="cost" value={Number(prod.cost) || 0} />
-
-                <div className="space-y-1">
-                  <label htmlFor="edit-name" className="text-sm font-medium">Nome</label>
-                  <Input id="edit-name" name="name" defaultValue={prod.name} required />
-                </div>
-
-                <div className="space-y-1">
-                  <label htmlFor="edit-quantity" className="text-sm font-medium">Quantidade em estoque</label>
-                  <Input id="edit-quantity" name="quantity" type="number" min="0" defaultValue={prod.quantity} required />
-                </div>
-
-                <DialogFooter>
-                  <Button type="submit" disabled={updating}>
-                    {updating ? "Salvando..." : "Salvar"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
-
-
