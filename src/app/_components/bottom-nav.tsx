@@ -8,6 +8,7 @@ import {
   Store,
   BanknoteArrowDown,
   Package,
+  HandCoins,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,12 @@ const navItems = [
     href: "/caixa",
     icon: BanknoteArrowDown,
     testId: "nav-caixa",
+  },
+  {
+    label: "Vendas",
+    href: "/vendas",
+    icon: HandCoins,
+    testId: "nav-vendas",
   },
   {
     label: "Despesas Pessoais",
