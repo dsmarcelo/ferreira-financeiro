@@ -1,19 +1,19 @@
 "use client";
 
 import { cn, formatCurrency } from "@/lib/utils";
-import type { Income } from "@/server/db/schema/incomes-schema";
+import type { Income as Sale } from "@/server/db/schema/incomes-schema";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import * as React from "react";
 
-export interface IncomeListItemProps {
-  income: Income;
+export interface SaleListItemProps {
+  sale: Sale;
   children?: React.ReactNode;
 }
 
-export function IncomeListItem({ income, children }: IncomeListItemProps) {
-  const totalIncome = Number(income.value); // This is the total income input by user
-  const profitMarginPercent = Number(income.profitMargin);
+export function SalesListItem({ sale, children }: SaleListItemProps) {
+  const totalIncome = Number(sale.value); // total sale value
+  const profitMarginPercent = Number(sale.profitMargin);
   const profitAmount = totalIncome * (profitMarginPercent / 100);
 
   return (
@@ -23,9 +23,9 @@ export function IncomeListItem({ income, children }: IncomeListItemProps) {
       )}
     >
       <div className="w-full">
-        <p className="text-base">{income.description}</p>
+        <p className="text-base">{sale.description}</p>
         <p className="text-muted-foreground text-sm whitespace-nowrap">
-          {format(parseISO(income.dateTime.toISOString()), "HH:mm", {
+          {format(parseISO(sale.dateTime.toISOString()), "HH:mm", {
             locale: ptBR,
           }).toUpperCase()}
         </p>

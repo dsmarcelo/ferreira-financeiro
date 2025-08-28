@@ -4,7 +4,7 @@ import { listIncomes } from "@/server/queries/income-queries";
 import Header from "../_components/header";
 import { Suspense } from "react";
 import Loading from "@/app/_components/loading/loading";
-import IncomeList from "@/app/_components/lists/income-list";
+import SimpleIncomeList from "@/app/_components/lists/simple-income-list";
 
 export default async function CaixaPage({
   searchParams,
@@ -27,7 +27,7 @@ export default async function CaixaPage({
       </Header>
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4">
         <Suspense fallback={<Loading />}>
-          <IncomeList incomes={incomes} />
+          <SimpleIncomeList incomes={incomes} />
         </Suspense>
       </main>
       <div className="fixed bottom-24 block w-full px-5 sm:hidden">

@@ -3,57 +3,59 @@ import { formatCurrency } from "@/lib/utils";
 import type { Income } from "@/server/db/schema/incomes-schema";
 import { use } from "react";
 import { useCallback, useTransition } from "react";
-import { IncomeListItem } from "./income-list-item";
+import { SalesListItem } from "./sales-list-item";
 import DownloadButton from "@/app/_components/buttons/download-button";
 import ShareButton from "@/app/_components/buttons/share-button";
 import { ptBR } from "date-fns/locale";
 import { format, parseISO } from "date-fns";
 import { Dot } from "lucide-react";
-import EditIncome from "@/app/_components/dialogs/edit/edit-income";
+import EditSale from "@/app/_components/dialogs/edit/edit-sale";
 
-function groupByDate(incomes: Income[]) {
-  return incomes
+function groupSalesByDate(sales: Income[]) {
+  return sales
     .sort((a, b) => {
       const dateA = format(a.dateTime, "yyyy-MM-dd");
       const dateB = format(b.dateTime, "yyyy-MM-dd");
       if (dateA !== dateB) return dateA.localeCompare(dateB);
       return a.id - b.id;
     })
-    .reduce<Record<string, Income[]>>((acc, income) => {
-      const date = format(income.dateTime, "yyyy-MM-dd");
+    .reduce<Record<string, Income[]>>((acc, sale) => {
+      const date = format(sale.dateTime, "yyyy-MM-dd");
       acc[date] ??= [];
-      acc[date].push(income);
+      acc[date].push(sale);
       return acc;
     }, {});
 }
 
-function sumIncomesByDate(incomes: Income[]): number {
-  return incomes.reduce((sum, income) => sum + Number(income.value), 0);
+function sumSalesByDate(sales: Income[]): number {
+  return sales.reduce((sum, sale) => sum + Number(sale.value), 0);
 }
 
-export default function IncomeList({
-  incomes,
+export default function SalesList({
+  sales,
+  labels,
 }: {
-  incomes: Promise<Income[]>;
+  sales: Promise<Income[]>;
+  labels?: { plural?: string };
 }) {
-  const allIncomes = use(incomes);
+  const allSales = use(sales);
 
   // PDF actions (hooks must be above any return)
   const [isPending, startTransition] = useTransition();
   const handleDownload = useCallback(() => {
     startTransition(() => {
-      // TODO: Implement income PDF download functionality
-      console.log("Download income PDF", allIncomes);
+      // TODO: Implement sales PDF download functionality
+      console.log("Download sales PDF", allSales);
     });
-  }, [allIncomes]);
+  }, [allSales]);
   const handleShare = useCallback(() => {
     startTransition(() => {
-      // TODO: Implement income PDF share functionality
-      console.log("Share income PDF", allIncomes);
+      // TODO: Implement sales PDF share functionality
+      console.log("Share sales PDF", allSales);
     });
-  }, [allIncomes]);
+  }, [allSales]);
 
-  if (allIncomes.length === 0) {
+  if (allSales.length === 0) {
     return (
       <div className="text-muted-foreground py-8 text-center">
         Nenhum resultado encontrado para o mês selecionado
@@ -61,7 +63,7 @@ export default function IncomeList({
     );
   }
 
-  const totals = allIncomes.reduce(
+  const totals = allSales.reduce(
     (acc, item) => {
       const totalIncome = Number(item.value); // This is the total income input by user
       const profitMarginPercent = Number(item.profitMargin);
@@ -76,8 +78,10 @@ export default function IncomeList({
     { baseValue: 0, profitAmount: 0, total: 0 },
   );
 
-  const grouped = groupByDate(allIncomes);
+  const grouped = groupSalesByDate(allSales);
   const sortedDates = Object.keys(grouped).sort();
+
+  const labelPlural = labels?.plural ?? "receitas";
 
   return (
     <div className="flex flex-col gap-4">
@@ -85,7 +89,9 @@ export default function IncomeList({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <div className="sm:border-r sm:pr-2">
             <p>Total do mês</p>
-            <p className="text-2xl font-bold text-green-600">{formatCurrency(totals.total)}</p>
+            <p className="text-2xl font-bold text-green-600">
+              {formatCurrency(totals.total)}
+            </p>
           </div>
           <div className="flex divide-x">
             <div className="pr-2">
@@ -93,25 +99,29 @@ export default function IncomeList({
                 <div className="h-2 w-2 rounded-full bg-blue-400" />
                 <p className="text-sm">Base</p>
               </div>
-              <p className="text-lg font-bold">{formatCurrency(totals.baseValue)}</p>
+              <p className="text-lg font-bold">
+                {formatCurrency(totals.baseValue)}
+              </p>
             </div>
             <div className="pl-2">
               <div className="flex items-center gap-1">
                 <div className="h-2 w-2 rounded-full bg-green-400" />
                 <p className="text-sm">Lucro</p>
               </div>
-              <p className="text-lg font-bold">{formatCurrency(totals.profitAmount)}</p>
+              <p className="text-lg font-bold">
+                {formatCurrency(totals.profitAmount)}
+              </p>
             </div>
           </div>
         </div>
         <div className="flex gap-2">
           <DownloadButton
-            aria-label="Baixar PDF das receitas"
+            aria-label={`Baixar PDF das ${labelPlural}`}
             onClick={handleDownload}
             disabled={isPending}
           />
           <ShareButton
-            aria-label="Compartilhar PDF das receitas"
+            aria-label={`Compartilhar PDF das ${labelPlural}`}
             onClick={handleShare}
             disabled={isPending}
           />
@@ -119,28 +129,28 @@ export default function IncomeList({
       </div>
 
       {sortedDates.length === 0 && (
-        <div className="text-muted-foreground py-8 text-center px-5">
-          Nenhuma receita encontrada.
+        <div className="text-muted-foreground px-5 py-8 text-center">
+          {`Nenhuma ${labelPlural.slice(0, -1)} encontrada.`}
         </div>
       )}
 
       <div className="divide-y">
         {sortedDates.map((date) => (
           <div key={date} className="pb-4">
-            <div className="text-muted-foreground flex items-center text-sm bg-muted p-1 px-4">
-              <p className="font-semibold uppercase text-primary">
-              {format(parseISO(date), "dd 'de' MMMM, EEE", { locale: ptBR })}
+            <div className="text-muted-foreground bg-muted flex items-center p-1 px-4 text-sm">
+              <p className="text-primary font-semibold uppercase">
+                {format(parseISO(date), "dd 'de' MMMM, EEE", { locale: ptBR })}
               </p>
               <Dot />
-              <p>{formatCurrency(sumIncomesByDate(grouped[date] ?? []))}</p>
+              <p>{formatCurrency(sumSalesByDate(grouped[date] ?? []))}</p>
             </div>
             <div className="flex flex-col divide-y px-5">
-              {grouped[date]?.map((income) => (
-                <EditIncome data={income} key={income.id}>
+              {grouped[date]?.map((sale) => (
+                <EditSale data={sale} key={sale.id}>
                   <div className="cursor-pointer">
-                    <IncomeListItem income={income} />
+                    <SalesListItem sale={sale} />
                   </div>
-                </EditIncome>
+                </EditSale>
               ))}
             </div>
           </div>

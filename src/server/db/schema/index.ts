@@ -1,4 +1,4 @@
-import { cashRegister } from "./cash-register";
+import { cashRegister } from "./cash-register-schema";
 import { expense } from "./expense-schema";
 import { profiles, userSessions } from "./user-profile";
 import { expenseCategory } from "./expense-category";

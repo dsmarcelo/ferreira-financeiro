@@ -1,13 +1,13 @@
 "use server";
 
 import { db } from "../db";
-import { cashRegister } from "../db/schema/cash-register";
+import { cashRegister } from "../db/schema/cash-register-schema";
 import { cashRegisterItem } from "../db/schema/cash-register-items";
 import { products } from "../db/schema/products";
 import type {
   CashRegister,
   CashRegisterInsert,
-} from "../db/schema/cash-register";
+} from "../db/schema/cash-register-schema";
 import { eq, and, gte, lte, sum, asc } from "drizzle-orm";
 
 // Create a new cash register entry

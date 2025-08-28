@@ -10,7 +10,7 @@ import {
   createCashRegisterWithItems,
 } from "@/server/queries/cash-register-queries";
 import { revalidatePath } from "next/cache";
-import type { CashRegisterInsert } from "@/server/db/schema/cash-register";
+import type { CashRegisterInsert } from "@/server/db/schema/cash-register-schema";
 import { z } from "zod";
 
 const cashRegisterInsertSchema = z.object({
