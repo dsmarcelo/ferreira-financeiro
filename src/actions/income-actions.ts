@@ -124,15 +124,15 @@ export async function actionCreateIncome(
     // Format values for DB
     const dbValue = computedValue.toFixed(2);
     const dbExtraValue = (extraValue ?? 0).toFixed(2);
-    const dbProfitMargin = profitMargin !== undefined ? profitMargin.toFixed(2) : undefined;
+    const dbProfitMargin = profitMargin !== undefined ? profitMargin.toFixed(2) : "0";
 
     if (items.length > 0) {
       await createIncomeWithItems({
         description: description as string,
         dateTime: dateTime,
-        value: dbValue!,
-        extraValue: dbExtraValue!,
-        profitMargin: dbProfitMargin!,
+        value: dbValue,
+        extraValue: dbExtraValue,
+        profitMargin: dbProfitMargin,
         discountType: discountType,
         discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
         customerId: customerId,
@@ -141,9 +141,9 @@ export async function actionCreateIncome(
       await createIncome({
         description: description as string,
         dateTime: dateTime,
-        value: dbValue!,
-        extraValue: dbExtraValue!,
-        profitMargin: dbProfitMargin!,
+        value: dbValue,
+        extraValue: dbExtraValue,
+        profitMargin: dbProfitMargin,
         discountType: discountType,
         discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
         customerId: customerId,

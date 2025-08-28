@@ -15,7 +15,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as unknown;
-    const name = typeof (body as any)?.name === "string" ? (body as any).name.trim() : "";
+    const name = typeof (body as { name: string })?.name === "string" ? (body as { name: string }).name.trim() : "";
     if (!name) return NextResponse.json({ error: "Nome é obrigatório" }, { status: 400 });
     const [created] = await db.insert(customers).values({ name }).returning({ id: customers.id, name: customers.name });
     return NextResponse.json(created, { status: 201 });

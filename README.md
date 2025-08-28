@@ -246,7 +246,6 @@ Hook up a form in a page/component and use a server action as the form `action`.
 The Add Income form (`src/app/_components/forms/add-income-form.tsx`) uses a persisted Zustand store instead of direct `localStorage`.
 
 - Store: `src/stores/income-form-store.ts` holds description, date/time, extra value, profit margin, discount (type/value), customer, and selected products.
-- The products page (`src/app/caixa/adicionar/produtos/page.tsx`) reads/updates `selectedProducts` via the same store.
 - No direct `localStorage` reads/writes in components; persistence is handled by the store.
 - After a successful submission, the form calls `clearFormData()` to reset state.
 

@@ -3,9 +3,10 @@ import { listItemsForIncome } from "@/server/queries/income-queries";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const idNum = Number(params.id);
+  const resolvedParams = await params;
+  const idNum = Number(resolvedParams?.id);
   if (!Number.isFinite(idNum) || idNum <= 0) {
     return NextResponse.json({ error: "invalid id" }, { status: 400 });
   }
