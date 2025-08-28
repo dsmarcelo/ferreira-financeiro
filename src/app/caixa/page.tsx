@@ -1,5 +1,4 @@
 import AddIncome from "@/app/_components/dialogs/add/add-income";
-import AddCashRegisterSheet from "@/app/_components/sheets/add-cash-register-sheet";
 import { Button } from "@/components/ui/button";
 import { listIncomes } from "@/server/queries/income-queries";
 import Header from "../_components/header";
@@ -23,9 +22,6 @@ export default async function CaixaPage({
             <AddIncome>
               <Button className="rounded-full">Adicionar Entrada</Button>
             </AddIncome>
-            <AddCashRegisterSheet>
-              <Button className="rounded-full" variant="outline">Adicionar Caixa</Button>
-            </AddCashRegisterSheet>
           </div>
         </div>
       </Header>
@@ -37,11 +33,10 @@ export default async function CaixaPage({
       <div className="fixed bottom-24 block w-full px-5 sm:hidden">
         <div className="flex gap-2">
           <AddIncome>
-            <Button className="h-12 w-full rounded-full">Adicionar Entrada</Button>
+            <Button className="h-12 w-full rounded-full">
+              Adicionar Entrada
+            </Button>
           </AddIncome>
-          <AddCashRegisterSheet>
-            <Button className="h-12 w-full rounded-full" variant="outline">Adicionar Caixa</Button>
-          </AddCashRegisterSheet>
         </div>
       </div>
     </div>
