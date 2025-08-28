@@ -23,7 +23,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { actionCreateProduct, type ActionResponse } from "@/actions/product-actions";
+import { actionCreateProduct, actionUpdateProduct, type ActionResponse } from "@/actions/product-actions";
 import { toast } from "sonner";
 
 interface IncomeProductEditorProps {
@@ -46,9 +46,15 @@ export function IncomeProductEditor({
   const [open, setOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [localProducts, setLocalProducts] = useState<Product[] | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<number | null>(null);
 
   const [createState, createAction, creating] = useActionState<ActionResponse, FormData>(
     actionCreateProduct,
+    { success: false, message: "" },
+  );
+  const [updateState, updateAction, updating] = useActionState<ActionResponse, FormData>(
+    actionUpdateProduct,
     { success: false, message: "" },
   );
 
@@ -124,6 +130,30 @@ export function IncomeProductEditor({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [createState.success, createState.message]);
+
+  // Handle product update result
+  useEffect(() => {
+    if (!updateState) return;
+    if (updateState.success) {
+      toast.success(updateState.message || "Produto atualizado");
+      void (async () => {
+        try {
+          const res = await fetch("/api/produtos", { cache: "no-store" });
+          if (res.ok) {
+            const data = (await res.json()) as Product[];
+            setLocalProducts(data);
+          }
+        } catch {
+          // ignore
+        }
+      })();
+      setEditOpen(false);
+      setEditingProductId(null);
+    } else if (updateState.message) {
+      toast.error(updateState.message);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updateState.success, updateState.message]);
 
   return (
     <div className="space-y-2">
@@ -209,6 +239,19 @@ export function IncomeProductEditor({
                         </div>
                       </div>
                     </div>
+                    <div className="pl-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingProductId(p.id);
+                          setEditOpen(true);
+                        }}
+                      >
+                        Editar
+                      </Button>
+                    </div>
                   </div>
                 );
               })}
@@ -256,6 +299,44 @@ export function IncomeProductEditor({
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit product dialog */}
+      <Dialog open={editOpen} onOpenChange={(v) => { setEditOpen(v); if (!v) setEditingProductId(null); }}>
+        <DialogContent className="gap-3 p-4">
+          <DialogHeader>
+            <DialogTitle>Editar produto</DialogTitle>
+          </DialogHeader>
+
+          {editingProductId != null && (() => {
+            const prod = selectableProducts.find((pp) => pp.id === editingProductId);
+            if (!prod) return null;
+            return (
+              <form action={updateAction} className="space-y-3">
+                <input type="hidden" name="id" value={prod.id} />
+                {/* Preserve price and cost (cost defaults to 0 if unknown) */}
+                <input type="hidden" name="price" value={Number(prod.price) || 0} />
+                <input type="hidden" name="cost" value={0} />
+
+                <div className="space-y-1">
+                  <Label htmlFor="edit-name">Nome</Label>
+                  <Input id="edit-name" name="name" defaultValue={prod.name} required />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="edit-quantity">Quantidade em estoque</Label>
+                  <Input id="edit-quantity" name="quantity" type="number" min="0" defaultValue={prod.quantity} required />
+                </div>
+
+                <DialogFooter>
+                  <Button type="submit" disabled={updating}>
+                    {updating ? "Salvando..." : "Salvar"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
