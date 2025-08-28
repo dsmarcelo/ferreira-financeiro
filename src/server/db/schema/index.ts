@@ -3,6 +3,7 @@ import { expense } from "./expense-schema";
 import { profiles, userSessions } from "./user-profile";
 import { expenseCategory } from "./expense-category";
 import { incomes } from "./incomes-schema";
+import { sales } from "./sales-schema";
 import { users, accounts, sessions, verificationTokens } from "./auth-schema";
 import { products } from "./products";
 import { cashRegisterItem } from "./cash-register-items";
@@ -16,6 +17,7 @@ export const schema = {
   userSessions,
   expenseCategory,
   incomes,
+  sales,
   products,
   cashRegisterItem,
   customers,
