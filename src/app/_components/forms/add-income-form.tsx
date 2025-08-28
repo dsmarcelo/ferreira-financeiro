@@ -173,6 +173,7 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
           profitAmount={profitAmount}
           finalTotal={finalTotal}
           profitMargin={incomeForm.profitMargin}
+          discountAmount={discountAmount}
         />
 
         <IncomeFormActions

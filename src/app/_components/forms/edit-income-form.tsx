@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TrashIcon } from "lucide-react";
 import { DeleteDialog } from "../dialogs/delete-dialog";
-import { Label } from "@/components/ui/label";
 import { useIncomeData } from "@/hooks/use-income-data";
 import {
   IncomeBasicFields,
