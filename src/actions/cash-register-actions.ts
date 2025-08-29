@@ -100,7 +100,7 @@ export async function actionCreateCashRegister(
         {
           date: date as string,
           value: finalTotal.toFixed(2),
-          extraValue: (extraValue ?? 0).toFixed(2),
+          profit: (extraValue ?? 0).toFixed(2),
         },
         items,
       );
@@ -109,7 +109,7 @@ export async function actionCreateCashRegister(
       await createCashRegister({
         date: date as string,
         value: finalTotal.toFixed(2),
-        extraValue: (extraValue ?? 0).toFixed(2),
+        profit: (extraValue ?? 0).toFixed(2),
       });
     }
     revalidatePath("/caixa");
@@ -162,7 +162,7 @@ export async function actionUpdateCashRegister(
     await updateCashRegister(id, {
       date: date as string,
       value: finalTotal.toFixed(2),
-      extraValue: (extraValue ?? 0).toFixed(2),
+      profit: (extraValue ?? 0).toFixed(2),
     });
     revalidatePath("/caixa");
     return { success: true, message: "Caixa atualizado com sucesso!" };

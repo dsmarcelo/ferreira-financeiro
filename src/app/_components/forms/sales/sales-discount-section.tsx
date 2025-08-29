@@ -12,7 +12,7 @@ interface IncomeDiscountSectionProps {
   disabled?: boolean;
 }
 
-export function IncomeDiscountSection({
+export function SalesDiscountSection({
   discountType,
   discountValue,
   totalSelectedValue,

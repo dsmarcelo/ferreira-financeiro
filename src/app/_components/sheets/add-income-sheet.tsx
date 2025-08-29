@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import AddIncomeForm from "@/app/_components/forms/add-income-form";
+import AddSaleForm from "@/app/_components/forms/add-sale-form";
 
 import {
   Dialog,
@@ -35,8 +35,8 @@ export default function AddIncomeSheet({
           <DialogDescription className="hidden" aria-hidden="true" />
         </DialogHeader>
         <div className="py-4">
-          <AddIncomeForm
-            id="add-income-form"
+          <AddSaleForm
+            id="add-sale-form"
             onSuccess={() => setOpen(false)}
           />
         </div>
@@ -44,7 +44,7 @@ export default function AddIncomeSheet({
           <DialogClose asChild>
             <Button variant="outline">Cancelar</Button>
           </DialogClose>
-          <Button type="submit" form="add-income-form">
+          <Button type="submit" form="add-sale-form">
             Adicionar
           </Button>
         </DialogFooter>

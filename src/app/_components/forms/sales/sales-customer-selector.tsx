@@ -28,7 +28,7 @@ interface IncomeCustomerSelectorProps {
   disabled?: boolean;
 }
 
-export function IncomeCustomerSelector({
+export function SalesCustomerSelector({
   customers,
   customerId,
   onCustomerIdChange,

@@ -9,7 +9,7 @@ interface IncomeProductSelectionProps {
   selectedProducts: Record<number, { quantity: number; unitPrice: number }>;
 }
 
-export function IncomeProductSelection({
+export function SalesProductSelection({
   products,
   selectedProducts,
 }: IncomeProductSelectionProps) {

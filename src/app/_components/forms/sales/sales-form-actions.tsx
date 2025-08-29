@@ -5,16 +5,14 @@ interface IncomeFormActionsProps {
   pending: boolean;
   selectedProducts: Record<number, { quantity: number; unitPrice: number }>;
   finalTotal: number;
-  extraValue: number;
   customerId: string;
 }
 
-export function IncomeFormActions({
+export function SalesFormActions({
   formId,
   pending,
   selectedProducts,
   finalTotal,
-  extraValue,
   customerId,
 }: IncomeFormActionsProps) {
   return (
@@ -32,13 +30,12 @@ export function IncomeFormActions({
         )}
       />
       <input type="hidden" name="totalValue" value={finalTotal} />
-      <input type="hidden" name="extraValue" value={extraValue} />
       <input type="hidden" name="customerId" value={customerId} />
       {/* Discount data will be handled by DiscountSelect component's hidden inputs */}
 
       {!formId && (
         <Button type="submit" disabled={pending} className="w-full">
-          {pending ? "Adicionando..." : "Adicionar Receita"}
+          {pending ? "Adicionando..." : "Adicionar Venda"}
         </Button>
       )}
     </>

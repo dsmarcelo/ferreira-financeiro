@@ -37,7 +37,7 @@ interface IncomeProductEditorProps {
   originalQuantities?: Record<number, number>;
 }
 
-export function IncomeProductEditor({
+export function SalesProductEditor({
   products,
   selectedProducts,
   onChange,

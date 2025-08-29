@@ -1,26 +1,39 @@
 "use client";
 import { formatCurrency } from "@/lib/utils";
 import type { Income } from "@/server/db/schema/incomes-schema";
-import { use } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { useCallback, useTransition } from "react";
 import { SalesListItem } from "./sales-list-item";
 import DownloadButton from "@/app/_components/buttons/download-button";
 import ShareButton from "@/app/_components/buttons/share-button";
 import { ptBR } from "date-fns/locale";
-import { format, parseISO } from "date-fns";
+import { format, isValid, parse, parseISO } from "date-fns";
 import { Dot } from "lucide-react";
 import EditSale from "@/app/_components/dialogs/edit/edit-sale";
 
 function groupSalesByDate(sales: Income[]) {
   return sales
     .sort((a, b) => {
-      const dateA = format(a.dateTime, "yyyy-MM-dd");
-      const dateB = format(b.dateTime, "yyyy-MM-dd");
+      const aDate =
+        typeof a.dateTime === "string"
+          ? parseISO(a.dateTime)
+          : new Date(a.dateTime);
+      const bDate =
+        typeof b.dateTime === "string"
+          ? parseISO(b.dateTime)
+          : new Date(b.dateTime);
+      const dateA = isValid(aDate) ? format(aDate, "yyyy-MM-dd") : "";
+      const dateB = isValid(bDate) ? format(bDate, "yyyy-MM-dd") : "";
       if (dateA !== dateB) return dateA.localeCompare(dateB);
       return a.id - b.id;
     })
     .reduce<Record<string, Income[]>>((acc, sale) => {
-      const date = format(sale.dateTime, "yyyy-MM-dd");
+      const saleDate =
+        typeof sale.dateTime === "string"
+          ? parseISO(sale.dateTime)
+          : new Date(sale.dateTime);
+      if (!isValid(saleDate)) return acc;
+      const date = format(saleDate, "yyyy-MM-dd");
       acc[date] ??= [];
       acc[date].push(sale);
       return acc;
@@ -34,26 +47,83 @@ function sumSalesByDate(sales: Income[]): number {
 export default function SalesList({
   sales,
   labels,
+  totalProfit,
+  aggregates,
 }: {
   sales: Promise<Income[]>;
   labels?: { plural?: string };
+  totalProfit?: Promise<number>;
+  aggregates?: Promise<{ totalRevenue: number; productProfit: number }>;
 }) {
   const allSales = use(sales);
+  const aggregateData = aggregates ? use(aggregates) : undefined;
 
   // PDF actions (hooks must be above any return)
   const [isPending, startTransition] = useTransition();
   const handleDownload = useCallback(() => {
     startTransition(() => {
       // TODO: Implement sales PDF download functionality
-      console.log("Download sales PDF", allSales);
+      void allSales;
     });
   }, [allSales]);
   const handleShare = useCallback(() => {
     startTransition(() => {
       // TODO: Implement sales PDF share functionality
-      console.log("Share sales PDF", allSales);
+      void allSales;
     });
   }, [allSales]);
+
+  const totalRevenueMemo = useMemo(
+    () => allSales.reduce((sum, s) => sum + Number(s.value), 0),
+    [allSales],
+  );
+  const totalRevenue = aggregateData?.totalRevenue ?? totalRevenueMemo;
+
+  const [profitState, setProfitState] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    async function compute() {
+      if (totalProfit) {
+        try {
+          const value = await totalProfit;
+          if (!cancelled) setProfitState(value);
+        } catch {
+          if (!cancelled) setProfitState(0);
+        }
+        return;
+      }
+      // Fallback: client compute if no aggregate provided
+      try {
+        const profits = await Promise.all(
+          allSales.map(async (s) => {
+            const res = await fetch(`/api/vendas/${s.id}/itens`, {
+              cache: "no-store",
+            });
+            if (!res.ok) return 0;
+            const data = (await res.json()) as Array<{
+              quantity: number;
+              unitPrice: string;
+              cost?: string;
+            }>;
+            return data.reduce((acc, it) => {
+              const unit = Number(it.unitPrice) || 0;
+              const cost = Number(it.cost) || 0;
+              const qty = Number(it.quantity) || 0;
+              return acc + (unit - cost) * qty;
+            }, 0);
+          }),
+        );
+        const sum = profits.reduce((a, b) => a + b, 0);
+        if (!cancelled) setProfitState(sum);
+      } catch {
+        if (!cancelled) setProfitState(0);
+      }
+    }
+    void compute();
+    return () => {
+      cancelled = true;
+    };
+  }, [allSales, totalProfit]);
 
   if (allSales.length === 0) {
     return (
@@ -63,20 +133,12 @@ export default function SalesList({
     );
   }
 
-  const totals = allSales.reduce(
-    (acc, item) => {
-      const totalIncome = Number(item.value); // This is the total income input by user
-      const profitMarginPercent = Number(item.profitMargin);
-      const profitAmount = totalIncome * (profitMarginPercent / 100);
-      const baseValue = totalIncome - profitAmount;
-      return {
-        baseValue: acc.baseValue + baseValue,
-        profitAmount: acc.profitAmount + profitAmount,
-        total: acc.total + totalIncome,
-      };
-    },
-    { baseValue: 0, profitAmount: 0, total: 0 },
-  );
+  const profitAmount = profitState ?? 0;
+  const totals = {
+    total: totalRevenue,
+    profitAmount,
+    baseValue: totalRevenue - profitAmount,
+  } as const;
 
   const grouped = groupSalesByDate(allSales);
   const sortedDates = Object.keys(grouped).sort();
@@ -139,7 +201,11 @@ export default function SalesList({
           <div key={date} className="pb-4">
             <div className="text-muted-foreground bg-muted flex items-center p-1 px-4 text-sm">
               <p className="text-primary font-semibold uppercase">
-                {format(parseISO(date), "dd 'de' MMMM, EEE", { locale: ptBR })}
+                {format(
+                  parse(date, "yyyy-MM-dd", new Date()),
+                  "dd 'de' MMMM, EEE",
+                  { locale: ptBR },
+                )}
               </p>
               <Dot />
               <p>{formatCurrency(sumSalesByDate(grouped[date] ?? []))}</p>

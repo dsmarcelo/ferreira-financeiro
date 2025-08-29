@@ -265,6 +265,8 @@ export async function listItemsForIncome(incomeId: number) {
       quantity: incomeItem.quantity,
       unitPrice: incomeItem.unitPrice,
       name: products.name,
+      cost: products.cost,
+      price: products.price,
     })
     .from(incomeItem)
     .leftJoin(products, eq(products.id, incomeItem.productId))

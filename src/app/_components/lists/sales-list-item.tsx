@@ -13,8 +13,34 @@ export interface SaleListItemProps {
 
 export function SalesListItem({ sale, children }: SaleListItemProps) {
   const totalIncome = Number(sale.value); // total sale value
-  const profitMarginPercent = Number(sale.profitMargin);
-  const profitAmount = totalIncome * (profitMarginPercent / 100);
+  const [profitAmount, setProfitAmount] = React.useState<number>(0);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch(`/api/vendas/${sale.id}/itens`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as Array<{
+          productId: number;
+          quantity: number;
+          unitPrice: string;
+          cost?: string;
+        }>;
+        const profit = data.reduce((acc, it) => {
+          const unit = Number(it.unitPrice) || 0;
+          const cost = Number(it.cost) || 0;
+          const qty = Number(it.quantity) || 0;
+          return acc + (unit - cost) * qty;
+        }, 0);
+        if (!cancelled) setProfitAmount(profit);
+      } catch {}
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [sale.id]);
 
   return (
     <div
@@ -34,9 +60,7 @@ export function SalesListItem({ sale, children }: SaleListItemProps) {
         <p className={cn("w-fit text-right font-semibold")}>
           {formatCurrency(totalIncome)}
         </p>
-        <p className="text-muted-foreground text-sm whitespace-nowrap">
-          Lucro: {profitMarginPercent}% ({formatCurrency(profitAmount)})
-        </p>
+        <p className="text-muted-foreground text-sm whitespace-nowrap">Lucro: {formatCurrency(profitAmount)}</p>
       </div>
       {children}
     </div>

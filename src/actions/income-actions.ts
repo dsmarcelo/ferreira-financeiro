@@ -22,8 +22,6 @@ const incomeInsertSchema = z.object({
   value: z.number().min(0, { message: "Valor inválido" }).optional(),
   profitMargin: z.number().min(0).max(100, { message: "Margem de lucro deve estar entre 0% e 100%" }),
   soldItemsJson: z.string().optional(),
-  discountType: z.enum(["percent", "fixed"]).optional(),
-  discountValue: z.number().min(0).optional(),
   customerId: z.number().int().optional(),
 });
 
@@ -49,10 +47,8 @@ export async function actionCreateIncome(
   const description = formData.get("description");
   const date = formData.get("date");
   const time = formData.get("time");
-  const extraValueStr = formData.get("extraValue"); // This is the extra value (without profit)
   const totalValueStr = formData.get("totalValue"); // Ignored for persistence; recomputed on server
   const profitMarginStr = formData.get("profitMargin");
-  const extraValue = typeof extraValueStr === "string" ? Number(extraValueStr) : 0;
   const totalValue = typeof totalValueStr === "string" ? Number(totalValueStr) : undefined;
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
 
@@ -72,22 +68,13 @@ export async function actionCreateIncome(
 
   // Validate using Zod, passing raw values
   // Validate base fields first (value will be recomputed but allow client value for basic presence)
-  const result = incomeInsertSchema.safeParse({ description, date, time, value: clientProvidedValue ?? extraValue, profitMargin, soldItemsJson, discountType, discountValue, customerId });
+  const result = incomeInsertSchema.safeParse({ description, date, time, value: clientProvidedValue, profitMargin, soldItemsJson, discountType, discountValue, customerId });
   if (!result.success) {
     // Return field-level errors and a general message
     return {
       success: false,
       message: "Por favor, corrija os erros no formulário.",
       errors: result.error.flatten().fieldErrors,
-    };
-  }
-
-  // Ensure we have a valid extra value
-  if (extraValue === undefined || isNaN(extraValue)) {
-    return {
-      success: false,
-      message: "Valor extra é obrigatório.",
-      errors: { value: ["Valor extra é obrigatório"] },
     };
   }
 
@@ -115,7 +102,7 @@ export async function actionCreateIncome(
       }
     }
 
-    const subtotal = itemsTotal + (extraValue ?? 0);
+    const subtotal = itemsTotal;
     const discountAmount = discountType === "percent"
       ? ((discountValue ?? 0) / 100) * subtotal
       : (discountValue ?? 0);
@@ -123,7 +110,6 @@ export async function actionCreateIncome(
 
     // Format values for DB
     const dbValue = computedValue.toFixed(2);
-    const dbExtraValue = (extraValue ?? 0).toFixed(2);
     const dbProfitMargin = profitMargin !== undefined ? profitMargin.toFixed(2) : "0";
 
     if (items.length > 0) {
@@ -131,10 +117,7 @@ export async function actionCreateIncome(
         description: description as string,
         dateTime: dateTime,
         value: dbValue,
-        extraValue: dbExtraValue,
         profitMargin: dbProfitMargin,
-        discountType: discountType,
-        discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
         customerId: customerId,
       }, items);
     } else {
@@ -142,10 +125,7 @@ export async function actionCreateIncome(
         description: description as string,
         dateTime: dateTime,
         value: dbValue,
-        extraValue: dbExtraValue,
         profitMargin: dbProfitMargin,
-        discountType: discountType,
-        discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
         customerId: customerId,
       });
     }
@@ -173,14 +153,12 @@ export async function actionUpdateIncome(
   const date = formData.get("date");
   const time = formData.get("time");
   const totalValueStr = formData.get("totalValue");
-  const extraValueStr = formData.get("extraValue");
   const profitMarginStr = formData.get("profitMargin");
   const discountTypeRaw = formData.get("discountType");
   const discountValueStr = formData.get("discountValue");
   const customerIdStr = formData.get("customerId");
   const soldItemsJson = formData.get("soldItemsJson");
   const totalValue = typeof totalValueStr === "string" ? Number(totalValueStr) : undefined;
-  const extraValue = typeof extraValueStr === "string" ? Number(extraValueStr) : 0;
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
   const discountValue = typeof discountValueStr === "string" ? Number(discountValueStr) : undefined;
   const customerId = typeof customerIdStr === "string" && customerIdStr.length > 0 ? Number(customerIdStr) : undefined;
@@ -189,21 +167,12 @@ export async function actionUpdateIncome(
     discountTypeRaw === "percent" || discountTypeRaw === "fixed" ? (discountTypeRaw) : undefined;
 
   // Validate using Zod, passing raw values
-  const result = incomeInsertSchema.safeParse({ description, date, time, value: totalValue ?? extraValue, profitMargin, discountType, discountValue, customerId });
+  const result = incomeInsertSchema.safeParse({ description, date, time, value: totalValue, profitMargin, discountType, discountValue, customerId });
   if (!result.success) {
     return {
       success: false,
       message: "Por favor, corrija os erros no formulário.",
       errors: result.error.flatten().fieldErrors,
-    };
-  }
-
-  // Ensure we have a valid extra value for updates
-  if (extraValue === undefined || isNaN(extraValue)) {
-    return {
-      success: false,
-      message: "Valor extra é obrigatório.",
-      errors: { value: ["Valor extra é obrigatório"] },
     };
   }
 
@@ -231,7 +200,7 @@ export async function actionUpdateIncome(
       }
     }
 
-    const subtotal = itemsTotal + (extraValue ?? 0);
+    const subtotal = itemsTotal;
     const computedDiscount = discountType === "percent"
       ? ((discountValue ?? 0) / 100) * subtotal
       : (discountValue ?? 0);
@@ -241,7 +210,7 @@ export async function actionUpdateIncome(
       description: description as string,
       dateTime: dateTime,
       value: computedValue.toFixed(2),
-      extraValue: (extraValue ?? 0).toFixed(2),
+      
       profitMargin: profitMargin?.toFixed(2) ?? "0",
       discountType,
       discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,

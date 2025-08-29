@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getIncomeById, listItemsForIncome } from "@/server/queries/income-queries";
-import EditIncomeForm from "@/app/_components/forms/edit-income-form";
+import EditSaleForm from "@/app/_components/forms/edit-sale-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import SubPageHeader from "@/app/_components/sub-page-header";
@@ -45,7 +45,7 @@ export default async function EditIncomePage({ params }: { params: Promise<{ id:
       <SubPageHeader title="Editar Entrada" />
       <div className="mx-auto mt-4 container max-w-3xl px-5">
         <Suspense fallback={<LoadingSkeleton />}>
-          <EditIncomeForm income={income} items={items} />
+          <EditSaleForm income={income} items={items} />
         </Suspense>
       </div>
     </div>

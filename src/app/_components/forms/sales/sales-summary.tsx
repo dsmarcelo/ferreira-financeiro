@@ -2,19 +2,13 @@ import { formatCurrency } from "@/lib/utils";
 
 interface IncomeSummaryProps {
   totalSelectedValue: number;
-  extraValue: number;
-  profitAmount: number;
   finalTotal: number;
-  profitMargin: number;
   discountAmount: number;
 }
 
-export function IncomeSummary({
+export function SalesSummary({
   totalSelectedValue,
-  extraValue,
-  profitAmount,
   finalTotal,
-  profitMargin,
   discountAmount,
 }: IncomeSummaryProps) {
   return (
@@ -28,14 +22,6 @@ export function IncomeSummary({
       <div className="text-sm text-slate-600">
         Desconto:{" "}
         <span className="font-bold">{formatCurrency(discountAmount)}</span>
-      </div>
-      <div className="text-sm text-slate-600">
-        Valor extra:{" "}
-        <span className="font-medium">{formatCurrency(extraValue)}</span>
-      </div>
-      <div className="text-sm text-slate-600">
-        Lucro sobre extra ({profitMargin}%):{" "}
-        <span className="font-medium">{formatCurrency(profitAmount)}</span>
       </div>
       <div className="text-base font-medium text-slate-800">
         Total da Venda:{" "}

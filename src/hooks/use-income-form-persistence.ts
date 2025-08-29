@@ -5,8 +5,6 @@ export interface IncomeFormData {
   description: string;
   dateStr: string;
   timeStr: string;
-  extraValue: number;
-  profitMargin: number;
   discountType: DiscountType;
   discountValue: number | undefined;
   customerId: string;
@@ -17,8 +15,6 @@ export interface IncomeFormPersistence {
   description: string;
   dateStr: string;
   timeStr: string;
-  extraValue: number;
-  profitMargin: number;
   discountType: DiscountType;
   discountValue: number | undefined;
   customerId: string;
@@ -29,8 +25,6 @@ export interface IncomeFormPersistence {
   setDescription: (value: string) => void;
   setDateStr: (value: string) => void;
   setTimeStr: (value: string) => void;
-  setExtraValue: (value: number) => void;
-  setProfitMargin: (value: number) => void;
   setDiscountType: (value: DiscountType) => void;
   setDiscountValue: (value: number | undefined) => void;
   setCustomerId: (value: string) => void;
@@ -45,8 +39,7 @@ export function useIncomeFormPersistence(): IncomeFormPersistence {
   const [description, setDescription] = useState<string>("");
   const [dateStr, setDateStr] = useState<string>("");
   const [timeStr, setTimeStr] = useState<string>("");
-  const [extraValue, setExtraValue] = useState<number>(0);
-  const [profitMargin, setProfitMargin] = useState<number>(28);
+  
   const [discountType, setDiscountType] = useState<DiscountType>("percentage");
   const [discountValue, setDiscountValue] = useState<number | undefined>(undefined);
   const [customerId, setCustomerId] = useState<string>("");
@@ -73,8 +66,7 @@ export function useIncomeFormPersistence(): IncomeFormPersistence {
       const savedDescription = localStorage.getItem("income-form-description");
       const savedDate = localStorage.getItem("income-form-date");
       const savedTime = localStorage.getItem("income-form-time");
-      const savedExtra = localStorage.getItem("income-form-extraValue");
-      const savedProfit = localStorage.getItem("income-form-profitMargin");
+      
       const savedDiscountType = localStorage.getItem("income-form-discountType");
       const savedDiscountValue = localStorage.getItem("income-form-discountValue");
 
@@ -82,8 +74,7 @@ export function useIncomeFormPersistence(): IncomeFormPersistence {
       // Defaults to today/current time if nothing saved
       setDateStr(savedDate ?? today);
       setTimeStr(savedTime ?? currentTime);
-      if (savedExtra !== null) setExtraValue(Number(savedExtra) || 0);
-      if (savedProfit !== null) setProfitMargin(Number(savedProfit) || 0);
+      
 
       // Load discount type and map legacy value "percent" to "percentage"
       if (savedDiscountType === "fixed") {
@@ -146,17 +137,7 @@ export function useIncomeFormPersistence(): IncomeFormPersistence {
     } catch {}
   }, [timeStr]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem("income-form-extraValue", String(extraValue));
-    } catch {}
-  }, [extraValue]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("income-form-profitMargin", String(profitMargin));
-    } catch {}
-  }, [profitMargin]);
+  
 
   useEffect(() => {
     // Only persist discount type after initial hydration
@@ -221,8 +202,6 @@ export function useIncomeFormPersistence(): IncomeFormPersistence {
     description,
     dateStr,
     timeStr,
-    extraValue,
-    profitMargin,
     discountType,
     discountValue,
     customerId,
@@ -233,8 +212,6 @@ export function useIncomeFormPersistence(): IncomeFormPersistence {
     setDescription,
     setDateStr,
     setTimeStr,
-    setExtraValue,
-    setProfitMargin,
     setDiscountType,
     setDiscountValue,
     setCustomerId,

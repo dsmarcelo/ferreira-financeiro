@@ -6,8 +6,6 @@ export interface IncomeFormData {
   description: string;
   dateStr: string;
   timeStr: string;
-  extraValue: number;
-  profitMargin: number;
   discountType: DiscountType;
   discountValue: number | undefined;
   customerId: string;
@@ -49,8 +47,6 @@ const getDefaultValues = () => {
     description: "",
     dateStr: today,
     timeStr: currentTime,
-    extraValue: 0,
-    profitMargin: 28,
     discountType: "percentage" as DiscountType,
     discountValue: undefined,
     customerId: "",
@@ -67,8 +63,7 @@ export const useIncomeFormStore = create<IncomeFormStore>()(
       setDescription: (value) => set({ description: value }),
       setDateStr: (value) => set({ dateStr: value }),
       setTimeStr: (value) => set({ timeStr: value }),
-      setExtraValue: (value) => set({ extraValue: value }),
-      setProfitMargin: (value) => set({ profitMargin: value }),
+      
       setDiscountType: (value) => set({ discountType: value }),
       setDiscountValue: (value) => set({ discountValue: value }),
       setCustomerId: (value) => set({ customerId: value }),
@@ -88,8 +83,6 @@ export const useIncomeFormStore = create<IncomeFormStore>()(
         description: state.description,
         dateStr: state.dateStr,
         timeStr: state.timeStr,
-        extraValue: state.extraValue,
-        profitMargin: state.profitMargin,
         discountType: state.discountType,
         discountValue: state.discountValue,
         customerId: state.customerId,
