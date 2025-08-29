@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listItemsForIncome } from "@/server/queries/income-queries";
+import { listItemsForSale } from "@/server/queries/sales-queries";
 
 export async function GET(
   _req: Request,
@@ -12,10 +12,9 @@ export async function GET(
   }
 
   try {
-    const items = await listItemsForIncome(idNum);
+    const items = await listItemsForSale(idNum);
     return NextResponse.json(items ?? []);
   } catch (e) {
     return NextResponse.json({ error: "failed to fetch items" }, { status: 500 });
   }
 }
-

@@ -16,6 +16,7 @@ import {
   createIncomeWithItems as createSaleWithItems,
   updateIncomeWithItems as updateSaleWithItems,
   listItemsForIncome as listItemsForSale,
+  createIncomeAndDecrementStock as createSaleAndDecrementStock,
 } from "@/server/queries/income-queries";
 
 export type { Sale, SaleInsert };
@@ -32,6 +33,7 @@ export {
   createSaleWithItems,
   updateSaleWithItems,
   listItemsForSale,
+  createSaleAndDecrementStock,
 };
 
 // Aggregate product-level profit for a date range: SUM((unit_price - products.cost) * quantity)
