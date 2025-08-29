@@ -18,6 +18,8 @@ export function SalesFormActions({
   return (
     <>
       {/* Hidden inputs for form data */}
+      {/* Sales do not expose profit margin; default to 0 to satisfy server validation */}
+      <input type="hidden" name="profitMargin" value={0} />
       <input
         type="hidden"
         name="soldItemsJson"
