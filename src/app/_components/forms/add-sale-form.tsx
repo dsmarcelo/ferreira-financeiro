@@ -2,10 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  actionCreateIncome,
-  type ActionResponse,
-} from "@/actions/income-actions";
+import { actionCreateSale, type ActionResponse } from "@/actions/sales-actions";
 import { toast } from "sonner";
 import { useIncomeFormStore } from "@/stores/income-form-store";
 import { useIncomeData } from "@/hooks/use-income-data";
@@ -31,7 +28,7 @@ const initialState: ActionResponse = {
 export default function AddSaleForm({ id, onSuccess }: AddSaleFormProps) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
-    actionCreateIncome,
+    actionCreateSale,
     initialState,
   );
 
