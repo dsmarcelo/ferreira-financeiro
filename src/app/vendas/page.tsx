@@ -3,9 +3,12 @@ import { Suspense } from "react";
 import Loading from "@/app/_components/loading/loading";
 import SalesList from "@/app/_components/lists/sales-list";
 import {
-  listSales,
-  sumSalesRevenueAndProductProfitByDateRange,
-} from "@/server/queries/sales-queries";
+  actionListSales as listSales,
+  actionSumSalesRevenueAndProductProfitByDateRange as sumSalesRevenueAndProductProfitByDateRange,
+  actionSumSalesProductProfitByDateRange as sumSalesProductProfitByDateRange,
+} from "@/actions/sales-actions";
+import AddIncome from "../_components/dialogs/add/add-income";
+import { Button } from "@/components/ui/button";
 
 export default async function VendasPage({
   searchParams,
@@ -30,19 +33,36 @@ export default async function VendasPage({
 
   const sales = listSales(from, to);
   const aggregates = sumSalesRevenueAndProductProfitByDateRange(from, to);
+  const totalProfit = sumSalesProductProfitByDateRange(from, to);
 
   return (
     <div className="flex min-h-screen flex-col pb-24">
-      <Header className="sticky top-0 z-50 flex-none" />
+      <Header className="sticky top-0 z-50 flex-none">
+        <div className="hidden sm:block">
+          <AddIncome>
+            <Button className="rounded-full">Adicionar Venda</Button>
+          </AddIncome>
+        </div>
+      </Header>
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-3">
         <Suspense fallback={<Loading />}>
           <SalesList
             sales={sales}
             aggregates={aggregates}
+            totalProfit={totalProfit}
             labels={{ plural: "vendas" }}
           />
         </Suspense>
       </main>
+      <div className="fixed bottom-24 block w-full px-5 sm:hidden">
+        <div className="flex gap-2">
+          <AddIncome>
+            <Button className="h-12 w-full rounded-full">
+              Adicionar Venda
+            </Button>
+          </AddIncome>
+        </div>
+      </div>
     </div>
   );
 }

@@ -16,29 +16,12 @@ export default async function CaixaPage({
 
   return (
     <div className="flex min-h-screen flex-col pb-24">
-      <Header className="sticky top-0 z-50 flex-none">
-        <div className="hidden sm:block">
-          <div className="flex gap-2">
-            <AddIncome>
-              <Button className="rounded-full">Adicionar Entrada</Button>
-            </AddIncome>
-          </div>
-        </div>
-      </Header>
+      <Header className="sticky top-0 z-50 flex-none" />
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4">
         <Suspense fallback={<Loading />}>
           <DailyIncomeList sales={incomes} />
         </Suspense>
       </main>
-      <div className="fixed bottom-24 block w-full px-5 sm:hidden">
-        <div className="flex gap-2">
-          <AddIncome>
-            <Button className="h-12 w-full rounded-full">
-              Adicionar Entrada
-            </Button>
-          </AddIncome>
-        </div>
-      </div>
     </div>
   );
 }
