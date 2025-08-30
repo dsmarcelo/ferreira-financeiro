@@ -1,7 +1,7 @@
 "use client";
 
 import { cn, formatCurrency } from "@/lib/utils";
-import type { Income as Sale } from "@/server/db/schema/incomes-schema";
+import type { Sale } from "@/server/db/schema/sales-schema";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import * as React from "react";
@@ -12,7 +12,7 @@ export interface SaleListItemProps {
 }
 
 export function SalesListItem({ sale, children }: SaleListItemProps) {
-  const totalIncome = Number(sale.value); // total sale value
+  const totalSale = Number(sale.value);
   const [profitAmount, setProfitAmount] = React.useState<number>(0);
 
   React.useEffect(() => {
@@ -36,7 +36,7 @@ export function SalesListItem({ sale, children }: SaleListItemProps) {
         if (!cancelled) setProfitAmount(profit);
       } catch {}
     }
-    load();
+    void load();
     return () => {
       cancelled = true;
     };
@@ -57,8 +57,8 @@ export function SalesListItem({ sale, children }: SaleListItemProps) {
         </p>
       </div>
       <div className="flex flex-col items-end">
-        <p className={cn("w-fit text-right font-semibold")}>
-          {formatCurrency(totalIncome)}
+        <p className={cn("w-fit text-right font-semibold")}> 
+          {formatCurrency(totalSale)}
         </p>
         <p className="text-muted-foreground text-sm whitespace-nowrap">Lucro: {formatCurrency(profitAmount)}</p>
       </div>

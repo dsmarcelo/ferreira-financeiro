@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { type Customer } from "@/hooks/use-income-data";
+import { type Customer } from "@/hooks/use-sales-data";
 
 interface IncomeCustomerSelectorProps {
   customers: Customer[];

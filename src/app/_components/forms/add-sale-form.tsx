@@ -4,8 +4,8 @@ import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { actionCreateSale, type ActionResponse } from "@/actions/sales-actions";
 import { toast } from "sonner";
-import { useIncomeFormStore } from "@/stores/income-form-store";
-import { useIncomeData } from "@/hooks/use-income-data";
+import { useSalesFormStore } from "@/stores/sales-form-store";
+import { useSalesData } from "@/hooks/use-sales-data";
 import {
   SalesBasicFields,
   SalesProductEditor,
@@ -33,9 +33,9 @@ export default function AddSaleForm({ id, onSuccess }: AddSaleFormProps) {
   );
 
   // Use Zustand store for form state
-  const incomeForm = useIncomeFormStore();
-  const clearFormData = useIncomeFormStore((s) => s.clearFormData);
-  const { products, customers, createCustomer } = useIncomeData();
+  const saleForm = useSalesFormStore();
+  const clearFormData = useSalesFormStore((s) => s.clearFormData);
+  const { products, customers, createCustomer } = useSalesData();
 
   // Wait for hydration to complete before rendering selects
   const [hydrated, setHydrated] = useState(false);
@@ -82,7 +82,7 @@ export default function AddSaleForm({ id, onSuccess }: AddSaleFormProps) {
 
   // Calculations
   const itemsTotal = useMemo((): number => {
-    return Object.entries(incomeForm.selectedProducts).reduce(
+    return Object.entries(saleForm.selectedProducts).reduce(
       (acc, [_productId, data]) => {
         const unit = data.unitPrice ?? 0;
         const qty = data.quantity ?? 0;
@@ -90,16 +90,16 @@ export default function AddSaleForm({ id, onSuccess }: AddSaleFormProps) {
       },
       0,
     );
-  }, [incomeForm.selectedProducts]);
+  }, [saleForm.selectedProducts]);
 
   const subtotal = useMemo((): number => itemsTotal, [itemsTotal]);
 
   const discountAmount = useMemo((): number => {
-    const dv = incomeForm.discountValue ?? 0;
-    if (incomeForm.discountType === "percentage") return (subtotal * dv) / 100;
-    if (incomeForm.discountType === "fixed") return dv;
+    const dv = saleForm.discountValue ?? 0;
+    if (saleForm.discountType === "percentage") return (subtotal * dv) / 100;
+    if (saleForm.discountType === "fixed") return dv;
     return 0;
-  }, [incomeForm.discountType, incomeForm.discountValue, subtotal]);
+  }, [saleForm.discountType, saleForm.discountValue, subtotal]);
 
   const totalSelectedValue = useMemo((): number => {
     return Math.max(0, subtotal - discountAmount);
@@ -119,26 +119,26 @@ export default function AddSaleForm({ id, onSuccess }: AddSaleFormProps) {
         className="space-y-4 text-base"
       >
         <SalesBasicFields
-          description={incomeForm.description}
-          dateStr={incomeForm.dateStr}
-          timeStr={incomeForm.timeStr}
-          onDescriptionChange={incomeForm.setDescription}
-          onDateChange={incomeForm.setDateStr}
-          onTimeChange={incomeForm.setTimeStr}
+          description={saleForm.description}
+          dateStr={saleForm.dateStr}
+          timeStr={saleForm.timeStr}
+          onDescriptionChange={saleForm.setDescription}
+          onDateChange={saleForm.setDateStr}
+          onTimeChange={saleForm.setTimeStr}
           errors={errors}
         />
 
         <SalesProductEditor
           products={products}
-          selectedProducts={incomeForm.selectedProducts}
-          onChange={incomeForm.setSelectedProducts}
+          selectedProducts={saleForm.selectedProducts}
+          onChange={saleForm.setSelectedProducts}
         />
 
         {hydrated && (
           <SalesCustomerSelector
             customers={customers}
-            customerId={incomeForm.customerId}
-            onCustomerIdChange={incomeForm.setCustomerId}
+            customerId={saleForm.customerId}
+            onCustomerIdChange={saleForm.setCustomerId}
             onCustomerCreate={createCustomer}
             disabled={isSubmitting}
           />
@@ -146,11 +146,11 @@ export default function AddSaleForm({ id, onSuccess }: AddSaleFormProps) {
 
         {hydrated && (
           <SalesDiscountSection
-            discountType={incomeForm.discountType}
-            discountValue={incomeForm.discountValue}
+            discountType={saleForm.discountType}
+            discountValue={saleForm.discountValue}
             totalSelectedValue={totalSelectedValue}
-            onDiscountTypeChange={incomeForm.setDiscountType}
-            onDiscountValueChange={incomeForm.setDiscountValue}
+            onDiscountTypeChange={saleForm.setDiscountType}
+            onDiscountValueChange={saleForm.setDiscountValue}
             disabled={isSubmitting}
           />
         )}
@@ -164,9 +164,9 @@ export default function AddSaleForm({ id, onSuccess }: AddSaleFormProps) {
         <SalesFormActions
           formId={id}
           pending={pending}
-          selectedProducts={incomeForm.selectedProducts}
+          selectedProducts={saleForm.selectedProducts}
           finalTotal={finalTotal}
-          customerId={incomeForm.customerId}
+          customerId={saleForm.customerId}
         />
 
         {state.message && (

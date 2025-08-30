@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import CurrencyInput from "@/components/inputs/currency-input";
-import { type Product } from "@/hooks/use-income-data";
+import { type Product } from "@/hooks/use-sales-data";
 import { Input } from "@/components/ui/input";
 import {
   Drawer,

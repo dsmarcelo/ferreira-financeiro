@@ -56,7 +56,7 @@ export default function EditIncomeSheet({
         <div className="py-4">
           <EditSaleForm
             id="edit-sale-form"
-            income={income}
+            sale={income}
             onSuccess={() => setOpen(false)}
           />
         </div>

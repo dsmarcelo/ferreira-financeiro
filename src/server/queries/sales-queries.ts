@@ -9,7 +9,7 @@ import {
   getIncomeById as getSaleById,
   updateIncome as updateSale,
   deleteIncome as deleteSale,
-  listIncomes as listSales,
+  listIncomes,
   sumIncomesByDateRange as sumSalesByDateRange,
   sumProfitAmountsByDateRange as sumSalesProfitAmountsByDateRange,
   sumTotalProfitByDateRange as sumSalesTotalProfitByDateRange,
@@ -26,7 +26,6 @@ export {
   getSaleById,
   updateSale,
   deleteSale,
-  listSales,
   sumSalesByDateRange,
   sumSalesProfitAmountsByDateRange,
   sumSalesTotalProfitByDateRange,
@@ -35,6 +34,10 @@ export {
   listItemsForSale,
   createSaleAndDecrementStock,
 };
+
+export async function listSales(from: string, to: string): Promise<Sale[]> {
+  return (await listIncomes(from, to)) as Sale[];
+}
 
 // Aggregate product-level profit for a date range: SUM((unit_price - products.cost) * quantity)
 import { db } from "@/server/db";

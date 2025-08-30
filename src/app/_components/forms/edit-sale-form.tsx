@@ -5,28 +5,28 @@
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  actionDeleteIncome,
-  actionUpdateIncome,
+  actionDeleteSale,
+  actionUpdateSale,
   type ActionResponse,
-} from "@/actions/income-actions";
-import type { Income } from "@/server/db/schema/incomes-schema";
+} from "@/actions/sales-actions";
+import type { Sale } from "@/server/db/schema/sales-schema";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TrashIcon } from "lucide-react";
 import { DeleteDialog } from "../dialogs/delete-dialog";
-import { useIncomeData } from "@/hooks/use-income-data";
+import { useSalesData } from "@/hooks/use-sales-data";
 import {
-  SalesBasicFields as IncomeBasicFields,
-  SalesCustomerSelector as IncomeCustomerSelector,
-  SalesDiscountSection as IncomeDiscountSection,
-  SalesSummary as IncomeSummary,
-  SalesFormActions as IncomeFormActions,
-  SalesProductEditor as IncomeProductEditor,
+  SalesBasicFields,
+  SalesCustomerSelector,
+  SalesDiscountSection,
+  SalesSummary,
+  SalesFormActions,
+  SalesProductEditor,
 } from "./sales";
 
 interface EditSaleFormProps {
   id?: string;
-  income: Income;
+  sale: Sale;
   items?: Array<{
     productId: number;
     quantity: number;
@@ -44,19 +44,19 @@ const initialState: ActionResponse = {
 
 export default function EditSaleForm({
   id,
-  income,
+  sale,
   items = [],
   onSuccess,
   onClose,
 }: EditSaleFormProps) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
-    actionUpdateIncome,
+    actionUpdateSale,
     initialState,
   );
 
   // Load data helpers
-  const { products, customers, createCustomer } = useIncomeData();
+  const { products, customers, createCustomer } = useSalesData();
 
   // Hydration gate for selects
   const [hydrated, setHydrated] = useState(false);
@@ -67,18 +67,18 @@ export default function EditSaleForm({
 
   // Local form state (aligned with new Add flow)
   const [description, setDescription] = useState<string>(
-    income.description ?? "",
+    (sale.description ?? "") as string,
   );
   const [dateStr, setDateStr] = useState<string>(
-    income.dateTime
-      ? new Date(income.dateTime).toLocaleDateString("en-CA", {
+    sale.dateTime
+      ? new Date(sale.dateTime).toLocaleDateString("en-CA", {
           timeZone: "America/Sao_Paulo",
         })
       : "",
   );
   const [timeStr, setTimeStr] = useState<string>(
-    income.dateTime
-      ? new Date(income.dateTime).toLocaleTimeString("pt-BR", {
+    sale.dateTime
+      ? new Date(sale.dateTime).toLocaleTimeString("pt-BR", {
           hour12: false,
           hour: "2-digit",
           minute: "2-digit",
@@ -88,15 +88,15 @@ export default function EditSaleForm({
   );
   const [profitMargin, setProfitMargin] = useState<number>(0);
   const [customerId, setCustomerId] = useState<string>(
-    income.customerId ? String(income.customerId) : "",
+    sale.customerId ? String(sale.customerId) : "",
   );
 
   // Discount state (UI uses "percentage" | "fixed"); DB uses "percent" | "fixed")
   const [discountType, setDiscountType] = useState<"percentage" | "fixed">(
-    income.discountType === "fixed" ? "fixed" : "percentage",
+    sale.discountType === "fixed" ? "fixed" : "percentage",
   );
   const [discountValue, setDiscountValue] = useState<number | undefined>(
-    income.discountValue ? Number(income.discountValue) : undefined,
+    sale.discountValue ? Number(sale.discountValue) : undefined,
   );
 
   // Editable selected products state (initialized from provided items)
@@ -116,11 +116,11 @@ export default function EditSaleForm({
 
   // Hydrate items from server to ensure latest linkage when opening the form
   useEffect(() => {
-    const incomeId = income.id;
-    if (!incomeId) return;
+    const saleId = sale.id;
+    if (!saleId) return;
     void (async () => {
       try {
-        const res = await fetch(`/api/receitas/${incomeId}/itens`, {
+        const res = await fetch(`/api/vendas/${saleId}/itens`, {
           cache: "no-store",
         });
         if (!res.ok) return;
@@ -148,9 +148,9 @@ export default function EditSaleForm({
         // ignore
       }
     })();
-  }, [income.id]);
+  }, [sale.id]);
 
-  // Original quantities for this income to compute available stock in edit mode
+  // Original quantities for this sale to compute available stock in edit mode
   const originalQuantities = useMemo(() => {
     const map: Record<number, number> = {};
     for (const it of items) {
@@ -213,20 +213,20 @@ export default function EditSaleForm({
   const errors = state?.errors ?? {};
 
   const handleDelete = async () => {
-    if (!income.id) return;
-    if (!window.confirm("Tem certeza que deseja excluir esta receita?")) return;
+    if (!sale.id) return;
+    if (!window.confirm("Tem certeza que deseja excluir esta venda?")) return;
 
     try {
-      await actionDeleteIncome(income.id);
-      toast.success("Receita excluída com sucesso!");
+      await actionDeleteSale(sale.id);
+      toast.success("Venda excluída com sucesso!");
       if (onClose) {
         onClose();
       } else {
         router.back();
       }
     } catch (error) {
-      toast.error("Erro ao excluir receita");
-      console.error("Error deleting income:", error);
+      toast.error("Erro ao excluir venda");
+      console.error("Error deleting sale:", error);
     }
   };
 
@@ -235,10 +235,10 @@ export default function EditSaleForm({
   return (
     <div className="space-y-4">
       <form id={id} action={formAction} className="space-y-4">
-        <input type="hidden" name="id" value={income.id} />
+        <input type="hidden" name="id" value={sale.id} />
 
         {/* Unified basic fields */}
-        <IncomeBasicFields
+        <SalesBasicFields
           description={description}
           dateStr={dateStr}
           timeStr={timeStr}
@@ -252,7 +252,7 @@ export default function EditSaleForm({
 
         {/* Customer selector */}
         {hydrated && (
-          <IncomeCustomerSelector
+          <SalesCustomerSelector
             customers={customers}
             customerId={customerId}
             onCustomerIdChange={setCustomerId}
@@ -262,7 +262,7 @@ export default function EditSaleForm({
 
         {/* Discount section */}
         {hydrated && (
-          <IncomeDiscountSection
+          <SalesDiscountSection
             discountType={discountType}
             discountValue={discountValue}
             totalSelectedValue={totalSelectedValue}
@@ -272,7 +272,7 @@ export default function EditSaleForm({
         )}
 
         {/* Summary */}
-        <IncomeSummary
+        <SalesSummary
           totalSelectedValue={totalSelectedValue}
           
           finalTotal={finalTotal}
@@ -280,7 +280,7 @@ export default function EditSaleForm({
         />
 
         {/* Editable products */}
-        <IncomeProductEditor
+        <SalesProductEditor
           products={products}
           selectedProducts={selectedProducts}
           originalQuantities={originalQuantities}
@@ -288,7 +288,7 @@ export default function EditSaleForm({
         />
 
         {/* Hidden inputs for submission (mirrors Add form) */}
-        <IncomeFormActions
+        <SalesFormActions
           formId={id}
           pending={pending}
           selectedProducts={selectedProducts}

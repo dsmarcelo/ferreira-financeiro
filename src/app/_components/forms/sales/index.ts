@@ -8,4 +8,4 @@ export { SalesSummary } from "./sales-summary";
 export { SalesFormActions } from "./sales-form-actions";
 
 // Re-export types for convenience
-export type { Product, Customer } from "@/hooks/use-income-data";
+export type { Product, Customer } from "@/hooks/use-sales-data";

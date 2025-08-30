@@ -2,7 +2,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/utils";
-import { type Product } from "@/hooks/use-income-data";
+import { type Product } from "@/hooks/use-sales-data";
 
 interface IncomeProductSelectionProps {
   products: Product[];

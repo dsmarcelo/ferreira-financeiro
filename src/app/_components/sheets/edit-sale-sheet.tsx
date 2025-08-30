@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import EditSaleForm from "@/app/_components/forms/edit-sale-form";
-import type { Income as Sale } from "@/server/db/schema/incomes-schema";
+import type { Sale } from "@/server/db/schema/sales-schema";
 import { actionDeleteSale } from "@/actions/sales-actions";
 import { toast } from "sonner";
 import { TrashIcon } from "lucide-react";
@@ -51,7 +51,7 @@ export default function EditSaleSheet({ sale, children }: EditSaleSheetProps) {
           <DialogDescription className="hidden" aria-hidden="true" />
         </DialogHeader>
         <div className="py-4">
-          <EditSaleForm id="edit-sale-form" income={sale} onSuccess={() => setOpen(false)} />
+          <EditSaleForm id="edit-sale-form" sale={sale} onSuccess={() => setOpen(false)} />
         </div>
         <DialogFooter className="gap-2">
           <Button type="button" variant="outline" size="icon" onClick={handleDelete}>

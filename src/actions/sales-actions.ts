@@ -9,11 +9,12 @@ import {
   actionUpdateIncome as actionUpdateSale,
   actionDeleteIncome as actionDeleteSale,
   actionGetIncomeById as actionGetSaleById,
-  actionListIncomes as actionListSales,
+  actionListIncomes,
   actionSumIncomesByDateRange as actionSumSalesByDateRange,
   actionSumProfitAmountsByDateRange as actionSumSalesProfitAmountsByDateRange,
   actionSumTotalProfitByDateRange as actionSumSalesTotalProfitByDateRange,
 } from "@/actions/income-actions";
+import type { Sale } from "@/server/db/schema/sales-schema";
 import {
   listItemsForSale,
   sumSalesProductProfitByDateRange,
@@ -27,11 +28,17 @@ export {
   actionUpdateSale,
   actionDeleteSale,
   actionGetSaleById,
-  actionListSales,
   actionSumSalesByDateRange,
   actionSumSalesProfitAmountsByDateRange,
   actionSumSalesTotalProfitByDateRange,
 };
+
+export async function actionListSales(
+  from: string,
+  to: string,
+): Promise<Sale[]> {
+  return (await actionListIncomes(from, to)) as Sale[];
+}
 
 // Additional sales-specific actions that don't exist on income-actions
 export async function actionListItemsForSale(incomeId: number) {

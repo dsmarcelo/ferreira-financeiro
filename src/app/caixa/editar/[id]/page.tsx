@@ -45,7 +45,7 @@ export default async function EditIncomePage({ params }: { params: Promise<{ id:
       <SubPageHeader title="Editar Entrada" />
       <div className="mx-auto mt-4 container max-w-3xl px-5">
         <Suspense fallback={<LoadingSkeleton />}>
-          <EditSaleForm income={income} items={items} />
+          <EditSaleForm sale={income} items={items} />
         </Suspense>
       </div>
     </div>

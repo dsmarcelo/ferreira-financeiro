@@ -1,7 +1,7 @@
 "use client";
 
 import { formatCurrency } from "@/lib/utils";
-import type { Income as Sale } from "@/server/db/schema/incomes-schema";
+import type { Sale } from "@/server/db/schema/sales-schema";
 import { use, useEffect, useMemo, useState } from "react";
 import { format, isValid, parse, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";

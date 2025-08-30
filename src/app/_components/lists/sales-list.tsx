@@ -1,6 +1,6 @@
 "use client";
 import { formatCurrency } from "@/lib/utils";
-import type { Income } from "@/server/db/schema/incomes-schema";
+import type { Sale } from "@/server/db/schema/sales-schema";
 import { use, useEffect, useMemo, useState } from "react";
 import { useCallback, useTransition } from "react";
 import { SalesListItem } from "./sales-list-item";
@@ -11,7 +11,7 @@ import { format, isValid, parse, parseISO } from "date-fns";
 import { Dot } from "lucide-react";
 import EditSale from "@/app/_components/dialogs/edit/edit-sale";
 
-function groupSalesByDate(sales: Income[]) {
+function groupSalesByDate(sales: Sale[]) {
   return sales
     .sort((a, b) => {
       const aDate =
@@ -27,7 +27,7 @@ function groupSalesByDate(sales: Income[]) {
       if (dateA !== dateB) return dateA.localeCompare(dateB);
       return a.id - b.id;
     })
-    .reduce<Record<string, Income[]>>((acc, sale) => {
+    .reduce<Record<string, Sale[]>>((acc, sale) => {
       const saleDate =
         typeof sale.dateTime === "string"
           ? parseISO(sale.dateTime)
@@ -40,7 +40,7 @@ function groupSalesByDate(sales: Income[]) {
     }, {});
 }
 
-function sumSalesByDate(sales: Income[]): number {
+function sumSalesByDate(sales: Sale[]): number {
   return sales.reduce((sum, sale) => sum + Number(sale.value), 0);
 }
 
@@ -50,7 +50,7 @@ export default function SalesList({
   totalProfit,
   aggregates,
 }: {
-  sales: Promise<Income[]>;
+  sales: Promise<Sale[]>;
   labels?: { plural?: string };
   totalProfit?: Promise<number>;
   aggregates?: Promise<{ totalRevenue: number; productProfit: number }>;

@@ -19,8 +19,6 @@ interface IncomeFormStore extends IncomeFormData {
   setDescription: (value: string) => void;
   setDateStr: (value: string) => void;
   setTimeStr: (value: string) => void;
-  setExtraValue: (value: number) => void;
-  setProfitMargin: (value: number) => void;
   setDiscountType: (value: DiscountType) => void;
   setDiscountValue: (value: number | undefined) => void;
   setCustomerId: (value: string) => void;

@@ -1,7 +1,7 @@
 "use client";
 
 import EditSaleSheet from "../../sheets/edit-sale-sheet";
-import type { Income as Sale } from "@/server/db/schema/incomes-schema";
+import type { Sale } from "@/server/db/schema/sales-schema";
 
 interface EditSaleProps {
   data: Sale;
