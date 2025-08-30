@@ -1,52 +1,239 @@
 "use server";
 
-// Sales are currently backed by the same table and logic as incomes.
-// This module provides a sales-named API surface while reusing income queries.
+import { db } from "@/server/db";
+import { sales } from "@/server/db/schema/sales-schema";
+import type { Sale, SaleInsert } from "@/server/db/schema/sales-schema";
+import { products } from "@/server/db/schema/products";
+import { incomeItem } from "@/server/db/schema/income-items";
+import { and, asc, eq, gte, lte, sum } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
-import type { Income as Sale, IncomeInsert as SaleInsert } from "@/server/db/schema/incomes-schema";
-import {
-  createIncome as createSale,
-  getIncomeById as getSaleById,
-  updateIncome as updateSale,
-  deleteIncome as deleteSale,
-  listIncomes,
-  sumIncomesByDateRange as sumSalesByDateRange,
-  sumProfitAmountsByDateRange as sumSalesProfitAmountsByDateRange,
-  sumTotalProfitByDateRange as sumSalesTotalProfitByDateRange,
-  createIncomeWithItems as createSaleWithItems,
-  updateIncomeWithItems as updateSaleWithItems,
-  listItemsForIncome as listItemsForSale,
-  createIncomeAndDecrementStock as createSaleAndDecrementStock,
-} from "@/server/queries/income-queries";
+// Create a new sale
+export async function createSale(data: SaleInsert): Promise<Sale> {
+  const [created] = await db.insert(sales).values(data).returning();
+  if (!created) throw new Error("Falha ao criar a venda.");
+  return created as Sale;
+}
 
-export type { Sale, SaleInsert };
+// Get a sale by ID
+export async function getSaleById(id: number): Promise<Sale | undefined> {
+  const [row] = await db.select().from(sales).where(eq(sales.id, id));
+  return row as Sale | undefined;
+}
 
-export {
-  createSale,
-  getSaleById,
-  updateSale,
-  deleteSale,
-  sumSalesByDateRange,
-  sumSalesProfitAmountsByDateRange,
-  sumSalesTotalProfitByDateRange,
-  createSaleWithItems,
-  updateSaleWithItems,
-  listItemsForSale,
-  createSaleAndDecrementStock,
-};
+// Update a sale by ID
+export async function updateSale(
+  id: number,
+  data: Partial<SaleInsert>,
+): Promise<Sale | undefined> {
+  const [updated] = await db
+    .update(sales)
+    .set(data)
+    .where(eq(sales.id, id))
+    .returning();
+  return updated as Sale | undefined;
+}
 
-export async function listSales(from: string, to: string): Promise<Sale[]> {
-  return (await listIncomes(from, to)) as Sale[];
+// Delete a sale by ID (and its related items)
+export async function deleteSale(id: number): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx.delete(incomeItem).where(eq(incomeItem.salesId, id));
+    await tx.delete(sales).where(eq(sales.id, id));
+  });
+}
+
+// List sales in a date range
+export async function listSales(
+  startDate: string,
+  endDate: string,
+): Promise<Sale[]> {
+  if (startDate && endDate) {
+    const startDateTime = new Date(`${startDate}T00:00:00.000Z`);
+    const endDateTime = new Date(`${endDate}T23:59:59.999Z`);
+    return (await db
+      .select()
+      .from(sales)
+      .where(and(gte(sales.dateTime, startDateTime), lte(sales.dateTime, endDateTime)))
+      .orderBy(asc(sales.dateTime))) as Sale[];
+  }
+  return [];
+}
+
+// Sum of sale values in a date range
+export async function sumSalesByDateRange(
+  startDate: string,
+  endDate: string,
+): Promise<number> {
+  const startDateTime = new Date(`${startDate}T00:00:00.000Z`);
+  const endDateTime = new Date(`${endDate}T23:59:59.999Z`);
+  const result = await db
+    .select({ sum: sum(sales.value) })
+    .from(sales)
+    .where(and(gte(sales.dateTime, startDateTime), lte(sales.dateTime, endDateTime)));
+  return Number(result[0]?.sum ?? 0);
+}
+
+// Sum of profit amounts computed from value * (profitMargin/100) in a date range
+export async function sumSalesProfitAmountsByDateRange(
+  startDate: string,
+  endDate: string,
+): Promise<number> {
+  const rows = await listSales(startDate, endDate);
+  const total = rows.reduce((acc, s) => {
+    const totalValue = Number(s.value) || 0;
+    const percent = Number(s.profitMargin) || 0;
+    return acc + totalValue * (percent / 100);
+  }, 0);
+  return total;
+}
+
+// Breakdown totals for the range: total, profit amount, base value
+export async function sumSalesTotalProfitByDateRange(
+  startDate: string,
+  endDate: string,
+): Promise<{ totalIncome: number; totalProfitAmount: number; totalBaseValue: number }> {
+  const rows = await listSales(startDate, endDate);
+  const totals = rows.reduce(
+    (acc, s) => {
+      const totalValue = Number(s.value) || 0;
+      const percent = Number(s.profitMargin) || 0;
+      const profitAmount = totalValue * (percent / 100);
+      const baseValue = totalValue - profitAmount;
+      return {
+        totalIncome: acc.totalIncome + totalValue,
+        totalProfitAmount: acc.totalProfitAmount + profitAmount,
+        totalBaseValue: acc.totalBaseValue + baseValue,
+      };
+    },
+    { totalIncome: 0, totalProfitAmount: 0, totalBaseValue: 0 },
+  );
+  return totals;
+}
+
+// Create sale and decrement stock atomically
+export async function createSaleAndDecrementStock(
+  data: SaleInsert,
+  items: Array<{ productId: number; quantity: number }>,
+): Promise<Sale> {
+  return db.transaction(async (tx) => {
+    for (const item of items) {
+      const [row] = await tx.select().from(products).where(eq(products.id, item.productId));
+      if (!row) throw new Error("Produto não encontrado");
+      const newQty = (row.quantity ?? 0) - item.quantity;
+      if (newQty < 0) {
+        throw new Error(
+          `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
+        );
+      }
+      await tx.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
+    }
+
+    const [created] = await tx.insert(sales).values(data).returning();
+    if (!created) throw new Error("Falha ao criar a venda.");
+    return created as Sale;
+  });
+}
+
+// Create sale with items and decrement stock
+export async function createSaleWithItems(
+  data: SaleInsert,
+  items: Array<{ productId: number; quantity: number; unitPrice: string }>,
+): Promise<Sale> {
+  return db.transaction(async (tx) => {
+    for (const item of items) {
+      const [row] = await tx.select().from(products).where(eq(products.id, item.productId));
+      if (!row) throw new Error("Produto não encontrado");
+      const newQty = (row.quantity ?? 0) - item.quantity;
+      if (newQty < 0) {
+        throw new Error(
+          `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
+        );
+      }
+      await tx.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
+    }
+
+    const [created] = await tx.insert(sales).values(data).returning();
+    if (!created) throw new Error("Falha ao criar a venda.");
+
+    for (const item of items) {
+      await tx.insert(incomeItem).values({
+        salesId: (created as Sale).id,
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      });
+    }
+
+    return created as Sale;
+  });
+}
+
+// Update sale and fully replace its items, restoring stock
+export async function updateSaleWithItems(
+  id: number,
+  data: Partial<SaleInsert>,
+  items: Array<{ productId: number; quantity: number; unitPrice: string }>,
+): Promise<Sale | undefined> {
+  return db.transaction(async (tx) => {
+    // Restore stock from existing items
+    const existingItems = await tx.select().from(incomeItem).where(eq(incomeItem.salesId, id));
+    for (const ex of existingItems) {
+      const [row] = await tx.select().from(products).where(eq(products.id, ex.productId));
+      if (!row) continue;
+      const restoredQty = (row.quantity ?? 0) + (ex.quantity ?? 0);
+      await tx.update(products).set({ quantity: restoredQty }).where(eq(products.id, ex.productId));
+    }
+
+    // Remove existing item rows
+    await tx.delete(incomeItem).where(eq(incomeItem.salesId, id));
+
+    // Decrement stock for new items and insert them
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const [row] = await tx.select().from(products).where(eq(products.id, item.productId));
+        if (!row) throw new Error("Produto não encontrado");
+        const newQty = (row.quantity ?? 0) - item.quantity;
+        if (newQty < 0) {
+          throw new Error(
+            `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
+          );
+        }
+        await tx.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
+      }
+
+      for (const item of items) {
+        await tx.insert(incomeItem).values({
+          salesId: id,
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+        });
+      }
+    }
+
+    // Update sale itself
+    const [updated] = await tx.update(sales).set(data).where(eq(sales.id, id)).returning();
+    return updated as Sale | undefined;
+  });
+}
+
+// List items sold for a specific sale (with product info)
+export async function listItemsForSale(saleId: number) {
+  return db
+    .select({
+      productId: incomeItem.productId,
+      quantity: incomeItem.quantity,
+      unitPrice: incomeItem.unitPrice,
+      name: products.name,
+      cost: products.cost,
+      price: products.price,
+    })
+    .from(incomeItem)
+    .leftJoin(products, eq(products.id, incomeItem.productId))
+    .where(eq(incomeItem.salesId, saleId));
 }
 
 // Aggregate product-level profit for a date range: SUM((unit_price - products.cost) * quantity)
-import { db } from "@/server/db";
-import { incomes } from "@/server/db/schema/incomes-schema";
-import { incomeItem } from "@/server/db/schema/income-items";
-import { products } from "@/server/db/schema/products";
-import { and, gte, lte, eq } from "drizzle-orm";
-import { sql } from "drizzle-orm";
-
 export async function sumSalesProductProfitByDateRange(startDate: string, endDate: string): Promise<number> {
   const startDateTime = new Date(`${startDate}T00:00:00.000Z`);
   const endDateTime = new Date(`${endDate}T23:59:59.999Z`);
@@ -56,9 +243,9 @@ export async function sumSalesProductProfitByDateRange(startDate: string, endDat
       profit: sql<number>`COALESCE(SUM( (CAST(${incomeItem.unitPrice} AS numeric) - CAST(${products.cost} AS numeric)) * ${incomeItem.quantity} ), 0)`,
     })
     .from(incomeItem)
-    .leftJoin(incomes, eq(incomes.id, incomeItem.incomeId))
+    .leftJoin(sales, eq(incomeItem.salesId, sales.id))
     .leftJoin(products, eq(products.id, incomeItem.productId))
-    .where(and(gte(incomes.dateTime, startDateTime), lte(incomes.dateTime, endDateTime)));
+    .where(and(gte(sales.dateTime, startDateTime), lte(sales.dateTime, endDateTime)));
 
   return Number(result[0]?.profit ?? 0);
 }
@@ -73,9 +260,9 @@ export async function sumSalesRevenueAndProductProfitByDateRange(
       const startDateTime = new Date(`${startDate}T00:00:00.000Z`);
       const endDateTime = new Date(`${endDate}T23:59:59.999Z`);
       const result = await db
-        .select({ total: sql<number>`COALESCE(SUM(CAST(${incomes.value} AS numeric)), 0)` })
-        .from(incomes)
-        .where(and(gte(incomes.dateTime, startDateTime), lte(incomes.dateTime, endDateTime)));
+        .select({ total: sql<number>`COALESCE(SUM(CAST(${sales.value} AS numeric)), 0)` })
+        .from(sales)
+        .where(and(gte(sales.dateTime, startDateTime), lte(sales.dateTime, endDateTime)));
       return Number(result[0]?.total ?? 0);
     })(),
   ]);

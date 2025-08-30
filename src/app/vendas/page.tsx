@@ -4,8 +4,8 @@ import Loading from "@/app/_components/loading/loading";
 import SalesList from "@/app/_components/lists/sales-list";
 import {
   actionListSales as listSales,
-  actionSumSalesRevenueAndProductProfitByDateRange as sumSalesRevenueAndProductProfitByDateRange,
-  actionSumSalesProductProfitByDateRange as sumSalesProductProfitByDateRange,
+  sumSalesRevenueAndProductProfitByDateRange,
+  sumSalesProductProfitByDateRange,
 } from "@/actions/sales-actions";
 import AddSale from "../_components/dialogs/add/add-sale";
 import { Button } from "@/components/ui/button";

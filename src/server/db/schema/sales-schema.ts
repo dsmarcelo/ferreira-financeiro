@@ -10,10 +10,6 @@ export const sales = createTable("sales", {
   id: serial("id").primaryKey(),
   description: text("description").notNull(),
   value: decimal("value", { precision: 15, scale: 2 }).notNull(),
-  profitMargin:
-    decimal("profit_margin", { precision: 15, scale: 2 })
-      .notNull()
-      .default("0"),
   dateTime: timestamp("date_time", { withTimezone: true }).notNull(),
   discountType: text("discount_type"), // 'percent' | 'fixed'
   discountValue: decimal("discount_value", { precision: 15, scale: 2 }),
@@ -30,7 +26,6 @@ export interface Sale {
   id: number;
   description: string;
   value: string;
-  profitMargin: string;
   dateTime: Date;
   discountType?: string | null;
   discountValue?: string | null;

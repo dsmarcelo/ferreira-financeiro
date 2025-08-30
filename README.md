@@ -139,6 +139,9 @@ Reusable server-side functions (called by server actions):
     CRUD helpers, and sums.
 - Incomes: `src/server/queries/income-queries.ts`
   - CRUD, list by date range, and profit calculations.
+- Sales: `src/server/queries/sales-queries.ts`
+  - CRUD against `sales` table, list by date range, sums and product profit
+    aggregations. Items are stored in `income_item` with `sales_id` linkage.
 - Cash register: `src/server/queries/cash-register-queries.ts`
   - CRUD, list by date range, and sums.
 - Categories: `src/server/queries/expense-category-queries.ts`
@@ -153,6 +156,9 @@ Form submissions call server actions which validate inputs (Zod), call the query
 - Expenses: `src/actions/expense-actions.ts`
   - Add one-time, parcelled, recurring; update/delete; toggle `isPaid` with recurring occurrence handling.
 - Incomes: `src/actions/income-actions.ts`
+- Sales: `src/actions/sales-actions.ts`
+  - Create/update/delete/list sales using `sales-queries` (no income imports),
+    computes totals/discounts server-side and revalidates `/vendas` and `/caixa`.
 - Cash register: `src/actions/cash-register-actions.ts`
 - Categories: `src/server/actions/category-actions.ts` (page-specific flow under categories)
 - Page-specific actions also live alongside pages (e.g., `src/app/login/actions.ts`).
