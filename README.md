@@ -1,8 +1,8 @@
-### Edit Income: products and discount behavior
+### Routes
 
-- Edit form now fetches its items from `GET /api/receitas/:id/itens` (backed by `listItemsForIncome`) when opened, and initializes the editable product list accordingly without overwriting ongoing user edits.
-- Products can be edited in-place (quantity and unit price). Stock availability during editing is computed as `stock + originalQuantity - selectedQuantity` and enforced by the UI.
-- Discount applies over the whole amount (products + extra value).
+- `/entradas` Lista de receitas (com adicionar/editar)
+- `/entradas/adicionar` Formulário para adicionar receita
+- `/entradas/editar/[id]` Formulário para editar receita
 
 # Ferreira Financeiro
 

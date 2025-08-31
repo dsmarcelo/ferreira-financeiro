@@ -14,7 +14,7 @@ export default function AddIncome({ children }: AddIncomeProps) {
   const isMobile = true;
 
   return isMobile ? (
-    <Link href="/caixa/adicionar">
+    <Link href="/entradas/adicionar">
       {children ?? <Button className="rounded-full">Adicionar Receita</Button>}
     </Link>
   ) : (

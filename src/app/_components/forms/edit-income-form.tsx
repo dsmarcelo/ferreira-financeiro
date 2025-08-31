@@ -1,0 +1,185 @@
+"use client";
+
+import { useActionState, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { actionUpdateIncome, actionDeleteIncome, type ActionResponse } from "@/actions/income-actions";
+import type { Income } from "@/server/db/schema/incomes-schema";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { DeleteDialog } from "../dialogs/delete-dialog";
+import { useIncomeData } from "@/hooks/use-income-data";
+import { IncomeBasicFields } from "./income/income-basic-fields";
+import { SalesCustomerSelector, SalesDiscountSection, SalesSummary } from "./sales";
+
+interface EditIncomeFormProps {
+  id?: string;
+  income: Income;
+  onSuccess?: () => void;
+  onClose?: () => void;
+}
+
+const initialState: ActionResponse = {
+  success: false,
+  message: "",
+};
+
+export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditIncomeFormProps) {
+  const router = useRouter();
+  const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
+    actionUpdateIncome,
+    initialState,
+  );
+
+  const { customers, createCustomer } = useIncomeData();
+
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setHydrated(true), 50);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Local form fields initialized from income
+  const [description, setDescription] = useState<string>((income.description ?? "") as string);
+  const [dateStr, setDateStr] = useState<string>(
+    income.dateTime
+      ? new Date(income.dateTime).toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })
+      : "",
+  );
+  const [timeStr, setTimeStr] = useState<string>(
+    income.dateTime
+      ? new Date(income.dateTime).toLocaleTimeString("pt-BR", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "America/Sao_Paulo",
+        })
+      : "12:00",
+  );
+
+  const [profitMargin, setProfitMargin] = useState<number | undefined>(
+    income.profitMargin ? Number(income.profitMargin) : undefined,
+  );
+  const [customerId, setCustomerId] = useState<string>(income.customerId ? String(income.customerId) : "");
+
+  // Discount state: map stored DB discount type to UI type
+  const [discountType, setDiscountType] = useState<"percentage" | "fixed">(
+    income.discountType === "fixed" ? "fixed" : "percentage",
+  );
+  const [discountValue, setDiscountValue] = useState<number | undefined>(
+    income.discountValue ? Number(income.discountValue) : undefined,
+  );
+
+  // Total value (editable numeric field)
+  const [totalValue, setTotalValue] = useState<number | undefined>(
+    income.value ? Number(income.value) : undefined,
+  );
+
+  // Compute totals
+  const subtotal = totalValue ?? 0;
+  const discountAmount = useMemo(() => {
+    if (!discountValue || discountValue <= 0) return 0;
+    if (discountType === "percentage") return (subtotal * discountValue) / 100;
+    return discountValue;
+  }, [discountType, discountValue, subtotal]);
+
+  const finalTotal = useMemo(() => Math.max(0, subtotal - discountAmount), [subtotal, discountAmount]);
+
+  useEffect(() => {
+    if (state.success === true && state.message) {
+      toast.success(state.message);
+      if (onSuccess) onSuccess();
+      else router.back();
+    } else if (state.success === false && state.message) {
+      toast.error(state.message);
+    }
+  }, [state.success, state.message, onSuccess, router]);
+
+  const errors = state?.errors ?? {};
+
+  const handleDelete = async () => {
+    if (!income.id) return;
+    try {
+      await actionDeleteIncome(income.id);
+      toast.success("Receita excluída com sucesso!");
+      if (onClose) onClose();
+      else router.back();
+    } catch (error) {
+      toast.error("Erro ao excluir receita");
+      console.error("Error deleting income:", error);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <form id={id} action={formAction} className="space-y-4">
+        <input type="hidden" name="id" value={income.id} />
+
+        <IncomeBasicFields
+          description={description}
+          dateStr={dateStr}
+          timeStr={timeStr}
+          totalValue={totalValue}
+          profitMargin={profitMargin}
+          onDescriptionChange={setDescription}
+          onDateChange={setDateStr}
+          onTimeChange={setTimeStr}
+          onTotalValueChange={setTotalValue}
+          onProfitMarginChange={setProfitMargin}
+          errors={errors}
+        />
+
+        {hydrated && (
+          <SalesCustomerSelector
+            customers={customers}
+            customerId={customerId}
+            onCustomerIdChange={setCustomerId}
+            onCustomerCreate={createCustomer}
+          />
+        )}
+
+        {hydrated && (
+          <SalesDiscountSection
+            discountType={discountType}
+            discountValue={discountValue}
+            totalSelectedValue={Math.max(0, subtotal - discountAmount)}
+            onDiscountTypeChange={setDiscountType}
+            onDiscountValueChange={setDiscountValue}
+          />
+        )}
+
+        <SalesSummary totalSelectedValue={subtotal} finalTotal={finalTotal} discountAmount={discountAmount} />
+
+        {/* Hidden inputs for server expectation */}
+        <input type="hidden" name="totalValue" value={finalTotal} />
+        <input type="hidden" name="customerId" value={customerId} />
+        <input type="hidden" name="profitMargin" value={profitMargin ?? 0} />
+
+        {!id && (
+          <div className="flex w-full justify-between gap-2 pt-2">
+            <DeleteDialog onConfirm={handleDelete} triggerText={<span>Excluir</span>} />
+
+            <Button type="submit" disabled={pending} className="">
+              {pending ? "Salvando..." : "Salvar Alterações"}
+            </Button>
+          </div>
+        )}
+
+        {state.message && (
+          <>
+            {state.success === true ? (
+              <p className="mt-2 text-sm text-green-600" aria-live="polite">
+                {state.message}
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-red-500" aria-live="polite">
+                {state.message}
+              </p>
+            )}
+          </>
+        )}
+      </form>
+    </div>
+  );
+}
+
+

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import EditSaleForm from "@/app/_components/forms/edit-sale-form";
+import EditIncomeForm from "@/app/_components/forms/edit-income-form";
 import type { Income } from "@/server/db/schema/incomes-schema";
 import { actionDeleteIncome } from "@/actions/income-actions";
 import { toast } from "sonner";
@@ -54,11 +54,7 @@ export default function EditIncomeSheet({
           <DialogDescription className="hidden" aria-hidden="true" />
         </DialogHeader>
         <div className="py-4">
-          <EditSaleForm
-            id="edit-sale-form"
-            sale={income}
-            onSuccess={() => setOpen(false)}
-          />
+          <EditIncomeForm id="edit-income-form" income={income} onSuccess={() => setOpen(false)} />
         </div>
         <DialogFooter className="gap-2">
           <Button
@@ -72,7 +68,7 @@ export default function EditIncomeSheet({
           <DialogClose asChild>
             <Button variant="outline">Cancelar</Button>
           </DialogClose>
-          <Button type="submit" form="edit-sale-form">
+          <Button type="submit" form="edit-income-form">
             Salvar
           </Button>
         </DialogFooter>
