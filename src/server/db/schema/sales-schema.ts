@@ -30,9 +30,10 @@ export interface Sale {
   discountType?: string | null;
   discountValue?: string | null;
   customerId: number | null;
+  // Optional, when joining with customers
+  customerName?: string | null;
   createdAt: Date;
   updatedAt: Date | null;
 }
 
 export type SaleInsert = Omit<Sale, "id" | "createdAt" | "updatedAt">;
-

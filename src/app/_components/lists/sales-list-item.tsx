@@ -19,7 +19,9 @@ export function SalesListItem({ sale, children }: SaleListItemProps) {
     let cancelled = false;
     async function load() {
       try {
-        const res = await fetch(`/api/vendas/${sale.id}/itens`, { cache: "no-store" });
+        const res = await fetch(`/api/vendas/${sale.id}/itens`, {
+          cache: "no-store",
+        });
         if (!res.ok) return;
         const data = (await res.json()) as Array<{
           productId: number;
@@ -49,7 +51,10 @@ export function SalesListItem({ sale, children }: SaleListItemProps) {
       )}
     >
       <div className="w-full">
-        <p className="text-base">{sale.description}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-base">{sale.description}</p>
+          {sale.customerName && <p> - {sale.customerName}</p>}
+        </div>
         <p className="text-muted-foreground text-sm whitespace-nowrap">
           {format(parseISO(sale.dateTime.toISOString()), "HH:mm", {
             locale: ptBR,
@@ -57,10 +62,12 @@ export function SalesListItem({ sale, children }: SaleListItemProps) {
         </p>
       </div>
       <div className="flex flex-col items-end">
-        <p className={cn("w-fit text-right font-semibold")}> 
+        <p className={cn("w-fit text-right font-semibold")}>
           {formatCurrency(totalSale)}
         </p>
-        <p className="text-muted-foreground text-sm whitespace-nowrap">Lucro: {formatCurrency(profitAmount)}</p>
+        <p className="text-muted-foreground text-sm whitespace-nowrap">
+          Lucro: {formatCurrency(profitAmount)}
+        </p>
       </div>
       {children}
     </div>

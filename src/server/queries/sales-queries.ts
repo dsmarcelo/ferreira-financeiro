@@ -2,6 +2,7 @@
 
 import { db } from "@/server/db";
 import { sales } from "@/server/db/schema/sales-schema";
+import { customers } from "@/server/db/schema/customers";
 import type { Sale, SaleInsert } from "@/server/db/schema/sales-schema";
 import { products } from "@/server/db/schema/products";
 import { incomeItem } from "@/server/db/schema/income-items";
@@ -50,11 +51,25 @@ export async function listSales(
   if (startDate && endDate) {
     const startDateTime = new Date(`${startDate}T00:00:00.000Z`);
     const endDateTime = new Date(`${endDate}T23:59:59.999Z`);
-    return (await db
-      .select()
+    // Join customers to include customerName for display
+    const rows = await db
+      .select({
+        id: sales.id,
+        description: sales.description,
+        value: sales.value,
+        dateTime: sales.dateTime,
+        discountType: sales.discountType,
+        discountValue: sales.discountValue,
+        customerId: sales.customerId,
+        createdAt: sales.createdAt,
+        updatedAt: sales.updatedAt,
+        customerName: customers.name,
+      })
       .from(sales)
+      .leftJoin(customers, eq(customers.id, sales.customerId))
       .where(and(gte(sales.dateTime, startDateTime), lte(sales.dateTime, endDateTime)))
-      .orderBy(asc(sales.dateTime))) as Sale[];
+      .orderBy(asc(sales.dateTime));
+    return rows as unknown as Sale[];
   }
   return [];
 }
