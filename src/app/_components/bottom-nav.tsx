@@ -9,6 +9,7 @@ import {
   BanknoteArrowDown,
   Package,
   HandCoins,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,12 @@ const navItems = [
     href: "/caixa",
     icon: BanknoteArrowDown,
     testId: "nav-caixa",
+  },
+  {
+    label: "Entradas",
+    href: "/entradas",
+    icon: TrendingUp,
+    testId: "nav-entradas",
   },
   {
     label: "Vendas",

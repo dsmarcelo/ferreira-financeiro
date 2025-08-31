@@ -15,6 +15,7 @@ import {
   Store,
   Package,
   HandCoins,
+  TrendingUp,
 } from "lucide-react";
 export default function Header({
   children,
@@ -45,6 +46,12 @@ export default function Header({
       href: "/caixa",
       icon: BanknoteArrowDown,
       testId: "nav-caixa",
+    },
+    {
+      label: "Entradas",
+      href: "/entradas",
+      icon: TrendingUp,
+      testId: "nav-entradas",
     },
     {
       label: "Vendas",
