@@ -65,11 +65,14 @@ export function SummaryPDFButton({ from, to }: SummaryPDFButtonProps) {
       disabled={isLoading}
       aria-busy={isLoading}
     >
-      {isLoading ? "Gerando PDF..." :
-      <div className="flex items-center gap-1 justify-center">
-        <FileDown className="h-4 w-4" />
-      <span>Relatório</span>
-      </div>}
+      {isLoading ? (
+        "Gerando PDF..."
+      ) : (
+        <div className="flex items-center justify-center gap-1">
+          <FileDown className="h-4 w-4" />
+          <span>Relatório</span>
+        </div>
+      )}
     </Button>
   );
 }
