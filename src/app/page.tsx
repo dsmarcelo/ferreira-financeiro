@@ -42,8 +42,7 @@ export default async function HomePage({
             {/* Summary cards for caixa, despesas pessoais, loja, produtos */}
             <SummaryCards from={from} to={to} />
             {/* Button to generate and download the summary PDF for the selected period */}
-            <div className="mt-4">
-            </div>
+            <div className="mt-4"></div>
           </>
         ) : (
           // Prompt to select a period if missing
@@ -54,28 +53,23 @@ export default async function HomePage({
         {/* Buttons to add new entries for each type of financial record */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <AddIncome>
-            <Button className="h-14 rounded-xl w-full">
+            <Button className="h-14 w-full rounded-xl">
               <BanknoteArrowDown className="h-4 w-4" />
               <span>Adicionar Entrada</span>
             </Button>
           </AddIncome>
           <AddPersonalExpense>
-            <Button className="h-14 rounded-xl w-full">
+            <Button className="h-14 w-full rounded-xl">
               <User className="h-4 w-4" />
               <span>Adicionar Despesa Pessoal</span>
             </Button>
           </AddPersonalExpense>
           <AddStoreExpense>
-            <Button className="h-14 rounded-xl w-full">
+            <Button className="h-14 w-full rounded-xl">
               <Store className="h-4 w-4" />
               <span>Adicionar Despesa de Loja</span>
             </Button>
           </AddStoreExpense>
-          {/* <AddProductPurchase>
-            <Button className="h-14 rounded-xl w-full">
-              Adicionar Compra de produto
-            </Button>
-          </AddProductPurchase> */}
         </div>
       </div>
     </main>

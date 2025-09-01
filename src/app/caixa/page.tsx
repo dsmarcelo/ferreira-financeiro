@@ -9,20 +9,11 @@ import { formatCurrency } from "@/lib/utils";
 export default async function CaixaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from: string; to: string }>;
+  searchParams: Promise<{ from?: string; to?: string }>;
 }) {
   const { from, to } = await searchParams;
-  const [salesTotal, incomesTotal] = await Promise.all([
-    sumSalesByDateRange(from, to),
-    sumIncomesByDateRange(from, to),
-  ]);
-  const total = (salesTotal ?? 0) + (incomesTotal ?? 0);
-  const sales = listSales(from, to);
-  const incomes = (await import("@/server/queries/income-queries")).listIncomes(
-    from,
-    to,
-  );
 
+  // Wait for valid params before querying
   if (!from || !to) {
     return (
       <div className="flex min-h-screen flex-col pb-24">
@@ -35,6 +26,17 @@ export default async function CaixaPage({
       </div>
     );
   }
+
+  const [salesTotal, incomesTotal] = await Promise.all([
+    sumSalesByDateRange(from, to),
+    sumIncomesByDateRange(from, to),
+  ]);
+  const total = (salesTotal ?? 0) + (incomesTotal ?? 0);
+  const sales = listSales(from, to);
+  const incomes = (await import("@/server/queries/income-queries")).listIncomes(
+    from,
+    to,
+  );
 
   return (
     <div className="flex min-h-screen flex-col pb-24">
