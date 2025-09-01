@@ -96,8 +96,7 @@ export async function sumSalesProfitAmountsByDateRange(
   const rows = await listSales(startDate, endDate);
   const total = rows.reduce((acc, s) => {
     const totalValue = Number(s.value) || 0;
-    const percent = Number(s.profitMargin) || 0;
-    return acc + totalValue * (percent / 100);
+    return acc + totalValue;
   }, 0);
   return total;
 }
@@ -111,8 +110,7 @@ export async function sumSalesTotalProfitByDateRange(
   const totals = rows.reduce(
     (acc, s) => {
       const totalValue = Number(s.value) || 0;
-      const percent = Number(s.profitMargin) || 0;
-      const profitAmount = totalValue * (percent / 100);
+      const profitAmount = totalValue;
       const baseValue = totalValue - profitAmount;
       return {
         totalIncome: acc.totalIncome + totalValue,

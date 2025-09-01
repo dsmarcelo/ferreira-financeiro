@@ -67,7 +67,7 @@ export default function EditSaleForm({
 
   // Local form state (aligned with new Add flow)
   const [description, setDescription] = useState<string>(
-    (sale.description ?? "") as string,
+    sale.description ?? "",
   );
   const [dateStr, setDateStr] = useState<string>(
     sale.dateTime
@@ -86,7 +86,6 @@ export default function EditSaleForm({
         })
       : "12:00",
   );
-  const [profitMargin, setProfitMargin] = useState<number>(0);
   const [customerId, setCustomerId] = useState<string>(
     sale.customerId ? String(sale.customerId) : "",
   );
@@ -242,11 +241,9 @@ export default function EditSaleForm({
           description={description}
           dateStr={dateStr}
           timeStr={timeStr}
-          
           onDescriptionChange={setDescription}
           onDateChange={setDateStr}
           onTimeChange={setTimeStr}
-          
           errors={errors}
         />
 
@@ -274,7 +271,6 @@ export default function EditSaleForm({
         {/* Summary */}
         <SalesSummary
           totalSelectedValue={totalSelectedValue}
-          
           finalTotal={finalTotal}
           discountAmount={discountAmount}
         />
