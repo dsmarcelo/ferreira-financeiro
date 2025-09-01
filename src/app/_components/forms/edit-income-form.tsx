@@ -2,14 +2,22 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { actionUpdateIncome, actionDeleteIncome, type ActionResponse } from "@/actions/income-actions";
+import {
+  actionUpdateIncome,
+  actionDeleteIncome,
+  type ActionResponse,
+} from "@/actions/income-actions";
 import type { Income } from "@/server/db/schema/incomes-schema";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { DeleteDialog } from "../dialogs/delete-dialog";
 import { useIncomeData } from "@/hooks/use-income-data";
 import { IncomeBasicFields } from "./income/income-basic-fields";
-import { SalesCustomerSelector, SalesDiscountSection, SalesSummary } from "./sales";
+import {
+  SalesCustomerSelector,
+  SalesDiscountSection,
+  SalesSummary,
+} from "./sales";
 
 interface EditIncomeFormProps {
   id?: string;
@@ -23,7 +31,12 @@ const initialState: ActionResponse = {
   message: "",
 };
 
-export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditIncomeFormProps) {
+export default function EditIncomeForm({
+  id,
+  income,
+  onSuccess,
+  onClose,
+}: EditIncomeFormProps) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState<ActionResponse, FormData>(
     actionUpdateIncome,
@@ -39,10 +52,14 @@ export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditI
   }, []);
 
   // Local form fields initialized from income
-  const [description, setDescription] = useState<string>((income.description ?? "") as string);
+  const [description, setDescription] = useState<string>(
+    income.description ?? "",
+  );
   const [dateStr, setDateStr] = useState<string>(
     income.dateTime
-      ? new Date(income.dateTime).toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })
+      ? new Date(income.dateTime).toLocaleDateString("en-CA", {
+          timeZone: "America/Sao_Paulo",
+        })
       : "",
   );
   const [timeStr, setTimeStr] = useState<string>(
@@ -59,14 +76,14 @@ export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditI
   const [profitMargin, setProfitMargin] = useState<number | undefined>(
     income.profitMargin ? Number(income.profitMargin) : undefined,
   );
-  const [customerId, setCustomerId] = useState<string>(income.customerId ? String(income.customerId) : "");
+  const [customerId, setCustomerId] = useState<string>("");
 
   // Discount state: map stored DB discount type to UI type
   const [discountType, setDiscountType] = useState<"percentage" | "fixed">(
-    income.discountType === "fixed" ? "fixed" : "percentage",
+    "percentage",
   );
   const [discountValue, setDiscountValue] = useState<number | undefined>(
-    income.discountValue ? Number(income.discountValue) : undefined,
+    undefined,
   );
 
   // Total value (editable numeric field)
@@ -82,7 +99,10 @@ export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditI
     return discountValue;
   }, [discountType, discountValue, subtotal]);
 
-  const finalTotal = useMemo(() => Math.max(0, subtotal - discountAmount), [subtotal, discountAmount]);
+  const finalTotal = useMemo(
+    () => Math.max(0, subtotal - discountAmount),
+    [subtotal, discountAmount],
+  );
 
   useEffect(() => {
     if (state.success === true && state.message) {
@@ -128,35 +148,22 @@ export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditI
           errors={errors}
         />
 
-        {hydrated && (
-          <SalesCustomerSelector
-            customers={customers}
-            customerId={customerId}
-            onCustomerIdChange={setCustomerId}
-            onCustomerCreate={createCustomer}
-          />
-        )}
-
-        {hydrated && (
-          <SalesDiscountSection
-            discountType={discountType}
-            discountValue={discountValue}
-            totalSelectedValue={Math.max(0, subtotal - discountAmount)}
-            onDiscountTypeChange={setDiscountType}
-            onDiscountValueChange={setDiscountValue}
-          />
-        )}
-
-        <SalesSummary totalSelectedValue={subtotal} finalTotal={finalTotal} discountAmount={discountAmount} />
+        <SalesSummary
+          totalSelectedValue={subtotal}
+          finalTotal={finalTotal}
+          discountAmount={discountAmount}
+        />
 
         {/* Hidden inputs for server expectation */}
         <input type="hidden" name="totalValue" value={finalTotal} />
-        <input type="hidden" name="customerId" value={customerId} />
         <input type="hidden" name="profitMargin" value={profitMargin ?? 0} />
 
         {!id && (
           <div className="flex w-full justify-between gap-2 pt-2">
-            <DeleteDialog onConfirm={handleDelete} triggerText={<span>Excluir</span>} />
+            <DeleteDialog
+              onConfirm={handleDelete}
+              triggerText={<span>Excluir</span>}
+            />
 
             <Button type="submit" disabled={pending} className="">
               {pending ? "Salvando..." : "Salvar Alterações"}
@@ -181,5 +188,3 @@ export default function EditIncomeForm({ id, income, onSuccess, onClose }: EditI
     </div>
   );
 }
-
-

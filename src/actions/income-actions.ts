@@ -60,7 +60,8 @@ export async function actionCreateIncome(
   const discountValueStr = formData.get("discountValue");
   const customerIdStr = formData.get("customerId");
   const discountValue = typeof discountValueStr === "string" ? Number(discountValueStr) : undefined;
-  const customerId = typeof customerIdStr === "string" && customerIdStr.length > 0 ? Number(customerIdStr) : undefined;
+  // Read but do not persist customerId; schema does not include it
+  const _customerId = typeof customerIdStr === "string" && customerIdStr.length > 0 ? Number(customerIdStr) : undefined;
 
   // Normalize discount type: treat empty string or invalid as undefined
   const discountType: "percent" | "fixed" | undefined =
@@ -68,7 +69,7 @@ export async function actionCreateIncome(
 
   // Validate using Zod, passing raw values
   // Validate base fields first (value will be recomputed but allow client value for basic presence)
-  const result = incomeInsertSchema.safeParse({ description, date, time, value: clientProvidedValue, profitMargin, soldItemsJson, discountType, discountValue, customerId });
+  const result = incomeInsertSchema.safeParse({ description, date, time, value: clientProvidedValue, profitMargin, soldItemsJson, discountType, discountValue, customerId: _customerId });
   if (!result.success) {
     // Return field-level errors and a general message
     return {
@@ -102,14 +103,18 @@ export async function actionCreateIncome(
       }
     }
 
+    // Decide persisted value: if items exist, compute with discount; otherwise use client-provided total
     const subtotal = itemsTotal;
     const discountAmount = discountType === "percent"
       ? ((discountValue ?? 0) / 100) * subtotal
       : (discountValue ?? 0);
-    const computedValue = Math.max(0, subtotal - discountAmount);
+    const computedFromItems = Math.max(0, subtotal - discountAmount);
+    const persistedNumericValue = items.length > 0
+      ? computedFromItems
+      : (clientProvidedValue ?? 0);
 
     // Format values for DB
-    const dbValue = computedValue.toFixed(2);
+    const dbValue = persistedNumericValue.toFixed(2);
     const dbProfitMargin = profitMargin !== undefined ? profitMargin.toFixed(2) : "0";
 
     if (items.length > 0) {
@@ -118,7 +123,6 @@ export async function actionCreateIncome(
         dateTime: dateTime,
         value: dbValue,
         profitMargin: dbProfitMargin,
-        customerId: customerId,
       }, items);
     } else {
       await createIncome({
@@ -126,7 +130,6 @@ export async function actionCreateIncome(
         dateTime: dateTime,
         value: dbValue,
         profitMargin: dbProfitMargin,
-        customerId: customerId,
       });
     }
     revalidatePath("/caixa");
@@ -161,13 +164,14 @@ export async function actionUpdateIncome(
   const totalValue = typeof totalValueStr === "string" ? Number(totalValueStr) : undefined;
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
   const discountValue = typeof discountValueStr === "string" ? Number(discountValueStr) : undefined;
-  const customerId = typeof customerIdStr === "string" && customerIdStr.length > 0 ? Number(customerIdStr) : undefined;
+  // Read but do not persist customerId; schema does not include it
+  const _customerId = typeof customerIdStr === "string" && customerIdStr.length > 0 ? Number(customerIdStr) : undefined;
 
   const discountType: "percent" | "fixed" | undefined =
     discountTypeRaw === "percent" || discountTypeRaw === "fixed" ? (discountTypeRaw) : undefined;
 
   // Validate using Zod, passing raw values
-  const result = incomeInsertSchema.safeParse({ description, date, time, value: totalValue, profitMargin, discountType, discountValue, customerId });
+  const result = incomeInsertSchema.safeParse({ description, date, time, value: totalValue, profitMargin, discountType, discountValue, customerId: _customerId });
   if (!result.success) {
     return {
       success: false,
@@ -200,21 +204,21 @@ export async function actionUpdateIncome(
       }
     }
 
+    // If items exist, compute; otherwise use client-provided total
     const subtotal = itemsTotal;
     const computedDiscount = discountType === "percent"
       ? ((discountValue ?? 0) / 100) * subtotal
       : (discountValue ?? 0);
-    const computedValue = Math.max(0, subtotal - computedDiscount);
+    const computedFromItems = Math.max(0, subtotal - computedDiscount);
+    const persistedNumericValue = items.length > 0
+      ? computedFromItems
+      : (totalValue ?? 0);
 
     const dataToUpdate = {
       description: description as string,
       dateTime: dateTime,
-      value: computedValue.toFixed(2),
-      
+      value: persistedNumericValue.toFixed(2),
       profitMargin: profitMargin?.toFixed(2) ?? "0",
-      discountType,
-      discountValue: discountValue !== undefined ? discountValue.toFixed(2) : undefined,
-      customerId,
     } as const;
 
     if (items.length > 0) {

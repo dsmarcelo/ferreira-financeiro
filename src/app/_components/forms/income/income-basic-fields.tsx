@@ -117,8 +117,9 @@ export function IncomeBasicFields({
             step={0.01}
             value={profitMargin ?? ""}
             onChange={(e) => {
-              const v = e.target.value === "" ? undefined : Number(e.target.value);
-              onProfitMarginChange(Number.isFinite(v as number) ? (v as number) : undefined);
+              const v =
+                e.target.value === "" ? undefined : Number(e.target.value);
+              onProfitMarginChange(Number.isFinite(v!) ? v! : undefined);
             }}
           />
           {errors.profitMargin && (
@@ -131,5 +132,3 @@ export function IncomeBasicFields({
     </>
   );
 }
-
-
