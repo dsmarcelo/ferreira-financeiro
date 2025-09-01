@@ -2,6 +2,7 @@
 
 import { formatCurrency } from "@/lib/utils";
 import type { Sale } from "@/server/db/schema/sales-schema";
+import type { Income } from "@/server/db/schema/incomes-schema";
 import { use, useEffect, useMemo, useState } from "react";
 import { format, isValid, parse, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -14,11 +15,14 @@ function toDateKey(d: unknown): string {
 
 export default function DailyIncomeList({
   sales,
+  incomes,
 }: {
   // Sales are backed by incomes; already filtered to the selected month
   sales: Promise<Sale[]>;
+  incomes: Promise<Income[]>;
 }) {
   const allSales = use(sales);
+  const allIncomes = use(incomes);
 
   // Map saleId -> profit for that sale
   const [profitBySale, setProfitBySale] = useState<Record<number, number>>({});
@@ -65,7 +69,7 @@ export default function DailyIncomeList({
     };
   }, [allSales]);
 
-  const grouped = useMemo(() => {
+  const groupedSales = useMemo(() => {
     return allSales.reduce<Record<string, Sale[]>>((acc, s) => {
       const key = toDateKey(s.dateTime);
       acc[key] ??= [];
@@ -74,7 +78,22 @@ export default function DailyIncomeList({
     }, {});
   }, [allSales]);
 
-  const sortedDates = useMemo(() => Object.keys(grouped).sort(), [grouped]);
+  const groupedIncomes = useMemo(() => {
+    return allIncomes.reduce<Record<string, Income[]>>((acc, inc) => {
+      const key = toDateKey(inc.dateTime);
+      acc[key] ??= [];
+      acc[key].push(inc);
+      return acc;
+    }, {});
+  }, [allIncomes]);
+
+  const sortedDates = useMemo(() => {
+    const keys = new Set<string>([
+      ...Object.keys(groupedSales),
+      ...Object.keys(groupedIncomes),
+    ]);
+    return Array.from(keys).sort();
+  }, [groupedSales, groupedIncomes]);
 
   if (allSales.length === 0) {
     return (
@@ -88,8 +107,17 @@ export default function DailyIncomeList({
     <div className="divide-y">
       {sortedDates.map((dateKey) => {
         const dateObj = parse(dateKey, "yyyy-MM-dd", new Date());
-        const daySales = grouped[dateKey] ?? [];
-        const dayTotal = daySales.reduce((sum, s) => sum + Number(s.value), 0);
+        const daySales = groupedSales[dateKey] ?? [];
+        const daySalesTotal = daySales.reduce(
+          (sum, s) => sum + Number(s.value),
+          0,
+        );
+        const dayIncomes = groupedIncomes[dateKey] ?? [];
+        const dayIncomesTotal = dayIncomes.reduce(
+          (sum, i) => sum + Number(i.value),
+          0,
+        );
+        const dayTotal = daySalesTotal + dayIncomesTotal;
         const dayProfit = daySales.reduce(
           (sum, s) => sum + (profitBySale[s.id] ?? 0),
           0,
