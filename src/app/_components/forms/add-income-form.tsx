@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { actionCreateIncome, type ActionResponse } from "@/actions/income-actions";
 import { toast } from "sonner";
 import { useIncomeFormStore } from "@/stores/income-form-store";
-import { useIncomeData } from "@/hooks/use-income-data";
 import { IncomeBasicFields } from "./income/income-basic-fields";
-import { SalesCustomerSelector, SalesDiscountSection, SalesSummary, SalesFormActions } from "./sales";
 import { IncomeFormActions } from "./income/income-form-actions";
 
 interface AddIncomeFormProps {
@@ -29,13 +27,6 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
 
   const form = useIncomeFormStore();
   const clearFormData = useIncomeFormStore((s) => s.clearFormData);
-  const { customers, createCustomer } = useIncomeData();
-
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setHydrated(true), 50);
-    return () => clearTimeout(t);
-  }, []);
 
   useEffect(() => {
     if (state.success === true && state.message) {
@@ -54,16 +45,6 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
   const [totalValue, setTotalValue] = useState<number | undefined>(undefined);
   const [profitMargin, setProfitMargin] = useState<number | undefined>(undefined);
 
-  // Compute discount amount and final total based on entered totalValue (no items editor for incomes)
-  const subtotal = totalValue ?? 0;
-  const discountAmount = (() => {
-    const dv = form.discountValue ?? 0;
-    if (form.discountType === "percentage") return (subtotal * dv) / 100;
-    if (form.discountType === "fixed") return dv;
-    return 0;
-  })();
-  const finalTotal = Math.max(0, subtotal - discountAmount);
-
   return (
     <div className="w-full space-y-4">
       <form id={id} action={formAction} className="space-y-4 text-base">
@@ -80,38 +61,6 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
           onProfitMarginChange={setProfitMargin}
           errors={errors}
         />
-
-        {hydrated && (
-          <SalesCustomerSelector
-            customers={customers}
-            customerId={form.customerId}
-            onCustomerIdChange={form.setCustomerId}
-            onCustomerCreate={createCustomer}
-            disabled={pending}
-          />
-        )}
-
-        {hydrated && (
-          <SalesDiscountSection
-            discountType={form.discountType}
-            discountValue={form.discountValue}
-            totalSelectedValue={Math.max(0, subtotal - discountAmount)}
-            onDiscountTypeChange={form.setDiscountType}
-            onDiscountValueChange={form.setDiscountValue}
-            disabled={pending}
-          />
-        )}
-
-        <SalesSummary
-          totalSelectedValue={subtotal}
-          finalTotal={finalTotal}
-          discountAmount={discountAmount}
-        />
-
-        {/* Hidden inputs expected by server action */}
-        <input type="hidden" name="totalValue" value={finalTotal} />
-        <input type="hidden" name="customerId" value={form.customerId} />
-        <input type="hidden" name="profitMargin" value={profitMargin ?? 0} />
 
         <IncomeFormActions formId={id} pending={pending} />
 

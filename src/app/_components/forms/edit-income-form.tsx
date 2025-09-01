@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   actionUpdateIncome,
@@ -13,11 +13,7 @@ import { toast } from "sonner";
 import { DeleteDialog } from "../dialogs/delete-dialog";
 import { useIncomeData } from "@/hooks/use-income-data";
 import { IncomeBasicFields } from "./income/income-basic-fields";
-import {
-  SalesCustomerSelector,
-  SalesDiscountSection,
-  SalesSummary,
-} from "./sales";
+// Sales-related components removed for incomes
 
 interface EditIncomeFormProps {
   id?: string;
@@ -76,32 +72,10 @@ export default function EditIncomeForm({
   const [profitMargin, setProfitMargin] = useState<number | undefined>(
     income.profitMargin ? Number(income.profitMargin) : undefined,
   );
-  const [customerId, setCustomerId] = useState<string>("");
-
-  // Discount state: map stored DB discount type to UI type
-  const [discountType, setDiscountType] = useState<"percentage" | "fixed">(
-    "percentage",
-  );
-  const [discountValue, setDiscountValue] = useState<number | undefined>(
-    undefined,
-  );
 
   // Total value (editable numeric field)
   const [totalValue, setTotalValue] = useState<number | undefined>(
     income.value ? Number(income.value) : undefined,
-  );
-
-  // Compute totals
-  const subtotal = totalValue ?? 0;
-  const discountAmount = useMemo(() => {
-    if (!discountValue || discountValue <= 0) return 0;
-    if (discountType === "percentage") return (subtotal * discountValue) / 100;
-    return discountValue;
-  }, [discountType, discountValue, subtotal]);
-
-  const finalTotal = useMemo(
-    () => Math.max(0, subtotal - discountAmount),
-    [subtotal, discountAmount],
   );
 
   useEffect(() => {
@@ -148,15 +122,7 @@ export default function EditIncomeForm({
           errors={errors}
         />
 
-        <SalesSummary
-          totalSelectedValue={subtotal}
-          finalTotal={finalTotal}
-          discountAmount={discountAmount}
-        />
-
-        {/* Hidden inputs for server expectation */}
-        <input type="hidden" name="totalValue" value={finalTotal} />
-        <input type="hidden" name="profitMargin" value={profitMargin ?? 0} />
+        {/* SalesSummary and hidden fields removed; values are submitted by inputs themselves */}
 
         {!id && (
           <div className="flex w-full justify-between gap-2 pt-2">
