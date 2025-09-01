@@ -55,13 +55,9 @@ export default async function VendasPage({
         </Suspense>
       </main>
       <div className="fixed bottom-24 block w-full px-5 sm:hidden">
-        <div className="flex gap-2">
-          <AddSale>
-            <Button className="h-12 w-full rounded-full">
-              Adicionar Venda
-            </Button>
-          </AddSale>
-        </div>
+        <AddSale>
+          <Button className="h-12 w-full rounded-full">Adicionar Venda</Button>
+        </AddSale>
       </div>
     </div>
   );

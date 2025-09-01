@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { sumExpensesByDateRangeWithSource } from "@/server/queries/summary-queries";
-import { sumIncomesByDateRange, sumProfitAmountsByDateRange } from "@/server/queries/income-queries";
+import { sumIncomesByDateRange } from "@/server/queries/income-queries";
 import { formatCurrency } from "@/lib/utils";
+import { sumSalesByDateRange } from "@/server/queries/sales-queries";
+import { getProfit } from "@/server/queries/summary-queries";
 
 // Props for the SummaryCards component
 interface SummaryCardsProps {
@@ -14,8 +16,9 @@ export default async function SummaryCards({ from, to }: SummaryCardsProps) {
   // Fetch all summary data in parallel for performance
   const [totalSales, profit, personalExpenses, storeExpenses] =
     await Promise.all([
-      sumIncomesByDateRange(from, to),
-      sumProfitAmountsByDateRange(from, to),
+      (await sumIncomesByDateRange(from, to)) +
+        (await sumSalesByDateRange(from, to)),
+      getProfit(from, to),
       sumExpensesByDateRangeWithSource({
         startDate: from,
         endDate: to,
@@ -35,11 +38,9 @@ export default async function SummaryCards({ from, to }: SummaryCardsProps) {
         href="/caixa"
         className="bg-background-secondary flex flex-wrap items-center justify-between gap-2 rounded-lg p-4 py-3"
       >
-        <p className="">
-          Vendas
-        </p>
+        <p className="">Vendas</p>
         <div className="flex items-center gap-2">
-          <p className="text-lg font-semibold flex items-center gap-2">
+          <p className="flex items-center gap-2 text-lg font-semibold">
             {formatCurrency(totalSales)}
             <span className="text-muted-foreground text-sm font-medium">
               {"(" + formatCurrency(profit) + ")"}
@@ -69,16 +70,6 @@ export default async function SummaryCards({ from, to }: SummaryCardsProps) {
           </p>
         </Link>
       </div>
-      {/* Product Purchases Card */}
-      {/* <Link
-        href="/compras-produtos"
-        className="bg-background-secondary flex flex-wrap items-center justify-between gap-2 rounded-lg p-4 py-3"
-      >
-        <p className="text-sm md:text-base">Compras de Produtos</p>
-        <p className="text-lg font-semibold">
-          {formatCurrency(productPurchases)}
-        </p>
-      </Link> */}
     </div>
   );
 }
