@@ -2,7 +2,7 @@
 
 import { formatCurrency } from "@/lib/utils";
 import type { Income } from "@/server/db/schema/incomes-schema";
-import { use, useEffect, useMemo, useState, useTransition, useCallback } from "react";
+import { use, useMemo, useTransition, useCallback } from "react";
 import { format, isValid, parse, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Dot } from "lucide-react";
@@ -61,39 +61,10 @@ export default function IncomesList({
     [allIncomes],
   );
 
-  const [profitState, setProfitState] = useState<number | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    async function compute() {
-      try {
-        const profits = await Promise.all(
-          allIncomes.map(async (s) => {
-            const res = await fetch(`/api/receitas/${s.id}/itens`, { cache: "no-store" });
-            if (!res.ok) return 0;
-            const data = (await res.json()) as Array<{
-              quantity: number;
-              unitPrice: string;
-              cost?: string;
-            }>;
-            return data.reduce((acc, it) => {
-              const unit = Number(it.unitPrice) || 0;
-              const cost = Number(it.cost) || 0;
-              const qty = Number(it.quantity) || 0;
-              return acc + (unit - cost) * qty;
-            }, 0);
-          }),
-        );
-        const sum = profits.reduce((a, b) => a + b, 0);
-        if (!cancelled) setProfitState(sum);
-      } catch {
-        if (!cancelled) setProfitState(0);
-      }
-    }
-    void compute();
-    return () => {
-      cancelled = true;
-    };
-  }, [allIncomes]);
+  const profitAmount = useMemo(
+    () => allIncomes.reduce((sum, s) => sum + Number(s.value) * (Number(s.profitMargin) / 100), 0),
+    [allIncomes],
+  );
 
   if (allIncomes.length === 0) {
     return (
@@ -103,7 +74,6 @@ export default function IncomesList({
     );
   }
 
-  const profitAmount = profitState ?? 0;
   const totals = {
     total: totalRevenue,
     profitAmount,

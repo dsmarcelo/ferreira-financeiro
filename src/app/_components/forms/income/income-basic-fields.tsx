@@ -2,6 +2,7 @@ import { Label } from "@/components/ui/label";
 import CurrencyInput from "@/components/inputs/currency-input";
 import { DatePicker } from "@/components/inputs/date-picker";
 import { Input } from "@/components/ui/input";
+import { formatCurrency } from "@/lib/utils";
 
 interface IncomeBasicFieldsProps {
   description: string;
@@ -30,6 +31,10 @@ export function IncomeBasicFields({
   onProfitMarginChange,
   errors,
 }: IncomeBasicFieldsProps) {
+  const value = totalValue ?? 0;
+  const margin = profitMargin ?? 0;
+  const computedProfit = Math.max(0, (value * margin) / 100);
+  const baseValue = Math.max(0, value - computedProfit);
   return (
     <>
       <div className="space-y-2">
@@ -127,6 +132,17 @@ export function IncomeBasicFields({
               {errors.profitMargin[0]}
             </p>
           )}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-4 text-sm">
+        <div>
+          <span className="text-slate-600">Lucro estimado: </span>
+          <span className="font-semibold">{formatCurrency(computedProfit)}</span>
+        </div>
+        <div>
+          <span className="text-slate-600">Base: </span>
+          <span className="font-semibold">{formatCurrency(baseValue)}</span>
         </div>
       </div>
     </>
