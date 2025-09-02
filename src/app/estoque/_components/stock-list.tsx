@@ -90,20 +90,6 @@ export default function StockList({ products }: StockListProps) {
     scheduleSave(id);
   };
 
-  const handleDelta = (id: number, delta: number) => {
-    setLocalProducts((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              quantity: Math.max(0, Number(p.quantity ?? 0) + delta).toString(),
-            }
-          : p,
-      ),
-    );
-    scheduleSave(id);
-  };
-
   return (
     <div className="space-y-4">
       {localProducts.length === 0 ? (
@@ -216,7 +202,6 @@ export default function StockList({ products }: StockListProps) {
                     label="Estoque"
                     value={Number(p.quantity ?? 0)}
                     onChange={(value) => handleSetQuantity(p.id, value)}
-                    onDelta={(delta) => handleDelta(p.id, delta)}
                   />
                 </div>
               </div>

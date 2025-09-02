@@ -2,60 +2,47 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 
 interface QuantityControlProps {
   value: number;
   onChange: (value: number) => void;
-  onDelta: (delta: number) => void;
   label: string;
 }
 
 export default function QuantityControl({
   value,
   onChange,
-  onDelta,
   label,
 }: QuantityControlProps) {
-  const [isFocused, setIsFocused] = useState(false);
   const [text, setText] = useState<string>(String(value ?? 0));
 
-  // Keep local text in sync when not focused
-  const displayValue = useMemo(() => {
-    return isFocused ? text : String(value ?? 0);
-  }, [isFocused, text, value]);
+  // Keep local text in sync with external value changes
+  useEffect(() => {
+    setText(String(value ?? 0));
+  }, [value]);
 
   return (
     <div className="flex w-full flex-col gap-1">
       <label className="text-xs text-slate-500">{label}</label>
       <div className="flex w-full items-center gap-1">
-        {isFocused && (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => onDelta(-1)}
-          >
-            -
-          </Button>
-        )}
+        {/* Commented out decrement button - was only shown when focused */}
+        {/* <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => onDelta(-1)}
+        >
+          -
+        </Button> */}
+
         {/* TODO: Make this the same as in the product sale editor */}
         <Input
           type="text"
           inputMode="decimal"
           min="0"
-          value={displayValue}
-          onFocus={(e) => {
-            setIsFocused(true);
-            // If the value is "0", clear it for easier editing
-            if (e.target.value === "0") {
-              setText("");
-            } else {
-              setText(e.target.value);
-            }
-          }}
+          value={text}
           onBlur={() => {
-            setIsFocused(false);
             const num = Number.parseFloat(text);
             if (Number.isFinite(num) && num >= 0) {
               onChange(num);
@@ -91,16 +78,16 @@ export default function QuantityControl({
           }}
           className="border-input bg-background min-w-12 rounded-md border px-1 py-1 text-center text-sm"
         />
-        {isFocused && (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => onDelta(1)}
-          >
-            +
-          </Button>
-        )}
+
+        {/* Commented out increment button - was only shown when focused */}
+        {/* <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => onDelta(1)}
+        >
+          +
+        </Button> */}
       </div>
     </div>
   );
