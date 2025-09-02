@@ -13,7 +13,8 @@ const productSchema = z.object({
   name: z.string().min(1, { message: "Nome é obrigatório" }),
   cost: z.number().min(0, { message: "Custo inválido" }),
   price: z.number().min(0, { message: "Preço inválido" }),
-  quantity: z.number().int().min(0, { message: "Quantidade inválida" }),
+  // Accept decimal quantities (e.g., 0.5). Validate as number >= 0.
+  quantity: z.number().min(0, { message: "Quantidade inválida" }),
 });
 
 export interface ActionResponse {
@@ -33,8 +34,7 @@ export async function actionCreateProduct(
 
   const cost = typeof costStr === "string" ? Number(costStr) : undefined;
   const price = typeof priceStr === "string" ? Number(priceStr) : undefined;
-  const quantity =
-    typeof quantityStr === "string" ? Number(quantityStr) : undefined;
+  const quantity = typeof quantityStr === "string" ? Number(quantityStr) : undefined;
 
   const parsed = productSchema.safeParse({ name, cost, price, quantity });
   if (!parsed.success) {
@@ -50,7 +50,8 @@ export async function actionCreateProduct(
       name: name as string,
       cost: cost!.toFixed(2),
       price: price!.toFixed(2),
-      quantity: quantity!,
+      // Store as decimal string in DB
+      quantity: String(quantity!),
     });
     revalidatePath("/estoque");
     return { success: true, message: "Produto criado com sucesso" };
@@ -76,8 +77,7 @@ export async function actionUpdateProduct(
 
   const cost = typeof costStr === "string" ? Number(costStr) : undefined;
   const price = typeof priceStr === "string" ? Number(priceStr) : undefined;
-  const quantity =
-    typeof quantityStr === "string" ? Number(quantityStr) : undefined;
+  const quantity = typeof quantityStr === "string" ? Number(quantityStr) : undefined;
 
   const parsed = productSchema.safeParse({ name, cost, price, quantity });
   if (!parsed.success) {
@@ -93,7 +93,8 @@ export async function actionUpdateProduct(
       name: name as string,
       cost: cost!.toFixed(2),
       price: price!.toFixed(2),
-      quantity: quantity!,
+      // Store as decimal string in DB
+      quantity: String(quantity!),
     });
     revalidatePath("/estoque");
     return { success: true, message: "Produto atualizado" };
@@ -113,5 +114,4 @@ export async function actionDeleteProduct(id: number): Promise<void> {
 export async function actionListProducts(query?: string) {
   return listProducts(query);
 }
-
 

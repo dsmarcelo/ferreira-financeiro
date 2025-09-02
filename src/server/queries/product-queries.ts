@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "../db";
-import { products } from "../db/schema/products";
-import type { Product, ProductInsert } from "../db/schema/products";
+import { products } from "../db/schema/products-schema";
+import type { Product, ProductInsert } from "../db/schema/products-schema";
 import { asc, eq, ilike } from "drizzle-orm";
 
 export async function createProduct(data: ProductInsert): Promise<Product> {
@@ -56,7 +56,8 @@ export async function decrementStock(
         .from(products)
         .where(eq(products.id, item.productId));
       if (!row) throw new Error("Produto não encontrado");
-      const newQty = (row.quantity ?? 0) - item.quantity;
+      const currentQty = Number(row.quantity ?? 0);
+      const newQty = currentQty - item.quantity;
       if (newQty < 0) {
         throw new Error(
           `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
@@ -64,10 +65,10 @@ export async function decrementStock(
       }
       await tx
         .update(products)
-        .set({ quantity: newQty })
+        // Persist as decimal string to match schema
+        .set({ quantity: String(newQty) as Product["quantity"] })
         .where(eq(products.id, item.productId));
     }
   });
 }
-
 

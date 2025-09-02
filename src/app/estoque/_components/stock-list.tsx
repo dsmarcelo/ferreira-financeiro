@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
-import type { Product } from "@/server/db/schema/products";
+import type { Product } from "@/server/db/schema/products-schema";
 import { useActionState } from "react";
 import {
   actionUpdateProduct,
@@ -40,7 +40,8 @@ export default function StockList({ products }: StockListProps) {
       const form = new FormData();
       form.set("id", String(prod.id));
       form.set("name", prod.name);
-      form.set("quantity", String(Math.max(0, prod.quantity ?? 0)));
+      const qty = Math.max(0, Number(prod.quantity ?? 0));
+      form.set("quantity", qty.toString());
       form.set("price", String(Number(prod.price) || 0));
       form.set("cost", String(Number(prod.cost) || 0));
       void updateAction(form);
@@ -80,7 +81,7 @@ export default function StockList({ products }: StockListProps) {
   }, [updateState.success, updateState.message]);
 
   const handleSetQuantity = (id: number, nextQtyRaw: number) => {
-    const nextQty = Math.max(0, Math.floor(nextQtyRaw));
+    const nextQty = Math.max(0, nextQtyRaw);
     setLocalProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, quantity: nextQty } : p)),
     );
@@ -208,7 +209,7 @@ export default function StockList({ products }: StockListProps) {
                 <div className="w-fit gap-1">
                   <QuantityControl
                     label="Estoque"
-                    value={p.quantity ?? 0}
+                    value={Number(p.quantity ?? 0)}
                     onChange={(value) => handleSetQuantity(p.id, value)}
                     onDelta={(delta) => handleDelta(p.id, delta)}
                   />
