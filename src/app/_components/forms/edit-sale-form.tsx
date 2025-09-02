@@ -10,10 +10,7 @@ import {
   type ActionResponse,
 } from "@/actions/sales-actions";
 import type { Sale } from "@/server/db/schema/sales-schema";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { TrashIcon } from "lucide-react";
-import { DeleteDialog } from "../dialogs/delete-dialog";
 import { useSalesData } from "@/hooks/use-sales-data";
 import {
   SalesBasicFields,
@@ -290,20 +287,9 @@ export default function EditSaleForm({
           selectedProducts={selectedProducts}
           finalTotal={finalTotal}
           customerId={customerId}
+          isEditMode={true}
+          onDelete={handleDelete}
         />
-
-        {!id && (
-          <div className="flex w-full justify-between gap-2 pt-2">
-            <DeleteDialog
-              onConfirm={handleDelete}
-              triggerText={<TrashIcon className="h-4 w-4 text-red-500" />}
-            />
-
-            <Button type="submit" disabled={pending} className="">
-              {pending ? "Salvando..." : "Salvar Alterações"}
-            </Button>
-          </div>
-        )}
 
         {state.message && (
           <>

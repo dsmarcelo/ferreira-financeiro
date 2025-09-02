@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button";
+import { TrashIcon } from "lucide-react";
+import { DeleteDialog } from "../../dialogs/delete-dialog";
 
 interface IncomeFormActionsProps {
   formId?: string;
@@ -6,6 +8,8 @@ interface IncomeFormActionsProps {
   selectedProducts: Record<number, { quantity: number; unitPrice: number }>;
   finalTotal: number;
   customerId: string;
+  isEditMode?: boolean;
+  onDelete?: () => void;
 }
 
 export function SalesFormActions({
@@ -14,9 +18,11 @@ export function SalesFormActions({
   selectedProducts,
   finalTotal,
   customerId,
+  isEditMode = false,
+  onDelete,
 }: IncomeFormActionsProps) {
   return (
-    <>
+    <div className="w-full">
       {/* Hidden inputs for form data */}
       {/* Sales do not expose profit margin; default to 0 to satisfy server validation */}
       <input type="hidden" name="profitMargin" value={0} />
@@ -36,10 +42,25 @@ export function SalesFormActions({
       {/* Discount data will be handled by DiscountSelect component's hidden inputs */}
 
       {!formId && (
-        <Button type="submit" disabled={pending} className="w-full">
-          {pending ? "Adicionando..." : "Adicionar Venda"}
-        </Button>
+        <div className="flex w-full justify-between gap-2 pt-2">
+          {isEditMode && onDelete && (
+            <DeleteDialog
+              onConfirm={onDelete}
+              triggerText={<TrashIcon className="h-4 w-4 text-red-500" />}
+            />
+          )}
+
+          <Button type="submit" disabled={pending} className="w-fit">
+            {pending
+              ? isEditMode
+                ? "Salvando..."
+                : "Adicionando..."
+              : isEditMode
+                ? "Salvar Alterações"
+                : "Adicionar Venda"}
+          </Button>
+        </div>
       )}
-    </>
+    </div>
   );
 }
