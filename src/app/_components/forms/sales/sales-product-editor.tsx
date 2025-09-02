@@ -228,12 +228,7 @@ export function SalesProductEditor({
                       <div className="flex items-center gap-2">
                         <p className="truncate font-medium">{p.name}</p>
                         <span className="text-muted-foreground text-xs">
-                          Em estoque:{" "}
-                          {Number.isInteger(availableRemaining)
-                            ? availableRemaining
-                            : availableRemaining % 1 === 0
-                              ? availableRemaining
-                              : availableRemaining.toFixed(2)}
+                          Em estoque: {p.quantity}
                         </span>
                       </div>
 
@@ -253,7 +248,10 @@ export function SalesProductEditor({
                             inputMode="decimal"
                             min="0"
                             value={
-                              Object.prototype.hasOwnProperty.call(qtyText, p.id)
+                              Object.prototype.hasOwnProperty.call(
+                                qtyText,
+                                p.id,
+                              )
                                 ? qtyText[p.id]
                                 : String(qty)
                             }
@@ -271,7 +269,10 @@ export function SalesProductEditor({
                                 ? Math.max(0, Math.min(num, maxAllowed))
                                 : 0;
                               setQuantity(p.id, clamped);
-                              setQtyText((prev) => ({ ...prev, [p.id]: String(clamped) }));
+                              setQtyText((prev) => ({
+                                ...prev,
+                                [p.id]: String(clamped),
+                              }));
                             }}
                             onChange={(e) => {
                               let inputValue = e.target.value;
@@ -288,11 +289,17 @@ export function SalesProductEditor({
                                 inputValue = inputValue.replace(/^0+/, "");
                                 if (inputValue === "") inputValue = "0";
                               }
-                              setQtyText((prev) => ({ ...prev, [p.id]: inputValue }));
+                              setQtyText((prev) => ({
+                                ...prev,
+                                [p.id]: inputValue,
+                              }));
                               const parsed = Number.parseFloat(inputValue);
                               if (Number.isFinite(parsed)) {
                                 setQuantity(p.id, parsed);
-                              } else if (inputValue === "" || inputValue === ".") {
+                              } else if (
+                                inputValue === "" ||
+                                inputValue === "."
+                              ) {
                                 // treat empty or "." as 0 while typing
                                 setQuantity(p.id, 0);
                               }
@@ -432,16 +439,11 @@ export function SalesProductEditor({
                     />
                   </div>
 
+                  {/* Keep stock immutable from Sales context: submit as hidden field */}
+                  <input type="hidden" name="quantity" value={prod.quantity} />
                   <div className="space-y-1">
-                    <Label htmlFor="edit-quantity">Quantidade em estoque</Label>
-                    <Input
-                      id="edit-quantity"
-                      name="quantity"
-                      type="number"
-                      min="0"
-                      defaultValue={prod.quantity}
-                      required
-                    />
+                    <Label>Quantidade em estoque</Label>
+                    <Input value={prod.quantity} readOnly disabled />
                   </div>
 
                   <DialogFooter>

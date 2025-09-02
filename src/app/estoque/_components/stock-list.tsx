@@ -83,7 +83,9 @@ export default function StockList({ products }: StockListProps) {
   const handleSetQuantity = (id: number, nextQtyRaw: number) => {
     const nextQty = Math.max(0, nextQtyRaw);
     setLocalProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, quantity: nextQty } : p)),
+      prev.map((p) =>
+        p.id === id ? { ...p, quantity: nextQty.toString() } : p,
+      ),
     );
     scheduleSave(id);
   };
@@ -92,7 +94,10 @@ export default function StockList({ products }: StockListProps) {
     setLocalProducts((prev) =>
       prev.map((p) =>
         p.id === id
-          ? { ...p, quantity: Math.max(0, (p.quantity ?? 0) + delta) }
+          ? {
+              ...p,
+              quantity: Math.max(0, Number(p.quantity ?? 0) + delta).toString(),
+            }
           : p,
       ),
     );

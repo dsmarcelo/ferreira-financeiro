@@ -5,7 +5,6 @@ import { z } from "zod";
 import type { Sale } from "@/server/db/schema/sales-schema";
 import {
   createSale,
-  updateSale,
   deleteSale,
   getSaleById,
   listSales,
@@ -93,7 +92,6 @@ export async function actionCreateSale(
     const computedValue = Math.max(0, subtotal - discountAmount);
 
     const dbValue = computedValue.toFixed(2);
-    const dbProfitMargin = profitMargin !== undefined ? profitMargin.toFixed(2) : "0";
 
     if (items.length > 0) {
       await createSaleWithItems({
@@ -184,11 +182,9 @@ export async function actionUpdateSale(
       customerId: customerId ?? null,
     } as const;
 
-    if (items.length > 0) {
-      await updateSaleWithItems(id, dataToUpdate, items);
-    } else {
-      await updateSale(id, dataToUpdate);
-    }
+    // Always use the item-aware update so stock is properly restored/deducted
+    // even when all items are removed in the edit form.
+    await updateSaleWithItems(id, dataToUpdate, items);
     revalidatePath("/vendas");
     revalidatePath("/caixa");
     return { success: true, message: "Venda atualizada com sucesso!" };

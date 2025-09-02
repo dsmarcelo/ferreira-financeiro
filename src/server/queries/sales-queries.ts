@@ -38,6 +38,19 @@ export async function updateSale(
 // Delete a sale by ID (and its related items)
 export async function deleteSale(id: number): Promise<void> {
   await db.transaction(async (tx) => {
+    // Restore stock from existing sale items before deletion
+    const existingItems = await tx.select().from(incomeItem).where(eq(incomeItem.salesId, id));
+    for (const ex of existingItems) {
+      const [row] = await tx.select().from(products).where(eq(products.id, ex.productId));
+      if (!row) continue;
+      const restoredQty = Number(row.quantity ?? 0) + Number(ex.quantity ?? 0);
+      await tx
+        .update(products)
+        .set({ quantity: String(restoredQty) as typeof products.$inferInsert["quantity"] })
+        .where(eq(products.id, ex.productId));
+    }
+
+    // Remove line items then the sale
     await tx.delete(incomeItem).where(eq(incomeItem.salesId, id));
     await tx.delete(sales).where(eq(sales.id, id));
   });
@@ -204,7 +217,7 @@ export async function updateSaleWithItems(
       const restoredQty = Number(row.quantity ?? 0) + Number(ex.quantity ?? 0);
       await tx
         .update(products)
-        .set({ quantity: String(restoredQty) as typeof products.$inferInsert["quantity"] })
+        .set({ quantity: String(restoredQty.toFixed(2)) as typeof products.$inferInsert["quantity"] })
         .where(eq(products.id, ex.productId));
     }
 
@@ -225,7 +238,7 @@ export async function updateSaleWithItems(
         }
         await tx
           .update(products)
-          .set({ quantity: String(newQty) as typeof products.$inferInsert["quantity"] })
+          .set({ quantity: String(newQty.toFixed(2)) as typeof products.$inferInsert["quantity"] })
           .where(eq(products.id, item.productId));
       }
 
@@ -233,7 +246,7 @@ export async function updateSaleWithItems(
         await tx.insert(incomeItem).values({
           salesId: id,
           productId: item.productId,
-          quantity: String(item.quantity),
+          quantity: String(item.quantity.toFixed(2)),
           unitPrice: item.unitPrice,
         });
       }
