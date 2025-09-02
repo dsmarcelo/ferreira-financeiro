@@ -48,22 +48,20 @@ export function SalesListItem({ sale, children }: SaleListItemProps) {
   return (
     <div
       className={cn(
-        "hover:bg-background-secondary active:bg-accent flex cursor-pointer items-center gap-2",
+        "hover:bg-background-secondary active:bg-accent flex cursor-pointer items-center gap-2 px-5",
       )}
     >
       <div className="w-full">
-        <div>
-          <div className="flex items-center -space-x-1">
-            <p className="text-muted-foreground text-sm whitespace-nowrap">
-              {format(parseISO(sale.dateTime.toISOString()), "HH:mm", {
-                locale: ptBR,
-              }).toUpperCase()}
-            </p>
-            <Dot />
-            <p className="text-base">{sale.description}</p>
-          </div>
-          {sale.customerName && <p>{sale.customerName}</p>}
+        <div className="flex items-center -space-x-1">
+          <p className="text-muted-foreground text-sm whitespace-nowrap">
+            {format(parseISO(sale.dateTime.toISOString()), "HH:mm", {
+              locale: ptBR,
+            }).toUpperCase()}
+          </p>
+          <Dot />
+          <p className="text-base">{sale.description}</p>
         </div>
+        {sale.customerName && <p>{sale.customerName}</p>}
       </div>
       <div className="flex flex-col items-end">
         <p className={cn("w-fit text-right font-semibold")}>
