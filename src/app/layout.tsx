@@ -14,12 +14,18 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="pt-BR"
-    >
+    <html lang="pt-BR">
       <body>
         <main className="mx-auto pb-32">{children}</main>
-        <Toaster richColors position="top-center" />
+        <Toaster
+          richColors
+          position="bottom-right"
+          toastOptions={{
+            duration: 1000,
+            className: "p-1",
+          }}
+          className="p-0"
+        />
         <BottomNav />
       </body>
     </html>
