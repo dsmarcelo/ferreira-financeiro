@@ -2,10 +2,9 @@
 import { formatCurrency } from "@/lib/utils";
 import type { Sale } from "@/server/db/schema/sales-schema";
 import { use, useEffect, useMemo, useState } from "react";
-import { useCallback, useTransition } from "react";
+
 import { SalesListItem } from "./sales-list-item";
-import DownloadButton from "@/app/_components/buttons/download-button";
-import ShareButton from "@/app/_components/buttons/share-button";
+
 import { ptBR } from "date-fns/locale";
 import { format, isValid, parse, parseISO } from "date-fns";
 import { Dot } from "lucide-react";
@@ -57,21 +56,6 @@ export default function SalesList({
 }) {
   const allSales = use(sales);
   const aggregateData = aggregates ? use(aggregates) : undefined;
-
-  // PDF actions (hooks must be above any return)
-  const [isPending, startTransition] = useTransition();
-  const handleDownload = useCallback(() => {
-    startTransition(() => {
-      // TODO: Implement sales PDF download functionality
-      void allSales;
-    });
-  }, [allSales]);
-  const handleShare = useCallback(() => {
-    startTransition(() => {
-      // TODO: Implement sales PDF share functionality
-      void allSales;
-    });
-  }, [allSales]);
 
   const totalRevenueMemo = useMemo(
     () => allSales.reduce((sum, s) => sum + Number(s.value), 0),
@@ -175,18 +159,6 @@ export default function SalesList({
               </p>
             </div>
           </div>
-        </div>
-        <div className="flex gap-2">
-          <DownloadButton
-            aria-label={`Baixar PDF das ${labelPlural}`}
-            onClick={handleDownload}
-            disabled={isPending}
-          />
-          <ShareButton
-            aria-label={`Compartilhar PDF das ${labelPlural}`}
-            onClick={handleShare}
-            disabled={isPending}
-          />
         </div>
       </div>
 

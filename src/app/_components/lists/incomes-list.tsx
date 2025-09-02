@@ -2,27 +2,35 @@
 
 import { formatCurrency } from "@/lib/utils";
 import type { Income } from "@/server/db/schema/incomes-schema";
-import { use, useMemo, useTransition, useCallback } from "react";
+import { use, useMemo } from "react";
 import { format, isValid, parse, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Dot } from "lucide-react";
 import { IncomesListItem } from "./incomes-list-item";
-import DownloadButton from "@/app/_components/buttons/download-button";
-import ShareButton from "@/app/_components/buttons/share-button";
+
 import EditIncome from "@/app/_components/dialogs/edit/edit-income";
 
 function groupIncomesByDate(incomes: Income[]) {
   return incomes
     .sort((a, b) => {
-      const aDate = typeof a.dateTime === "string" ? parseISO(a.dateTime) : new Date(a.dateTime);
-      const bDate = typeof b.dateTime === "string" ? parseISO(b.dateTime) : new Date(b.dateTime);
+      const aDate =
+        typeof a.dateTime === "string"
+          ? parseISO(a.dateTime)
+          : new Date(a.dateTime);
+      const bDate =
+        typeof b.dateTime === "string"
+          ? parseISO(b.dateTime)
+          : new Date(b.dateTime);
       const dateA = isValid(aDate) ? format(aDate, "yyyy-MM-dd") : "";
       const dateB = isValid(bDate) ? format(bDate, "yyyy-MM-dd") : "";
       if (dateA !== dateB) return dateA.localeCompare(dateB);
       return a.id - b.id;
     })
     .reduce<Record<string, Income[]>>((acc, income) => {
-      const dt = typeof income.dateTime === "string" ? parseISO(income.dateTime) : new Date(income.dateTime);
+      const dt =
+        typeof income.dateTime === "string"
+          ? parseISO(income.dateTime)
+          : new Date(income.dateTime);
       if (!isValid(dt)) return acc;
       const date = format(dt, "yyyy-MM-dd");
       acc[date] ??= [];
@@ -44,25 +52,17 @@ export default function IncomesList({
 }) {
   const allIncomes = use(incomes);
 
-  const [isPending, startTransition] = useTransition();
-  const handleDownload = useCallback(() => {
-    startTransition(() => {
-      void allIncomes;
-    });
-  }, [allIncomes]);
-  const handleShare = useCallback(() => {
-    startTransition(() => {
-      void allIncomes;
-    });
-  }, [allIncomes]);
-
   const totalRevenue = useMemo(
     () => allIncomes.reduce((sum, s) => sum + Number(s.value), 0),
     [allIncomes],
   );
 
   const profitAmount = useMemo(
-    () => allIncomes.reduce((sum, s) => sum + Number(s.value) * (Number(s.profitMargin) / 100), 0),
+    () =>
+      allIncomes.reduce(
+        (sum, s) => sum + Number(s.value) * (Number(s.profitMargin) / 100),
+        0,
+      ),
     [allIncomes],
   );
 
@@ -115,10 +115,6 @@ export default function IncomesList({
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
-          <DownloadButton aria-label={`Baixar PDF das ${labelPlural}`} onClick={handleDownload} disabled={isPending} />
-          <ShareButton aria-label={`Compartilhar PDF das ${labelPlural}`} onClick={handleShare} disabled={isPending} />
-        </div>
       </div>
 
       {sortedDates.length === 0 && (
@@ -132,7 +128,11 @@ export default function IncomesList({
           <div key={date} className="pb-4">
             <div className="text-muted-foreground bg-muted flex items-center p-1 px-4 text-sm">
               <p className="text-primary font-semibold uppercase">
-                {format(parse(date, "yyyy-MM-dd", new Date()), "dd 'de' MMMM, EEE", { locale: ptBR })}
+                {format(
+                  parse(date, "yyyy-MM-dd", new Date()),
+                  "dd 'de' MMMM, EEE",
+                  { locale: ptBR },
+                )}
               </p>
               <Dot />
               <p>{formatCurrency(sumIncomesByDate(grouped[date] ?? []))}</p>
@@ -152,5 +152,3 @@ export default function IncomesList({
     </div>
   );
 }
-
-
