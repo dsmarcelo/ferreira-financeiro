@@ -8,7 +8,7 @@ import { SalesListItem } from "./sales-list-item";
 import { ptBR } from "date-fns/locale";
 import { format, isValid, parse, parseISO } from "date-fns";
 import { Dot } from "lucide-react";
-import EditSale from "@/app/_components/dialogs/edit/edit-sale";
+import Link from "next/link";
 
 function groupSalesByDate(sales: Sale[]) {
   return sales
@@ -184,11 +184,13 @@ export default function SalesList({
             </div>
             <div className="flex flex-col divide-y">
               {grouped[date]?.map((sale) => (
-                <EditSale data={sale} key={sale.id}>
-                  <div className="cursor-pointer">
-                    <SalesListItem sale={sale} />
-                  </div>
-                </EditSale>
+                <Link
+                  key={sale.id}
+                  href={`/vendas/editar/${sale.id}`}
+                  className="cursor-pointer"
+                >
+                  <SalesListItem sale={sale} />
+                </Link>
               ))}
             </div>
           </div>
