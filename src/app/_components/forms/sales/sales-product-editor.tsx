@@ -226,7 +226,12 @@ export function SalesProductEditor({
                       <div className="flex items-center gap-2">
                         <p className="truncate font-medium">{p.name}</p>
                         <span className="text-muted-foreground text-xs">
-                          Em estoque: {availableRemaining}
+                          Em estoque:{" "}
+                          {Number.isInteger(availableRemaining)
+                            ? availableRemaining
+                            : availableRemaining % 1 === 0
+                              ? availableRemaining
+                              : availableRemaining.toFixed(2)}
                         </span>
                       </div>
 
@@ -243,16 +248,28 @@ export function SalesProductEditor({
                           </Button>
                           <Input
                             type="number"
-                            inputMode="numeric"
+                            inputMode="decimal"
                             min="0"
                             max={maxAllowed}
                             value={qty}
                             onFocus={(e) => {
+                              // If the value is "0" and there's no ".", clear it for easier editing
                               if (e.target.value === "0") e.target.value = "";
                             }}
                             onChange={(e) => {
-                              const newQty =
-                                Number.parseInt(e.target.value) || 0;
+                              let inputValue = e.target.value;
+                              // Remove leading zero if present and not a decimal (e.g., "01" -> "1", but "0.5" stays)
+                              if (
+                                inputValue.length > 1 &&
+                                inputValue.startsWith("0") &&
+                                !inputValue.includes(".")
+                              ) {
+                                inputValue = inputValue.replace(/^0+/, "");
+                                // If all zeros were removed, fallback to "0"
+                                if (inputValue === "") inputValue = "0";
+                                e.target.value = inputValue;
+                              }
+                              const newQty = Number.parseFloat(inputValue) || 0;
                               setQuantity(p.id, newQty);
                             }}
                             className="border-input bg-background min-w-12 rounded-md border px-1 py-1 text-center text-sm"
