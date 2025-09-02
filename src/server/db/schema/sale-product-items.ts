@@ -6,7 +6,7 @@ import { products } from "./products-schema";
 /**
  * Line items for cash register entries: product, quantity, and unitPrice at sale time.
  */
-export const cashRegisterItem = createTable("cash_register_item", {
+export const saleProductItem = createTable("sale_product_item", {
   id: serial("id").primaryKey(),
   cashRegisterId: integer("cash_register_id").references(() => cashRegister.id).notNull(),
   productId: integer("product_id").references(() => products.id).notNull(),
@@ -15,6 +15,6 @@ export const cashRegisterItem = createTable("cash_register_item", {
   unitPrice: decimal("unit_price", { precision: 15, scale: 2 }).notNull(),
 });
 
-export type CashRegisterItem = typeof cashRegisterItem.$inferSelect;
-export type CashRegisterItemInsert = typeof cashRegisterItem.$inferInsert;
+export type SaleProductItem = typeof saleProductItem.$inferSelect;
+export type SaleProductItemInsert = typeof saleProductItem.$inferInsert;
 

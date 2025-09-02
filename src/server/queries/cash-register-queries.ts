@@ -2,7 +2,7 @@
 
 import { db } from "../db";
 import { cashRegister } from "../db/schema/cash-register-schema";
-import { cashRegisterItem } from "../db/schema/cash-register-items";
+import { saleProductItem } from "../db/schema/sale-product-items";
 import { products } from "../db/schema/products-schema";
 import type {
   CashRegister,
@@ -44,7 +44,7 @@ export async function createCashRegisterWithItems(
         .update(products)
         .set({ quantity: String(newQty) as typeof products.$inferInsert["quantity"] })
         .where(eq(products.id, item.productId));
-      await tx.insert(cashRegisterItem).values({
+      await tx.insert(saleProductItem).values({
         cashRegisterId: created.id,
         productId: item.productId,
         quantity: String(item.quantity),
@@ -59,8 +59,8 @@ export async function createCashRegisterWithItems(
 export async function listItemsForCashRegister(cashRegisterId: number) {
   return db
     .select()
-    .from(cashRegisterItem)
-    .where(eq(cashRegisterItem.cashRegisterId, cashRegisterId));
+    .from(saleProductItem)
+    .where(eq(saleProductItem.cashRegisterId, cashRegisterId));
 }
 
 // Get a cash register entry by ID

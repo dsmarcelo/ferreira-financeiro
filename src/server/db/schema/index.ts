@@ -6,7 +6,7 @@ import { incomes } from "./incomes-schema";
 import { sales } from "./sales-schema";
 import { users, accounts, sessions, verificationTokens } from "./auth-schema";
 import { products } from "./products-schema";
-import { cashRegisterItem } from "./cash-register-items";
+import { saleProductItem } from "./sale-product-items";
 import { customers } from "./customers";
 import { incomeItem } from "./income-items";
 
@@ -19,7 +19,7 @@ export const schema = {
   incomes,
   sales,
   products,
-  cashRegisterItem,
+  cashRegisterItem: saleProductItem,
   customers,
   incomeItem,
   // Auth.js tables
