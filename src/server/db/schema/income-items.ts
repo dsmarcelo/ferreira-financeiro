@@ -11,10 +11,10 @@ export const incomeItem = createTable("income_item", {
   incomeId: integer("income_id").references(() => incomes.id, { onDelete: "cascade" }),
   salesId: integer("sales_id").references(() => sales.id, { onDelete: "cascade" }),
   productId: integer("product_id").references(() => products.id).notNull(),
-  quantity: integer("quantity").notNull(),
+  // Allow decimal quantities
+  quantity: decimal("quantity", { precision: 15, scale: 2 }).notNull(),
   unitPrice: decimal("unit_price", { precision: 15, scale: 2 }).notNull(),
 });
 
 export type IncomeItem = typeof incomeItem.$inferSelect;
 export type IncomeItemInsert = typeof incomeItem.$inferInsert;
-

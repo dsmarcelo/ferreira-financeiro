@@ -33,17 +33,21 @@ export async function createCashRegisterWithItems(
     for (const item of items) {
       const [row] = await tx.select().from(products).where(eq(products.id, item.productId));
       if (!row) throw new Error("Produto não encontrado");
-      const newQty = (row.quantity ?? 0) - item.quantity;
+      const currentQty = Number(row.quantity ?? 0);
+      const newQty = currentQty - item.quantity;
       if (newQty < 0) {
         throw new Error(
           `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
         );
       }
-      await tx.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
+      await tx
+        .update(products)
+        .set({ quantity: String(newQty) as typeof products.$inferInsert["quantity"] })
+        .where(eq(products.id, item.productId));
       await tx.insert(cashRegisterItem).values({
         cashRegisterId: created.id,
         productId: item.productId,
-        quantity: item.quantity,
+        quantity: String(item.quantity),
         unitPrice: item.unitPrice,
       });
     }

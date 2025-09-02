@@ -132,13 +132,17 @@ export async function createSaleAndDecrementStock(
     for (const item of items) {
       const [row] = await tx.select().from(products).where(eq(products.id, item.productId));
       if (!row) throw new Error("Produto não encontrado");
-      const newQty = (row.quantity ?? 0) - item.quantity;
+      const currentQty = Number(row.quantity ?? 0);
+      const newQty = currentQty - item.quantity;
       if (newQty < 0) {
         throw new Error(
           `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
         );
       }
-      await tx.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
+      await tx
+        .update(products)
+        .set({ quantity: String(newQty) as typeof products.$inferInsert["quantity"] })
+        .where(eq(products.id, item.productId));
     }
 
     const [created] = await tx.insert(sales).values(data).returning();
@@ -156,13 +160,17 @@ export async function createSaleWithItems(
     for (const item of items) {
       const [row] = await tx.select().from(products).where(eq(products.id, item.productId));
       if (!row) throw new Error("Produto não encontrado");
-      const newQty = (row.quantity ?? 0) - item.quantity;
+      const currentQty = Number(row.quantity ?? 0);
+      const newQty = currentQty - item.quantity;
       if (newQty < 0) {
         throw new Error(
           `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
         );
       }
-      await tx.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
+      await tx
+        .update(products)
+        .set({ quantity: String(newQty) as typeof products.$inferInsert["quantity"] })
+        .where(eq(products.id, item.productId));
     }
 
     const [created] = await tx.insert(sales).values(data).returning();
@@ -172,7 +180,7 @@ export async function createSaleWithItems(
       await tx.insert(incomeItem).values({
         salesId: (created as Sale).id,
         productId: item.productId,
-        quantity: item.quantity,
+        quantity: String(item.quantity),
         unitPrice: item.unitPrice,
       });
     }
@@ -193,8 +201,11 @@ export async function updateSaleWithItems(
     for (const ex of existingItems) {
       const [row] = await tx.select().from(products).where(eq(products.id, ex.productId));
       if (!row) continue;
-      const restoredQty = (row.quantity ?? 0) + (ex.quantity ?? 0);
-      await tx.update(products).set({ quantity: restoredQty }).where(eq(products.id, ex.productId));
+      const restoredQty = Number(row.quantity ?? 0) + Number(ex.quantity ?? 0);
+      await tx
+        .update(products)
+        .set({ quantity: String(restoredQty) as typeof products.$inferInsert["quantity"] })
+        .where(eq(products.id, ex.productId));
     }
 
     // Remove existing item rows
@@ -205,20 +216,24 @@ export async function updateSaleWithItems(
       for (const item of items) {
         const [row] = await tx.select().from(products).where(eq(products.id, item.productId));
         if (!row) throw new Error("Produto não encontrado");
-        const newQty = (row.quantity ?? 0) - item.quantity;
+        const currentQty = Number(row.quantity ?? 0);
+        const newQty = currentQty - item.quantity;
         if (newQty < 0) {
           throw new Error(
             `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
           );
         }
-        await tx.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
+        await tx
+          .update(products)
+          .set({ quantity: String(newQty) as typeof products.$inferInsert["quantity"] })
+          .where(eq(products.id, item.productId));
       }
 
       for (const item of items) {
         await tx.insert(incomeItem).values({
           salesId: id,
           productId: item.productId,
-          quantity: item.quantity,
+          quantity: String(item.quantity),
           unitPrice: item.unitPrice,
         });
       }

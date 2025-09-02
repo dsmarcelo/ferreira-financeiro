@@ -52,6 +52,8 @@ export function SalesProductEditor({
   const [localProducts, setLocalProducts] = useState<Product[] | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
+  // Local text state for quantity inputs to preserve decimals while typing
+  const [qtyText, setQtyText] = useState<Record<number, string>>({});
 
   const [createState, createAction, creating] = useActionState<
     ActionResponse,
@@ -247,30 +249,53 @@ export function SalesProductEditor({
                             -
                           </Button>
                           <Input
-                            type="number"
+                            type="text"
                             inputMode="decimal"
                             min="0"
-                            max={maxAllowed}
-                            value={qty}
+                            value={
+                              Object.prototype.hasOwnProperty.call(qtyText, p.id)
+                                ? qtyText[p.id]
+                                : String(qty)
+                            }
                             onFocus={(e) => {
-                              // If the value is "0" and there's no ".", clear it for easier editing
-                              if (e.target.value === "0") e.target.value = "";
+                              const current = e.target.value;
+                              setQtyText((prev) => ({
+                                ...prev,
+                                [p.id]: current === "0" ? "" : current,
+                              }));
+                            }}
+                            onBlur={() => {
+                              const raw = qtyText[p.id] ?? String(qty);
+                              const num = Number.parseFloat(raw);
+                              const clamped = Number.isFinite(num)
+                                ? Math.max(0, Math.min(num, maxAllowed))
+                                : 0;
+                              setQuantity(p.id, clamped);
+                              setQtyText((prev) => ({ ...prev, [p.id]: String(clamped) }));
                             }}
                             onChange={(e) => {
                               let inputValue = e.target.value;
-                              // Remove leading zero if present and not a decimal (e.g., "01" -> "1", but "0.5" stays)
+                              // Allow only digits and a single dot
+                              if (!/^[0-9]*\.?[0-9]*$/.test(inputValue)) {
+                                return;
+                              }
+                              // Remove leading zeros if not a decimal (keep "0.xxx")
                               if (
                                 inputValue.length > 1 &&
                                 inputValue.startsWith("0") &&
-                                !inputValue.includes(".")
+                                !inputValue.startsWith("0.")
                               ) {
                                 inputValue = inputValue.replace(/^0+/, "");
-                                // If all zeros were removed, fallback to "0"
                                 if (inputValue === "") inputValue = "0";
-                                e.target.value = inputValue;
                               }
-                              const newQty = Number.parseFloat(inputValue) || 0;
-                              setQuantity(p.id, newQty);
+                              setQtyText((prev) => ({ ...prev, [p.id]: inputValue }));
+                              const parsed = Number.parseFloat(inputValue);
+                              if (Number.isFinite(parsed)) {
+                                setQuantity(p.id, parsed);
+                              } else if (inputValue === "" || inputValue === ".") {
+                                // treat empty or "." as 0 while typing
+                                setQuantity(p.id, 0);
+                              }
                             }}
                             className="border-input bg-background min-w-12 rounded-md border px-1 py-1 text-center text-sm"
                           />
