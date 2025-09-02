@@ -182,7 +182,7 @@ export default function SalesList({
               <Dot />
               <p>{formatCurrency(sumSalesByDate(grouped[date] ?? []))}</p>
             </div>
-            <div className="flex flex-col divide-y px-5">
+            <div className="flex flex-col divide-y">
               {grouped[date]?.map((sale) => (
                 <EditSale data={sale} key={sale.id}>
                   <div className="cursor-pointer">

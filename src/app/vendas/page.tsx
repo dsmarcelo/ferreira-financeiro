@@ -44,7 +44,7 @@ export default async function VendasPage({
           </AddSale>
         </div>
       </Header>
-      <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-3">
+      <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4">
         <Suspense fallback={<Loading />}>
           <SalesList
             sales={sales}
