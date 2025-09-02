@@ -23,7 +23,11 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { actionCreateProduct, actionUpdateProduct, type ActionResponse } from "@/actions/product-actions";
+import {
+  actionCreateProduct,
+  actionUpdateProduct,
+  type ActionResponse,
+} from "@/actions/product-actions";
 import { toast } from "sonner";
 
 interface IncomeProductEditorProps {
@@ -49,16 +53,19 @@ export function SalesProductEditor({
   const [editOpen, setEditOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
 
-  const [createState, createAction, creating] = useActionState<ActionResponse, FormData>(
-    actionCreateProduct,
-    { success: false, message: "" },
-  );
-  const [updateState, updateAction, updating] = useActionState<ActionResponse, FormData>(
-    actionUpdateProduct,
-    { success: false, message: "" },
-  );
+  const [createState, createAction, creating] = useActionState<
+    ActionResponse,
+    FormData
+  >(actionCreateProduct, { success: false, message: "" });
+  const [updateState, updateAction, updating] = useActionState<
+    ActionResponse,
+    FormData
+  >(actionUpdateProduct, { success: false, message: "" });
 
-  const selectableProducts = useMemo(() => localProducts ?? products, [localProducts, products]);
+  const selectableProducts = useMemo(
+    () => localProducts ?? products,
+    [localProducts, products],
+  );
 
   // Removed handleRemove; deletion is handled by setting quantity to 0
 
@@ -82,9 +89,15 @@ export function SalesProductEditor({
 
   const setQuantity = (productId: number, nextQtyRaw: number) => {
     const current = ensureEntry(productId);
-    const maxAllowed = Math.max(0, (current.quantity ?? 0) + getAvailable(productId));
+    const maxAllowed = Math.max(
+      0,
+      (current.quantity ?? 0) + getAvailable(productId),
+    );
     const nextQty = Math.max(0, Math.min(nextQtyRaw, maxAllowed));
-    const next = { ...selectedProducts } as Record<number, { quantity: number; unitPrice: number }>;
+    const next = { ...selectedProducts } as Record<
+      number,
+      { quantity: number; unitPrice: number }
+    >;
     if (nextQty === 0) delete next[productId];
     else next[productId] = { ...current, quantity: nextQty };
     onChange(next);
@@ -98,7 +111,10 @@ export function SalesProductEditor({
 
   const handlePriceChange = (productId: number, price: number | undefined) => {
     const entry = ensureEntry(productId);
-    const next = { ...selectedProducts } as Record<number, { quantity: number; unitPrice: number }>;
+    const next = { ...selectedProducts } as Record<
+      number,
+      { quantity: number; unitPrice: number }
+    >;
     if (!entry || (entry?.quantity ?? 0) === 0) {
       // If price is changed before any quantity, start with qty 1 for convenience
       next[productId] = { quantity: 1, unitPrice: price ?? 0 };
@@ -161,10 +177,19 @@ export function SalesProductEditor({
 
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerTrigger asChild>
-          <Button type="button" variant="outline" className="w-full justify-between">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full justify-between"
+          >
             <span>Produtos</span>
             <span className="text-muted-foreground text-xs">
-              {Object.values(selectedProducts).filter((v) => (v?.quantity ?? 0) > 0).length} selecionado(s)
+              {
+                Object.values(selectedProducts).filter(
+                  (v) => (v?.quantity ?? 0) > 0,
+                ).length
+              }{" "}
+              selecionado(s)
             </span>
           </Button>
         </DrawerTrigger>
@@ -172,7 +197,12 @@ export function SalesProductEditor({
         <DrawerContent className="data-[vaul-drawer-direction=bottom]:max-h-[90dvh] data-[vaul-drawer-direction=top]:max-h-[90dvh]">
           <DrawerHeader className="flex flex-row items-center justify-between">
             <DrawerTitle>Produtos</DrawerTitle>
-            <Button className="w-fit" type="button" variant="outline" onClick={() => setAddOpen(true)}>
+            <Button
+              className="w-fit"
+              type="button"
+              variant="outline"
+              onClick={() => setAddOpen(true)}
+            >
               + Novo produto
             </Button>
           </DrawerHeader>
@@ -183,7 +213,10 @@ export function SalesProductEditor({
                 const entry = selectedProducts[p.id];
                 const qty = entry?.quantity ?? 0;
                 const availableRemaining = getAvailable(p.id);
-                const maxAllowed = Math.max(0, qty + Math.max(0, availableRemaining));
+                const maxAllowed = Math.max(
+                  0,
+                  qty + Math.max(0, availableRemaining),
+                );
                 return (
                   <div
                     key={p.id}
@@ -192,7 +225,9 @@ export function SalesProductEditor({
                     <div className="flex min-w-0 flex-1 flex-col">
                       <div className="flex items-center gap-2">
                         <p className="truncate font-medium">{p.name}</p>
-                        <span className="text-muted-foreground text-xs">Em estoque: {availableRemaining}</span>
+                        <span className="text-muted-foreground text-xs">
+                          Em estoque: {availableRemaining}
+                        </span>
                       </div>
 
                       <div className="mt-2 flex items-center gap-2">
@@ -212,8 +247,12 @@ export function SalesProductEditor({
                             min="0"
                             max={maxAllowed}
                             value={qty}
+                            onFocus={(e) => {
+                              if (e.target.value === "0") e.target.value = "";
+                            }}
                             onChange={(e) => {
-                              const newQty = Number.parseInt(e.target.value) || 0;
+                              const newQty =
+                                Number.parseInt(e.target.value) || 0;
                               setQuantity(p.id, newQty);
                             }}
                             className="border-input bg-background min-w-12 rounded-md border px-1 py-1 text-center text-sm"
@@ -260,7 +299,9 @@ export function SalesProductEditor({
 
           <DrawerFooter>
             <DrawerClose asChild>
-              <Button type="button" variant="default">Concluir</Button>
+              <Button type="button" variant="default">
+                Concluir
+              </Button>
             </DrawerClose>
           </DrawerFooter>
         </DrawerContent>
@@ -287,7 +328,14 @@ export function SalesProductEditor({
 
             <div className="space-y-1">
               <Label htmlFor="quantity">Quantidade em estoque</Label>
-              <Input id="quantity" name="quantity" type="number" min="0" defaultValue={0} required />
+              <Input
+                id="quantity"
+                name="quantity"
+                type="number"
+                min="0"
+                defaultValue={0}
+                required
+              />
             </div>
 
             {/* Hidden cost defaults to 0 */}
@@ -303,40 +351,65 @@ export function SalesProductEditor({
       </Dialog>
 
       {/* Edit product dialog */}
-      <Dialog open={editOpen} onOpenChange={(v) => { setEditOpen(v); if (!v) setEditingProductId(null); }}>
+      <Dialog
+        open={editOpen}
+        onOpenChange={(v) => {
+          setEditOpen(v);
+          if (!v) setEditingProductId(null);
+        }}
+      >
         <DialogContent className="gap-3 p-4">
           <DialogHeader>
             <DialogTitle>Editar produto</DialogTitle>
           </DialogHeader>
 
-          {editingProductId != null && (() => {
-            const prod = selectableProducts.find((pp) => pp.id === editingProductId);
-            if (!prod) return null;
-            return (
-              <form action={updateAction} className="space-y-3">
-                <input type="hidden" name="id" value={prod.id} />
-                {/* Preserve price and cost (cost defaults to 0 if unknown) */}
-                <input type="hidden" name="price" value={Number(prod.price) || 0} />
-                <input type="hidden" name="cost" value={0} />
+          {editingProductId != null &&
+            (() => {
+              const prod = selectableProducts.find(
+                (pp) => pp.id === editingProductId,
+              );
+              if (!prod) return null;
+              return (
+                <form action={updateAction} className="space-y-3">
+                  <input type="hidden" name="id" value={prod.id} />
+                  {/* Preserve price and cost (cost defaults to 0 if unknown) */}
+                  <input
+                    type="hidden"
+                    name="price"
+                    value={Number(prod.price) || 0}
+                  />
+                  <input type="hidden" name="cost" value={0} />
 
-                <div className="space-y-1">
-                  <Label htmlFor="edit-name">Nome</Label>
-                  <Input id="edit-name" name="name" defaultValue={prod.name} required />
-                </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="edit-name">Nome</Label>
+                    <Input
+                      id="edit-name"
+                      name="name"
+                      defaultValue={prod.name}
+                      required
+                    />
+                  </div>
 
-                <div className="space-y-1">
-                  <Label htmlFor="edit-quantity">Quantidade em estoque</Label>
-                  <Input id="edit-quantity" name="quantity" type="number" min="0" defaultValue={prod.quantity} required />
-                </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="edit-quantity">Quantidade em estoque</Label>
+                    <Input
+                      id="edit-quantity"
+                      name="quantity"
+                      type="number"
+                      min="0"
+                      defaultValue={prod.quantity}
+                      required
+                    />
+                  </div>
 
-                <DialogFooter>
-                  <Button type="submit" disabled={updating}>
-                    {updating ? "Salvando..." : "Salvar"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            );
-          })()}
+                  <DialogFooter>
+                    <Button type="submit" disabled={updating}>
+                      {updating ? "Salvando..." : "Salvar"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              );
+            })()}
         </DialogContent>
       </Dialog>
     </div>
