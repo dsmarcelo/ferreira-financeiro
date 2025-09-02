@@ -1,7 +1,7 @@
 import { createTable } from "./table-creator";
 import { integer, decimal, serial } from "drizzle-orm/pg-core";
 import { cashRegister } from "./cash-register-schema";
-import { products } from "./products";
+import { products } from "./products-schema";
 
 /**
  * Line items for cash register entries: product, quantity, and unitPrice at sale time.

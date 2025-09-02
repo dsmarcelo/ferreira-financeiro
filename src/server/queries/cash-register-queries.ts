@@ -3,7 +3,7 @@
 import { db } from "../db";
 import { cashRegister } from "../db/schema/cash-register-schema";
 import { cashRegisterItem } from "../db/schema/cash-register-items";
-import { products } from "../db/schema/products";
+import { products } from "../db/schema/products-schema";
 import type {
   CashRegister,
   CashRegisterInsert,

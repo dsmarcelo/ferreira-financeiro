@@ -2,7 +2,7 @@
 
 import { db } from "../db";
 import { incomes } from "../db/schema/incomes-schema";
-import { products } from "../db/schema/products";
+import { products } from "../db/schema/products-schema";
 import { incomeItem } from "../db/schema/income-items";
 import type {
   Income,

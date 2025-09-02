@@ -2,7 +2,7 @@ import { createTable } from "./table-creator";
 import { integer, decimal, serial } from "drizzle-orm/pg-core";
 import { incomes } from "./incomes-schema";
 import { sales } from "./sales-schema";
-import { products } from "./products";
+import { products } from "./products-schema";
 
 // Optional linkage of products sold within an income (sale)
 export const incomeItem = createTable("income_item", {

@@ -4,7 +4,7 @@ import { db } from "@/server/db";
 import { sales } from "@/server/db/schema/sales-schema";
 import { customers } from "@/server/db/schema/customers";
 import type { Sale, SaleInsert } from "@/server/db/schema/sales-schema";
-import { products } from "@/server/db/schema/products";
+import { products } from "@/server/db/schema/products-schema";
 import { incomeItem } from "@/server/db/schema/income-items";
 import { and, asc, eq, gte, lte, sum } from "drizzle-orm";
 import { sql } from "drizzle-orm";
