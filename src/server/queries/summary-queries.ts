@@ -13,7 +13,7 @@ export async function sumCashRegisterByDateRange(
   startDate: string,
   endDate: string,
 ) {
-  const cashRegisterSum = Number(
+  const incomesSum = Number(
     (
       await db
         .select({ sum: sum(incomes.value) })
@@ -26,7 +26,15 @@ export async function sumCashRegisterByDateRange(
         )
     )[0]?.sum ?? 0,
   );
-  return cashRegisterSum;
+  const salesSum = Number(
+    (
+      await db
+        .select({ sum: sum(sales.value) })
+        .from(sales)
+        .where(and(gte(sales.dateTime, new Date(startDate)), lte(sales.dateTime, new Date(endDate))))
+  )[0]?.sum ?? 0,
+  );
+  return incomesSum + salesSum;
 }
 
 export async function sumExpensesByDateRangeWithSource({
