@@ -196,7 +196,7 @@ export function SalesProductEditor({
           </Button>
         </DrawerTrigger>
 
-        <DrawerContent className="data-[vaul-drawer-direction=bottom]:max-h-[90dvh] data-[vaul-drawer-direction=top]:max-h-[90dvh]">
+        <DrawerContent className="mx-auto max-w-xl data-[vaul-drawer-direction=bottom]:max-h-[90dvh] data-[vaul-drawer-direction=top]:max-h-[90dvh]">
           <DrawerHeader className="flex flex-row items-center justify-between">
             <DrawerTitle>Produtos</DrawerTitle>
             <Button
