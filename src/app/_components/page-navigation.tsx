@@ -8,7 +8,7 @@ export default function PageNavigation() {
   const pathname = usePathname();
 
   return (
-    <div className="mx-auto flex gap-2 rounded-full">
+    <div className="mx-auto flex gap-2 rounded-full py-1">
       <Link className="cursor-pointer" href="/vendas">
         <Button
           className="rounded-full"
