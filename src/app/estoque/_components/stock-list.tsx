@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, startTransition } from "react";
 import { Input } from "@/components/ui/input";
 import CurrencyInput from "@/components/inputs/currency-input";
 import type { Product } from "@/server/db/schema/products-schema";
@@ -25,39 +25,32 @@ export default function StockList({ products }: StockListProps) {
     { success: false, message: "" },
   );
 
-  // Keep per-product debounce timers to batch quick edits
-  const debounceTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(
-    new Map(),
-  );
+  // Track which product ids have unsaved changes
+  const [dirtyIds, setDirtyIds] = useState<Set<number>>(new Set());
 
-  // Schedules a debounced save for a given product id
-  const scheduleSave = (productId: number) => {
-    const existing = debounceTimersRef.current.get(productId);
-    if (existing) clearTimeout(existing);
-    const timeoutId = setTimeout(() => {
-      const prod = localProducts.find((pp) => pp.id === productId);
-      if (!prod) return;
-      const form = new FormData();
-      form.set("id", String(prod.id));
-      form.set("name", prod.name);
-      const qty = Math.max(0, Number(prod.quantity ?? 0));
-      form.set("quantity", qty.toString());
-      form.set("price", String(Number(prod.price) || 0));
-      form.set("cost", String(Number(prod.cost) || 0));
-      void updateAction(form);
-      debounceTimersRef.current.delete(productId);
-    }, 1000);
-    debounceTimersRef.current.set(productId, timeoutId);
+  const markDirty = (productId: number) => {
+    setDirtyIds((prev) => new Set(prev).add(productId));
   };
 
-  // Clear any pending timers on unmount
-  useEffect(() => {
-    const timers = debounceTimersRef.current;
-    return () => {
-      for (const t of timers.values()) clearTimeout(t);
-      timers.clear();
-    };
-  }, []);
+  const submitProduct = (productId: number) => {
+    const prod = localProducts.find((pp) => pp.id === productId);
+    if (!prod) return;
+    const form = new FormData();
+    form.set("id", String(prod.id));
+    form.set("name", prod.name);
+    const qty = Math.max(0, Number(prod.quantity ?? 0));
+    form.set("quantity", qty.toString());
+    form.set("price", String(Number(prod.price) || 0));
+    form.set("cost", String(Number(prod.cost) || 0));
+    startTransition(() => {
+      void updateAction(form);
+    });
+    setDirtyIds((prev) => {
+      const next = new Set(prev);
+      next.delete(productId);
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!updateState) return;
@@ -87,7 +80,7 @@ export default function StockList({ products }: StockListProps) {
         p.id === id ? { ...p, quantity: nextQty.toString() } : p,
       ),
     );
-    scheduleSave(id);
+    markDirty(id);
   };
 
   return (
@@ -113,7 +106,7 @@ export default function StockList({ products }: StockListProps) {
                         pp.id === p.id ? { ...pp, name: next } : pp,
                       ),
                     );
-                    scheduleSave(p.id);
+                    markDirty(p.id);
                   }}
                   className="border-input bg-background w-full rounded-md border px-2 py-1 text-sm"
                 />
@@ -167,7 +160,7 @@ export default function StockList({ products }: StockListProps) {
                             : pp,
                         ),
                       );
-                      scheduleSave(p.id);
+                      markDirty(p.id);
                     }}
                     className="h-9 w-full px-2 py-1"
                   />
@@ -192,16 +185,18 @@ export default function StockList({ products }: StockListProps) {
                             : pp,
                         ),
                       );
-                      scheduleSave(p.id);
+                      markDirty(p.id);
                     }}
                     className="h-9 w-full px-2 py-1"
                   />
                 </div>
-                <div className="w-fit gap-1">
+                <div className="flex w-fit items-end gap-1">
                   <QuantityControl
                     label="Estoque"
                     value={Number(p.quantity ?? 0)}
                     onChange={(value) => handleSetQuantity(p.id, value)}
+                    showSubmit={dirtyIds.has(p.id)}
+                    onSubmit={() => submitProduct(p.id)}
                   />
                 </div>
               </div>
