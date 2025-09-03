@@ -4,6 +4,7 @@ import Loading from "@/app/_components/loading/loading";
 import IncomesList from "@/app/_components/lists/incomes-list";
 import { actionListIncomes as listIncomes } from "@/actions/income-actions";
 import AddIncome from "../_components/dialogs/add/add-income";
+import PageNavigation from "../_components/page-navigation";
 import { Button } from "@/components/ui/button";
 
 export default async function EntradasPage({
@@ -37,6 +38,7 @@ export default async function EntradasPage({
           </AddIncome>
         </div>
       </Header>
+      <PageNavigation />
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4 px-3">
         <Suspense fallback={<Loading />}>
           <IncomesList incomes={incomes} labels={{ plural: "receitas" }} />
@@ -45,12 +47,12 @@ export default async function EntradasPage({
       <div className="fixed bottom-24 block w-full px-5 sm:hidden">
         <div className="flex gap-2">
           <AddIncome>
-            <Button className="h-12 w-full rounded-full">Adicionar Receita</Button>
+            <Button className="h-12 w-full rounded-full">
+              Adicionar Receita
+            </Button>
           </AddIncome>
         </div>
       </div>
     </div>
   );
 }
-
-

@@ -8,6 +8,7 @@ import {
   sumSalesProductProfitByDateRange,
 } from "@/actions/sales-actions";
 import AddSale from "../_components/dialogs/add/add-sale";
+import PageNavigation from "../_components/page-navigation";
 import { Button } from "@/components/ui/button";
 
 export default async function VendasPage({
@@ -44,6 +45,7 @@ export default async function VendasPage({
           </AddSale>
         </div>
       </Header>
+      <PageNavigation />
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4">
         <Suspense fallback={<Loading />}>
           <SalesList
