@@ -66,7 +66,7 @@ export async function decrementStock(
       await tx
         .update(products)
         // Persist as decimal string to match schema
-        .set({ quantity: String(newQty) as Product["quantity"] })
+        .set({ quantity: String(newQty) })
         .where(eq(products.id, item.productId));
     }
   });
