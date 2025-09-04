@@ -114,6 +114,7 @@ export async function actionCreateSale(
     }
     revalidatePath("/vendas");
     revalidatePath("/caixa");
+    revalidatePath("/estoque")
     return { success: true, message: "Venda adicionada com sucesso!" };
   } catch (error) {
     return { success: false, message: (error as Error)?.message ?? "Erro ao adicionar venda." };
@@ -187,6 +188,7 @@ export async function actionUpdateSale(
     await updateSaleWithItems(id, dataToUpdate, items);
     revalidatePath("/vendas");
     revalidatePath("/caixa");
+    revalidatePath("/estoque")
     return { success: true, message: "Venda atualizada com sucesso!" };
   } catch (error) {
     return { success: false, message: (error as Error)?.message ?? "Erro ao atualizar venda." };
@@ -197,6 +199,7 @@ export async function actionDeleteSale(id: number) {
   await deleteSale(id);
   revalidatePath("/vendas");
   revalidatePath("/caixa");
+  revalidatePath("/estoque")
 }
 
 export async function actionGetSaleById(id: number) {
