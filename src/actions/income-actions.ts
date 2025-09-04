@@ -9,8 +9,6 @@ import {
   sumIncomesByDateRange,
   sumProfitAmountsByDateRange,
   sumTotalProfitByDateRange,
-  createIncomeWithItems,
-  updateIncomeWithItems,
 } from "@/server/queries/income-queries";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -21,8 +19,6 @@ const incomeInsertSchema = z.object({
   time: z.string({ message: "Hora inválida" }),
   value: z.number().min(0, { message: "Valor inválido" }).optional(),
   profitMargin: z.number().min(0).max(100, { message: "Margem de lucro deve estar entre 0% e 100%" }),
-  soldItemsJson: z.string().optional(),
-  customerId: z.number().int().optional(),
 });
 
 // Define a common ActionResponse interface for form actions
@@ -55,13 +51,10 @@ export async function actionCreateIncome(
   // We will recompute value on the server from items + extraValue - discount (without profit)
   // Keep reading totalValue for validation fallback but do not persist it directly
   const clientProvidedValue = totalValue;
-  const soldItemsJson = formData.get("soldItemsJson");
   const discountTypeRaw = formData.get("discountType");
   const discountValueStr = formData.get("discountValue");
-  const customerIdStr = formData.get("customerId");
   const discountValue = typeof discountValueStr === "string" ? Number(discountValueStr) : undefined;
   // Read but do not persist customerId; schema does not include it
-  const _customerId = typeof customerIdStr === "string" && customerIdStr.length > 0 ? Number(customerIdStr) : undefined;
 
   // Normalize discount type: treat empty string or invalid as undefined
   const discountType: "percent" | "fixed" | undefined =
@@ -69,7 +62,7 @@ export async function actionCreateIncome(
 
   // Validate using Zod, passing raw values
   // Validate base fields first (value will be recomputed but allow client value for basic presence)
-  const result = incomeInsertSchema.safeParse({ description, date, time, value: clientProvidedValue, profitMargin, soldItemsJson, discountType, discountValue, customerId: _customerId });
+  const result = incomeInsertSchema.safeParse({ description, date, time, value: clientProvidedValue, profitMargin, discountType, discountValue });
   if (!result.success) {
     // Return field-level errors and a general message
     return {
@@ -84,32 +77,12 @@ export async function actionCreateIncome(
     const dateTimeString = `${date as string}T${time as string}:00`;
     const dateTime = new Date(dateTimeString);
 
-    // Compute items total and final value server-side
-    let itemsTotal = 0;
-    const items: Array<{ productId: number; quantity: number; unitPrice: string }> = [];
-    if (typeof soldItemsJson === "string" && soldItemsJson.trim().length > 0) {
-      try {
-        const parsed = JSON.parse(soldItemsJson) as Array<{ productId: number; quantity: number; unitPrice: number }>;
-        for (const it of parsed) {
-          if (typeof it.productId === "number" && typeof it.quantity === "number" && it.quantity > 0) {
-            const unitPriceNum = typeof it.unitPrice === "number" ? it.unitPrice : 0;
-            const unitPrice = unitPriceNum.toFixed(2);
-            itemsTotal += unitPriceNum * it.quantity;
-            items.push({ productId: it.productId, quantity: it.quantity, unitPrice });
-          }
-        }
-      } catch {
-        // ignore bad json
-      }
-    }
-
     // Decide persisted value: if items exist, compute with discount; otherwise use client-provided total
-    const subtotal = itemsTotal;
     const discountAmount = discountType === "percent"
-      ? ((discountValue ?? 0) / 100) * subtotal
+      ? ((discountValue ?? 0) / 100) * (clientProvidedValue ?? 0)
       : (discountValue ?? 0);
-    const computedFromItems = Math.max(0, subtotal - discountAmount);
-    const persistedNumericValue = items.length > 0
+    const computedFromItems = Math.max(0, (clientProvidedValue ?? 0) - discountAmount);
+    const persistedNumericValue = clientProvidedValue !== undefined
       ? computedFromItems
       : (clientProvidedValue ?? 0);
 
@@ -117,22 +90,14 @@ export async function actionCreateIncome(
     const dbValue = persistedNumericValue.toFixed(2);
     const dbProfitMargin = profitMargin !== undefined ? profitMargin.toFixed(2) : "0";
 
-    if (items.length > 0) {
-      await createIncomeWithItems({
-        description: description as string,
-        dateTime: dateTime,
-        value: dbValue,
-        profitMargin: dbProfitMargin,
-      }, items);
-    } else {
       await createIncome({
         description: description as string,
         dateTime: dateTime,
         value: dbValue,
         profitMargin: dbProfitMargin,
       });
-    }
     revalidatePath("/caixa");
+    revalidatePath("/entradas");
     return { success: true, message: "Receita adicionada com sucesso!" };
   } catch (error) {
     return {
@@ -160,7 +125,6 @@ export async function actionUpdateIncome(
   const discountTypeRaw = formData.get("discountType");
   const discountValueStr = formData.get("discountValue");
   const customerIdStr = formData.get("customerId");
-  const soldItemsJson = formData.get("soldItemsJson");
   const totalValue = typeof totalValueStr === "string" ? Number(totalValueStr) : undefined;
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
   const discountValue = typeof discountValueStr === "string" ? Number(discountValueStr) : undefined;
@@ -185,32 +149,13 @@ export async function actionUpdateIncome(
     const dateTimeString = `${date as string}T${time as string}:00`;
     const dateTime = new Date(dateTimeString);
 
-    // Parse items (if any) to compute new total and optionally update linkage
-    const items: Array<{ productId: number; quantity: number; unitPrice: string }> = [];
-    let itemsTotal = 0;
-    if (typeof soldItemsJson === "string" && soldItemsJson.trim().length > 0) {
-      try {
-        const parsed = JSON.parse(soldItemsJson) as Array<{ productId: number; quantity: number; unitPrice: number }>;
-        for (const it of parsed) {
-          if (typeof it.productId === "number" && typeof it.quantity === "number" && it.quantity > 0) {
-            const unitPriceNum = typeof it.unitPrice === "number" ? it.unitPrice : 0;
-            const unitPrice = unitPriceNum.toFixed(2);
-            itemsTotal += unitPriceNum * it.quantity;
-            items.push({ productId: it.productId, quantity: it.quantity, unitPrice });
-          }
-        }
-      } catch {
-        // ignore bad json
-      }
-    }
-
     // If items exist, compute; otherwise use client-provided total
-    const subtotal = itemsTotal;
+    const subtotal = totalValue ?? 0;
     const computedDiscount = discountType === "percent"
       ? ((discountValue ?? 0) / 100) * subtotal
       : (discountValue ?? 0);
     const computedFromItems = Math.max(0, subtotal - computedDiscount);
-    const persistedNumericValue = items.length > 0
+    const persistedNumericValue = totalValue !== undefined
       ? computedFromItems
       : (totalValue ?? 0);
 
@@ -221,11 +166,8 @@ export async function actionUpdateIncome(
       profitMargin: profitMargin?.toFixed(2) ?? "0",
     } as const;
 
-    if (items.length > 0) {
-      await updateIncomeWithItems(id, dataToUpdate, items);
-    } else {
-      await updateIncome(id, dataToUpdate);
-    }
+    await updateIncome(id, dataToUpdate);
+    revalidatePath("/entradas");
     revalidatePath("/caixa");
     return { success: true, message: "Receita atualizada com sucesso!" };
   } catch (error) {
@@ -240,6 +182,7 @@ export async function actionUpdateIncome(
 export async function actionDeleteIncome(id: number) {
   await deleteIncome(id);
   revalidatePath("/caixa");
+  revalidatePath("/entradas");
 }
 
 // Server action to get an income entry by ID
