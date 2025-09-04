@@ -10,14 +10,7 @@ export default async function EstoquePage() {
   return (
     <div className="container mx-auto max-w-screen-lg space-y-6 p-4 pb-24">
       <SubPageHeader title="Estoque" />
-      <div className="flex justify-end">
-        <AddProduct>
-          <Button className="rounded-full">Adicionar Produto</Button>
-        </AddProduct>
-      </div>
       <StockList products={products} />
     </div>
   );
 }
-
-
