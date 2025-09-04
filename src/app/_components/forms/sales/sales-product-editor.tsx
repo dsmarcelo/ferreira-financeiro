@@ -29,6 +29,7 @@ import {
   type ActionResponse,
 } from "@/actions/product-actions";
 import { toast } from "sonner";
+import { Box } from "lucide-react";
 
 interface IncomeProductEditorProps {
   products: Product[];
@@ -182,9 +183,11 @@ export function SalesProductEditor({
           <Button
             type="button"
             variant="outline"
-            className="w-full justify-between"
+            className="h-14 w-full justify-between"
           >
-            <span>Produtos</span>
+            <span className="flex items-center gap-2">
+              <Box className="h-4 w-4" /> Produtos
+            </span>
             <span className="text-muted-foreground text-xs">
               {
                 Object.values(selectedProducts).filter(

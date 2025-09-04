@@ -244,6 +244,14 @@ export default function EditSaleForm({
           errors={errors}
         />
 
+        {/* Editable products */}
+        <SalesProductEditor
+          products={products}
+          selectedProducts={selectedProducts}
+          originalQuantities={originalQuantities}
+          onChange={setSelectedProducts}
+        />
+
         {/* Customer selector */}
         {hydrated && (
           <SalesCustomerSelector
@@ -270,14 +278,6 @@ export default function EditSaleForm({
           totalSelectedValue={totalSelectedValue}
           finalTotal={finalTotal}
           discountAmount={discountAmount}
-        />
-
-        {/* Editable products */}
-        <SalesProductEditor
-          products={products}
-          selectedProducts={selectedProducts}
-          originalQuantities={originalQuantities}
-          onChange={setSelectedProducts}
         />
 
         {/* Hidden inputs for submission (mirrors Add form) */}

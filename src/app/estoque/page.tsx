@@ -1,7 +1,5 @@
 import SubPageHeader from "@/app/_components/sub-page-header";
 import { listProducts } from "@/server/queries/product-queries";
-import AddProduct from "../_components/dialogs/add/add-product";
-import { Button } from "@/components/ui/button";
 import StockList from "./_components/stock-list";
 
 export default async function EstoquePage() {

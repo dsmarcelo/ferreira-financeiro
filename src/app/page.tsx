@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { SummaryPDFButton } from "@/app/_components/summary-pdf-button";
 import ProfitText from "./_components/profit-text";
 import { Suspense } from "react";
-import { User, Store, BanknoteArrowDown } from "lucide-react";
+import { User, Store, BanknoteArrowDown, ShoppingCart } from "lucide-react";
+import AddSale from "./_components/dialogs/add/add-sale";
 
 // Home page for the financial dashboard
 export default async function HomePage({
@@ -52,6 +53,12 @@ export default async function HomePage({
         )}
         {/* Buttons to add new entries for each type of financial record */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <AddSale>
+            <Button className="h-14 w-full rounded-xl">
+              <ShoppingCart className="h-4 w-4" />
+              <span>Adicionar Venda</span>
+            </Button>
+          </AddSale>
           <AddIncome>
             <Button className="h-14 w-full rounded-xl">
               <BanknoteArrowDown className="h-4 w-4" />
