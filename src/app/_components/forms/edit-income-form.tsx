@@ -11,7 +11,6 @@ import type { Income } from "@/server/db/schema/incomes-schema";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { DeleteDialog } from "../dialogs/delete-dialog";
-import { useIncomeData } from "@/hooks/use-income-data";
 import { IncomeBasicFields } from "./income/income-basic-fields";
 // Sales-related components removed for incomes
 
@@ -39,14 +38,6 @@ export default function EditIncomeForm({
     initialState,
   );
 
-  const { customers, createCustomer } = useIncomeData();
-
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setHydrated(true), 50);
-    return () => clearTimeout(t);
-  }, []);
-
   // Local form fields initialized from income
   const [description, setDescription] = useState<string>(
     income.description ?? "",
@@ -58,6 +49,7 @@ export default function EditIncomeForm({
         })
       : "",
   );
+
   const [timeStr, setTimeStr] = useState<string>(
     income.dateTime
       ? new Date(income.dateTime).toLocaleTimeString("pt-BR", {
