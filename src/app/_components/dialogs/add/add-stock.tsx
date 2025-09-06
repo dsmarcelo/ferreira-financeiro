@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import ResponsiveDialog from "@/app/_components/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useActionState } from "react";
-import { actionIncrementStock, type IncrementStockResponse } from "@/actions/stock-actions";
+import { actionIncrementStock } from "@/actions/stock-actions";
 import { toast } from "sonner";
 
 export default function AddStockDialog({
@@ -21,24 +20,8 @@ export default function AddStockDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState<string>("");
-  const [state, formAction] = useActionState<IncrementStockResponse, FormData>(
-    actionIncrementStock,
-    { success: false, message: "" },
-  );
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.success) {
-      const value = Number(amount);
-      if (onAdded && isFinite(value) && value > 0) onAdded(value);
-      toast.success("Estoque adicionado");
-      setOpen(false);
-      setAmount("");
-    } else if (state.message) {
-      toast.error(state.message);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state?.success, state?.message]);
+  const [isPending, startTransition] = useTransition();
+  // Handle feedback inline after calling the server action to avoid unsafe types
 
   const trigger = useMemo(
     () => children ?? <Button variant="secondary">Adicionar estoque</Button>,
@@ -54,7 +37,34 @@ export default function AddStockDialog({
     const fd = new FormData();
     fd.set("productId", String(productId));
     fd.set("amount", String(numeric));
-    void formAction(fd);
+    startTransition(async () => {
+      const call = actionIncrementStock as unknown as (
+        prevState: unknown,
+        payload: FormData,
+      ) => Promise<unknown>;
+      const resultUnknown: unknown = await call(undefined, fd);
+      const isResponse = (
+        val: unknown,
+      ): val is { success: boolean; message: string } => {
+        if (typeof val !== "object" || val === null) return false;
+        const maybe = val as { success?: unknown; message?: unknown };
+        return (
+          typeof maybe.success === "boolean" && typeof maybe.message === "string"
+        );
+      };
+
+      if (isResponse(resultUnknown) && resultUnknown.success) {
+        const value = Number(amount);
+        if (onAdded && isFinite(value) && value > 0) onAdded(value);
+        toast.success("Estoque adicionado");
+        setOpen(false);
+        setAmount("");
+      } else if (isResponse(resultUnknown)) {
+        toast.error(resultUnknown.message);
+      } else {
+        toast.error("Erro ao atualizar estoque");
+      }
+    });
   };
 
   return (
@@ -79,8 +89,8 @@ export default function AddStockDialog({
           />
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit}>Adicionar</Button>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={isPending}>Cancelar</Button>
+          <Button onClick={handleSubmit} disabled={isPending}>Adicionar</Button>
         </div>
       </div>
     </ResponsiveDialog>
