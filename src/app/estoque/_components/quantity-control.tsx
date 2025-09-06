@@ -1,24 +1,18 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
-import { Check } from "lucide-react";
 
 interface QuantityControlProps {
   value: number;
   onChange: (value: number) => void;
   label: string;
-  showSubmit?: boolean;
-  onSubmit?: () => void;
 }
 
 export default function QuantityControl({
   value,
   onChange,
   label,
-  showSubmit,
-  onSubmit,
 }: QuantityControlProps) {
   const [text, setText] = useState<string>(String(value ?? 0));
 
@@ -31,16 +25,6 @@ export default function QuantityControl({
     <div className="flex w-full flex-col gap-1">
       <label className="text-xs text-slate-500">{label}</label>
       <div className="flex w-full items-center gap-1">
-        {/* Commented out decrement button - was only shown when focused */}
-        {/* <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          onClick={() => onDelta(-1)}
-        >
-          -
-        </Button> */}
-
         {/* TODO: Make this the same as in the product sale editor */}
         <Input
           type="text"
@@ -83,28 +67,6 @@ export default function QuantityControl({
           }}
           className="border-input bg-background min-w-12 rounded-md border px-1 py-1 text-center text-sm"
         />
-
-        {showSubmit && onSubmit && (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={onSubmit}
-            className="h-9 w-9"
-          >
-            <Check className="h-4 w-4" />
-          </Button>
-        )}
-
-        {/* Commented out increment button - was only shown when focused */}
-        {/* <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          onClick={() => onDelta(1)}
-        >
-          +
-        </Button> */}
       </div>
     </div>
   );

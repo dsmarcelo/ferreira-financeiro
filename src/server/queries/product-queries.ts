@@ -72,3 +72,27 @@ export async function decrementStock(
   });
 }
 
+export async function incrementStock(
+  productId: number,
+  amount: number,
+): Promise<Product> {
+  if (amount <= 0 || !isFinite(amount)) {
+    throw new Error("Quantidade a adicionar deve ser maior que zero");
+  }
+
+  const [row] = await db.select().from(products).where(eq(products.id, productId));
+  if (!row) throw new Error("Produto não encontrado");
+
+  const currentQty = Number(row.quantity ?? 0);
+  const newQty = currentQty + amount;
+
+  const [updated] = await db
+    .update(products)
+    .set({ quantity: String(newQty) })
+    .where(eq(products.id, productId))
+    .returning();
+
+  if (!updated) throw new Error("Falha ao atualizar estoque");
+  return updated;
+}
+

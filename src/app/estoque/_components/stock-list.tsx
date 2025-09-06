@@ -15,6 +15,8 @@ import { actionDeleteStock } from "@/actions/stock-actions";
 import QuantityControl from "./quantity-control";
 import AddProduct from "@/app/_components/dialogs/add/add-product";
 import { Button } from "@/components/ui/button";
+import AddStockDialog from "@/app/_components/dialogs/add/add-stock";
+import { Check } from "lucide-react";
 
 interface StockListProps {
   products: Product[];
@@ -169,34 +171,37 @@ export default function StockList({ products }: StockListProps) {
                       }}
                       className="border-input bg-background w-full rounded-md border px-2 py-1 text-sm"
                     />
-                    <DeleteDialog
-                      onConfirm={async () => {
-                        // Optimistic update
-                        setLocalProducts((prev) =>
-                          prev.filter((pp) => pp.id !== p.id),
-                        );
-                        try {
-                          await actionDeleteStock(p.id);
-                          toast.success("Produto removido");
-                        } catch (e) {
-                          toast.error(
-                            (e as Error)?.message ?? "Erro ao remover produto",
+                    <div className="flex items-center gap-2">
+                      <DeleteDialog
+                        onConfirm={async () => {
+                          // Optimistic update
+                          setLocalProducts((prev) =>
+                            prev.filter((pp) => pp.id !== p.id),
                           );
-                          // Best-effort refetch to restore state if needed
                           try {
-                            const res = await fetch("/api/produtos", {
-                              cache: "no-store",
-                            });
-                            if (res.ok) {
-                              const data = (await res.json()) as Product[];
-                              setLocalProducts(data);
+                            await actionDeleteStock(p.id);
+                            toast.success("Produto removido");
+                          } catch (e) {
+                            toast.error(
+                              (e as Error)?.message ??
+                                "Erro ao remover produto",
+                            );
+                            // Best-effort refetch to restore state if needed
+                            try {
+                              const res = await fetch("/api/produtos", {
+                                cache: "no-store",
+                              });
+                              if (res.ok) {
+                                const data = (await res.json()) as Product[];
+                                setLocalProducts(data);
+                              }
+                            } catch {
+                              // ignore
                             }
-                          } catch {
-                            // ignore
                           }
-                        }
-                      }}
-                    />
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className="flex w-full gap-1">
                     <div className="flex w-full flex-col gap-1">
@@ -256,9 +261,29 @@ export default function StockList({ products }: StockListProps) {
                         label="Estoque"
                         value={Number(p.quantity ?? 0)}
                         onChange={(value) => handleSetQuantity(p.id, value)}
-                        showSubmit={dirtyIds.has(p.id)}
-                        onSubmit={() => submitProduct(p.id)}
                       />
+                      <AddStockDialog
+                        productId={p.id}
+                        productName={p.name}
+                        onAdded={(amount) => {
+                          setLocalProducts((prev) =>
+                            prev.map((pp) =>
+                              pp.id === p.id
+                                ? {
+                                    ...pp,
+                                    quantity: String(
+                                      (Number(pp.quantity ?? 0) || 0) + amount,
+                                    ),
+                                  }
+                                : pp,
+                            ),
+                          );
+                        }}
+                      >
+                        <Button  variant="outline">
+                          +
+                        </Button>
+                      </AddStockDialog>
                     </div>
                   </div>
                   {/* Individual product calculations */}
@@ -283,8 +308,19 @@ export default function StockList({ products }: StockListProps) {
                         )}
                       </div>
                     </div>
+                    {/* MOVE THE SUBMIT BUTTON HERE */}
                     <div className="flex w-fit items-end">
-                      <div className="h-9 w-16"></div>
+                      <div className="h-9 w-16">
+                        {dirtyIds.has(p.id)&&<Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => submitProduct(p.id)}
+                          className="h-9 w-9"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>}
+                      </div>
                     </div>
                   </div>
                 </div>
