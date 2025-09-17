@@ -11,7 +11,7 @@ import { IncomesListItem } from "./incomes-list-item";
 import EditIncome from "@/app/_components/dialogs/edit/edit-income";
 
 function groupIncomesByDate(incomes: Income[]) {
-  return incomes
+  return [...incomes]
     .sort((a, b) => {
       const aDate =
         typeof a.dateTime === "string"
@@ -23,8 +23,8 @@ function groupIncomesByDate(incomes: Income[]) {
           : new Date(b.dateTime);
       const dateA = isValid(aDate) ? format(aDate, "yyyy-MM-dd") : "";
       const dateB = isValid(bDate) ? format(bDate, "yyyy-MM-dd") : "";
-      if (dateA !== dateB) return dateA.localeCompare(dateB);
-      return a.id - b.id;
+      if (dateA !== dateB) return dateB.localeCompare(dateA);
+      return b.id - a.id;
     })
     .reduce<Record<string, Income[]>>((acc, income) => {
       const dt =
@@ -81,7 +81,9 @@ export default function IncomesList({
   } as const;
 
   const grouped = groupIncomesByDate(allIncomes);
-  const sortedDates = Object.keys(grouped).sort();
+  const sortedDates = Object.keys(grouped).sort((a, b) =>
+    a === b ? 0 : b.localeCompare(a),
+  );
   const labelPlural = labels?.plural ?? "receitas";
 
   return (

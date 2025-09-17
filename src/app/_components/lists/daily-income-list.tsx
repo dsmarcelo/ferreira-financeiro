@@ -1,9 +1,8 @@
 "use client";
 
 import { formatCurrency } from "@/lib/utils";
-import type { Sale } from "@/server/db/schema/sales-schema";
 import type { Income } from "@/server/db/schema/incomes-schema";
-import { use, useEffect, useMemo, useState } from "react";
+import { use, useMemo } from "react";
 import { format, isValid, parse, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -14,73 +13,16 @@ function toDateKey(d: unknown): string {
 }
 
 export default function DailyIncomeList({
-  sales,
   incomes,
 }: {
-  // Sales are backed by incomes; already filtered to the selected month
-  sales: Promise<Sale[]>;
   incomes: Promise<Income[]>;
 }) {
-  const allSales = use(sales);
   const allIncomes = use(incomes);
-
-  // Map saleId -> profit for that sale
-  const [profitBySale, setProfitBySale] = useState<Record<number, number>>({});
-
-  useEffect(() => {
-    let cancelled = false;
-    async function loadProfits() {
-      try {
-        const results = await Promise.all(
-          allSales.map(async (s) => {
-            try {
-              const res = await fetch(`/api/vendas/${s.id}/itens`, {
-                cache: "no-store",
-              });
-              if (!res.ok) return [s.id, 0] as const;
-              const data = (await res.json()) as Array<{
-                quantity: number;
-                unitPrice: string;
-                cost?: string;
-              }>;
-              const profit = data.reduce((acc, it) => {
-                const unit = Number(it.unitPrice) || 0;
-                const cost = Number(it.cost) || 0;
-                const qty = Number(it.quantity) || 0;
-                return acc + (unit - cost) * qty;
-              }, 0);
-              return [s.id, profit] as const;
-            } catch {
-              return [s.id, 0] as const;
-            }
-          }),
-        );
-        if (cancelled) return;
-        const map: Record<number, number> = {};
-        for (const [id, profit] of results) map[id] = profit;
-        setProfitBySale(map);
-      } catch {
-        if (!cancelled) setProfitBySale({});
-      }
-    }
-    void loadProfits();
-    return () => {
-      cancelled = true;
-    };
-  }, [allSales]);
-
-  const groupedSales = useMemo(() => {
-    return allSales.reduce<Record<string, Sale[]>>((acc, s) => {
-      const key = toDateKey(s.dateTime);
-      acc[key] ??= [];
-      acc[key].push(s);
-      return acc;
-    }, {});
-  }, [allSales]);
 
   const groupedIncomes = useMemo(() => {
     return allIncomes.reduce<Record<string, Income[]>>((acc, inc) => {
       const key = toDateKey(inc.dateTime);
+      if (!key) return acc;
       acc[key] ??= [];
       acc[key].push(inc);
       return acc;
@@ -88,14 +30,10 @@ export default function DailyIncomeList({
   }, [allIncomes]);
 
   const sortedDates = useMemo(() => {
-    const keys = new Set<string>([
-      ...Object.keys(groupedSales),
-      ...Object.keys(groupedIncomes),
-    ]);
-    return Array.from(keys).sort();
-  }, [groupedSales, groupedIncomes]);
+    return Object.keys(groupedIncomes).sort((a, b) => b.localeCompare(a));
+  }, [groupedIncomes]);
 
-  if (allSales.length === 0) {
+  if (allIncomes.length === 0) {
     return (
       <div className="text-muted-foreground py-8 text-center">
         Nenhum resultado encontrado para o mês selecionado
@@ -107,22 +45,12 @@ export default function DailyIncomeList({
     <div className="divide-y">
       {sortedDates.map((dateKey) => {
         const dateObj = parse(dateKey, "yyyy-MM-dd", new Date());
-        const daySales = groupedSales[dateKey] ?? [];
-        const daySalesTotal = daySales.reduce(
-          (sum, s) => sum + Number(s.value),
-          0,
-        );
         const dayIncomes = groupedIncomes[dateKey] ?? [];
         const dayIncomesTotal = dayIncomes.reduce(
-          (sum, i) => sum + Number(i.value),
+          (sum, income) => sum + Number(income.value),
           0,
         );
-        const dayTotal = daySalesTotal + dayIncomesTotal;
-        const dayProfit = daySales.reduce(
-          (sum, s) => sum + (profitBySale[s.id] ?? 0),
-          0,
-        );
-        const count = daySales.length;
+        const count = dayIncomes.length;
 
         return (
           <div
@@ -131,17 +59,14 @@ export default function DailyIncomeList({
           >
             <div className="min-w-0">
               <p className="truncate text-base font-semibold">
-                {format(dateObj, "dd 'de' MMMM, EEE", { locale: ptBR })}
+                {format(dateObj, "dd/MM, EEE", { locale: ptBR })}
               </p>
               <p className="text-muted-foreground text-sm">
-                {count} {count === 1 ? "venda" : "vendas"}
+                {count} {count === 1 ? "receita" : "receitas"}
               </p>
             </div>
             <div className="ml-4 text-right">
-              <p className="font-semibold">{formatCurrency(dayTotal)}</p>
-              <p className="text-muted-foreground text-sm">
-                Lucro: {formatCurrency(dayProfit)}
-              </p>
+              <p className="font-semibold">{formatCurrency(dayIncomesTotal)}</p>
             </div>
           </div>
         );

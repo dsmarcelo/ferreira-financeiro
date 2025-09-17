@@ -1,4 +1,3 @@
-import { listSales, sumSalesByDateRange } from "@/server/queries/sales-queries";
 import { sumIncomesByDateRange } from "@/server/queries/income-queries";
 import Header from "../_components/header";
 import { Suspense } from "react";
@@ -27,12 +26,8 @@ export default async function CaixaPage({
     );
   }
 
-  const [salesTotal, incomesTotal] = await Promise.all([
-    sumSalesByDateRange(from, to),
-    sumIncomesByDateRange(from, to),
-  ]);
-  const total = (salesTotal ?? 0) + (incomesTotal ?? 0);
-  const sales = listSales(from, to);
+  const [incomesTotal] = await Promise.all([sumIncomesByDateRange(from, to)]);
+  const total = incomesTotal ?? 0;
   const incomes = (await import("@/server/queries/income-queries")).listIncomes(
     from,
     to,
@@ -53,7 +48,7 @@ export default async function CaixaPage({
           </div>
         </div>
         <Suspense fallback={<Loading />}>
-          <DailyIncomeList sales={sales} incomes={incomes} />
+          <DailyIncomeList incomes={incomes} />
         </Suspense>
       </main>
     </div>

@@ -3,6 +3,7 @@
 - `/entradas` Lista de receitas (com adicionar/editar)
 - `/entradas/adicionar` Formulário para adicionar receita
 - `/entradas/editar/[id]` Formulário para editar receita
+- `/caixa` Consolidação diária das receitas registradas
 
 # Ferreira Financeiro
 
