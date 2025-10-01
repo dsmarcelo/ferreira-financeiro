@@ -1,17 +1,12 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  actionCreateIncome,
-  type ActionResponse,
-} from "@/actions/income-actions";
-import { Label } from "@/components/ui/label";
-import CurrencyInput from "@/components/inputs/currency-input";
-import { Button } from "@/components/ui/button";
+import { actionCreateIncome, type ActionResponse } from "@/actions/income-actions";
 import { toast } from "sonner";
-import { DatePicker } from "@/components/inputs/date-picker";
-import { Input } from "@/components/ui/input";
+import { useIncomeFormStore } from "@/stores/income-form-store";
+import { IncomeBasicFields } from "./income/income-basic-fields";
+import { IncomeFormActions } from "./income/income-form-actions";
 
 interface AddIncomeFormProps {
   id?: string;
@@ -30,127 +25,44 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     initialState,
   );
 
-  // Handle success/error toasts and navigation
+  const form = useIncomeFormStore();
+  const clearFormData = useIncomeFormStore((s) => s.clearFormData);
+
   useEffect(() => {
     if (state.success === true && state.message) {
       toast.success(state.message);
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        router.back();
-      }
+      if (onSuccess) onSuccess();
+      else router.back();
+      clearFormData();
     } else if (state.success === false && state.message) {
       toast.error(state.message);
     }
-  }, [state, onSuccess, router]);
+  }, [state.success, state.message, onSuccess, router, clearFormData]);
 
-  // Parse error messages from ActionResponse
   const errors = state?.errors ?? {};
 
-  // Get today's date and current time in local timezone
-  const today = new Date().toLocaleDateString('en-CA', {
-    timeZone: 'America/Sao_Paulo'
-  });
-
-  const currentTime = new Date().toLocaleTimeString('pt-BR', {
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'America/Sao_Paulo'
-  });
+  // Local numeric state for total value and profit margin
+  const [totalValue, setTotalValue] = useState<number | undefined>(undefined);
+  const [profitMargin, setProfitMargin] = useState<number | undefined>(undefined);
 
   return (
-    <div className="space-y-4">
-      <form id={id} action={formAction} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="description">Descrição</Label>
-          <Input
-            id="description"
-            name="description"
-            type="text"
-            placeholder="Descrição da receita"
-            required
-          />
-          {errors.description && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.description?.[0]}
-            </p>
-          )}
-        </div>
+    <div className="w-full space-y-4">
+      <form id={id} action={formAction} className="space-y-4 text-base">
+        <IncomeBasicFields
+          description={form.description}
+          dateStr={form.dateStr}
+          timeStr={form.timeStr}
+          totalValue={totalValue}
+          profitMargin={profitMargin}
+          onDescriptionChange={form.setDescription}
+          onDateChange={form.setDateStr}
+          onTimeChange={form.setTimeStr}
+          onTotalValueChange={setTotalValue}
+          onProfitMarginChange={setProfitMargin}
+          errors={errors}
+        />
 
-        <div className="space-y-2">
-          <Label htmlFor="date">Data</Label>
-          <DatePicker
-            id="date"
-            name="date"
-            required
-            defaultValue={today}
-          />
-          {errors.date && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.date?.[0]}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="time">Hora</Label>
-          <Input
-            id="time"
-            name="time"
-            type="time"
-            defaultValue={currentTime}
-            className="rounded-md"
-            required
-          />
-          {errors.time && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.time?.[0]}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="value">Receita Total</Label>
-          <CurrencyInput
-            id="value"
-            name="value"
-            step="0.01"
-            min={0}
-            required
-          />
-          {errors.value && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.value[0]}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="profitMargin">Margem de Lucro (%)</Label>
-          <Input
-            id="profitMargin"
-            name="profitMargin"
-            type="number"
-            inputMode="numeric"
-            step="0.01"
-            min={0}
-            max={100}
-            defaultValue="28"
-            required
-          />
-          {errors.profitMargin && (
-            <p className="mt-1 text-sm text-red-500" aria-live="polite">
-              {errors.profitMargin[0]}
-            </p>
-          )}
-        </div>
-
-        {!id && (
-          <Button type="submit" disabled={pending} className="w-full">
-            {pending ? "Adicionando..." : "Adicionar Receita"}
-          </Button>
-        )}
+        <IncomeFormActions formId={id} pending={pending} />
 
         {state.message && (
           <>
@@ -169,3 +81,5 @@ export default function AddIncomeForm({ id, onSuccess }: AddIncomeFormProps) {
     </div>
   );
 }
+
+

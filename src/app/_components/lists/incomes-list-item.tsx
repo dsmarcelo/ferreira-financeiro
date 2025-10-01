@@ -11,10 +11,9 @@ export interface IncomeListItemProps {
   children?: React.ReactNode;
 }
 
-export function IncomeListItem({ income, children }: IncomeListItemProps) {
-  const totalIncome = Number(income.value); // This is the total income input by user
-  const profitMarginPercent = Number(income.profitMargin);
-  const profitAmount = totalIncome * (profitMarginPercent / 100);
+export function IncomesListItem({ income, children }: IncomeListItemProps) {
+  const totalIncome = Number(income.value);
+  const profitAmount = totalIncome * (Number(income.profitMargin) / 100);
 
   return (
     <div
@@ -34,11 +33,11 @@ export function IncomeListItem({ income, children }: IncomeListItemProps) {
         <p className={cn("w-fit text-right font-semibold")}>
           {formatCurrency(totalIncome)}
         </p>
-        <p className="text-muted-foreground text-sm whitespace-nowrap">
-          Lucro: {profitMarginPercent}% ({formatCurrency(profitAmount)})
-        </p>
+        <p className="text-muted-foreground text-sm whitespace-nowrap">Lucro: {formatCurrency(profitAmount)}</p>
       </div>
       {children}
     </div>
   );
 }
+
+

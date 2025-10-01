@@ -1,38 +1,56 @@
-import AddIncome from "@/app/_components/dialogs/add/add-income";
-import { Button } from "@/components/ui/button";
-import { listIncomes } from "@/server/queries/income-queries";
+import { sumIncomesByDateRange } from "@/server/queries/income-queries";
 import Header from "../_components/header";
 import { Suspense } from "react";
 import Loading from "@/app/_components/loading/loading";
-import IncomeList from "@/app/_components/lists/income-list";
+import DailyIncomeList from "@/app/_components/lists/daily-income-list";
+import { formatCurrency } from "@/lib/utils";
 
 export default async function CaixaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from: string; to: string }>;
+  searchParams: Promise<{ from?: string; to?: string }>;
 }) {
   const { from, to } = await searchParams;
-  const incomes = listIncomes(from, to);
+
+  // Wait for valid params before querying
+  if (!from || !to) {
+    return (
+      <div className="flex min-h-screen flex-col pb-24">
+        <Header className="sticky top-0 z-50 flex-none" />
+        <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4">
+          <div className="text-muted-foreground py-8 text-center">
+            Selecione um período para visualizar o caixa
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const [incomesTotal] = await Promise.all([sumIncomesByDateRange(from, to)]);
+  const total = incomesTotal ?? 0;
+  const incomes = (await import("@/server/queries/income-queries")).listIncomes(
+    from,
+    to,
+  );
 
   return (
     <div className="flex min-h-screen flex-col pb-24">
-      <Header className="sticky top-0 z-50 flex-none">
-        <div className="hidden sm:block">
-          <AddIncome>
-            <Button className="rounded-full">Adicionar Entrada</Button>
-          </AddIncome>
-        </div>
-      </Header>
+      <Header className="sticky top-0 z-50 flex-none" />
       <main className="container mx-auto mt-4 flex h-full max-w-screen-lg flex-1 flex-col gap-4">
+        <div className="flex items-center justify-between rounded-md border p-5">
+          <div>
+            <p className="text-muted-foreground text-sm">
+              Receita total do período
+            </p>
+            <p className="text-2xl font-semibold">
+              {formatCurrency(total ?? 0)}
+            </p>
+          </div>
+        </div>
         <Suspense fallback={<Loading />}>
-          <IncomeList incomes={incomes} />
+          <DailyIncomeList incomes={incomes} />
         </Suspense>
       </main>
-      <div className="fixed bottom-24 block w-full px-5 sm:hidden">
-        <AddIncome>
-          <Button className="h-12 w-full rounded-full">Adicionar Entrada</Button>
-        </AddIncome>
-      </div>
     </div>
   );
 }

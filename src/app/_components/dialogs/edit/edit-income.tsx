@@ -15,7 +15,7 @@ export default function EditIncome({ data, children }: EditIncomeProps) {
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   return isMobile ? (
-    <Link href={`/caixa/editar/${data.id}`}>
+    <Link href={`/entradas/editar/${data.id}`}>
       {children ?? (
         <Button className="rounded-full">Editar Entrada</Button>
       )}

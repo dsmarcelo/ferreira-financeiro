@@ -17,7 +17,7 @@ const incomeInsertSchema = z.object({
   description: z.string().min(1, { message: "Descrição é obrigatória" }),
   date: z.string({ message: "Data inválida" }),
   time: z.string({ message: "Hora inválida" }),
-  value: z.number().min(0, { message: "Valor inválido" }),
+  value: z.number().min(0, { message: "Valor inválido" }).optional(),
   profitMargin: z.number().min(0).max(100, { message: "Margem de lucro deve estar entre 0% e 100%" }),
 });
 
@@ -43,13 +43,26 @@ export async function actionCreateIncome(
   const description = formData.get("description");
   const date = formData.get("date");
   const time = formData.get("time");
-  const valueStr = formData.get("value");
+  const totalValueStr = formData.get("totalValue"); // Ignored for persistence; recomputed on server
   const profitMarginStr = formData.get("profitMargin");
-  const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
+  const totalValue = typeof totalValueStr === "string" ? Number(totalValueStr) : undefined;
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
 
+  // We will recompute value on the server from items + extraValue - discount (without profit)
+  // Keep reading totalValue for validation fallback but do not persist it directly
+  const clientProvidedValue = totalValue;
+  const discountTypeRaw = formData.get("discountType");
+  const discountValueStr = formData.get("discountValue");
+  const discountValue = typeof discountValueStr === "string" ? Number(discountValueStr) : undefined;
+  // Read but do not persist customerId; schema does not include it
+
+  // Normalize discount type: treat empty string or invalid as undefined
+  const discountType: "percent" | "fixed" | undefined =
+    discountTypeRaw === "percent" || discountTypeRaw === "fixed" ? (discountTypeRaw) : undefined;
+
   // Validate using Zod, passing raw values
-  const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin });
+  // Validate base fields first (value will be recomputed but allow client value for basic presence)
+  const result = incomeInsertSchema.safeParse({ description, date, time, value: clientProvidedValue, profitMargin, discountType, discountValue });
   if (!result.success) {
     // Return field-level errors and a general message
     return {
@@ -64,17 +77,27 @@ export async function actionCreateIncome(
     const dateTimeString = `${date as string}T${time as string}:00`;
     const dateTime = new Date(dateTimeString);
 
-    // Format values for DB (value with 2 decimals, profit margin as percentage with 2 decimals)
-    const dbValue = value !== undefined ? value.toFixed(2) : undefined;
-    const dbProfitMargin = profitMargin !== undefined ? profitMargin.toFixed(2) : undefined;
+    // Decide persisted value: if items exist, compute with discount; otherwise use client-provided total
+    const discountAmount = discountType === "percent"
+      ? ((discountValue ?? 0) / 100) * (clientProvidedValue ?? 0)
+      : (discountValue ?? 0);
+    const computedFromItems = Math.max(0, (clientProvidedValue ?? 0) - discountAmount);
+    const persistedNumericValue = clientProvidedValue !== undefined
+      ? computedFromItems
+      : (clientProvidedValue ?? 0);
 
-    await createIncome({
-      description: description as string,
-      dateTime: dateTime,
-      value: dbValue!,
-      profitMargin: dbProfitMargin!
-    });
+    // Format values for DB
+    const dbValue = persistedNumericValue.toFixed(2);
+    const dbProfitMargin = profitMargin !== undefined ? profitMargin.toFixed(2) : "0";
+
+      await createIncome({
+        description: description as string,
+        dateTime: dateTime,
+        value: dbValue,
+        profitMargin: dbProfitMargin,
+      });
     revalidatePath("/caixa");
+    revalidatePath("/entradas");
     return { success: true, message: "Receita adicionada com sucesso!" };
   } catch (error) {
     return {
@@ -97,13 +120,22 @@ export async function actionUpdateIncome(
   const description = formData.get("description");
   const date = formData.get("date");
   const time = formData.get("time");
-  const valueStr = formData.get("value");
+  const totalValueStr = formData.get("totalValue");
   const profitMarginStr = formData.get("profitMargin");
-  const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
+  const discountTypeRaw = formData.get("discountType");
+  const discountValueStr = formData.get("discountValue");
+  const customerIdStr = formData.get("customerId");
+  const totalValue = typeof totalValueStr === "string" ? Number(totalValueStr) : undefined;
   const profitMargin = typeof profitMarginStr === "string" ? Number(profitMarginStr) : undefined;
+  const discountValue = typeof discountValueStr === "string" ? Number(discountValueStr) : undefined;
+  // Read but do not persist customerId; schema does not include it
+  const _customerId = typeof customerIdStr === "string" && customerIdStr.length > 0 ? Number(customerIdStr) : undefined;
+
+  const discountType: "percent" | "fixed" | undefined =
+    discountTypeRaw === "percent" || discountTypeRaw === "fixed" ? (discountTypeRaw) : undefined;
 
   // Validate using Zod, passing raw values
-  const result = incomeInsertSchema.safeParse({ description, date, time, value, profitMargin });
+  const result = incomeInsertSchema.safeParse({ description, date, time, value: totalValue, profitMargin, discountType, discountValue, customerId: _customerId });
   if (!result.success) {
     return {
       success: false,
@@ -117,12 +149,25 @@ export async function actionUpdateIncome(
     const dateTimeString = `${date as string}T${time as string}:00`;
     const dateTime = new Date(dateTimeString);
 
-    await updateIncome(id, {
+    // If items exist, compute; otherwise use client-provided total
+    const subtotal = totalValue ?? 0;
+    const computedDiscount = discountType === "percent"
+      ? ((discountValue ?? 0) / 100) * subtotal
+      : (discountValue ?? 0);
+    const computedFromItems = Math.max(0, subtotal - computedDiscount);
+    const persistedNumericValue = totalValue !== undefined
+      ? computedFromItems
+      : (totalValue ?? 0);
+
+    const dataToUpdate = {
       description: description as string,
       dateTime: dateTime,
-      value: value!.toFixed(2),
-      profitMargin: profitMargin!.toFixed(2),
-    });
+      value: persistedNumericValue.toFixed(2),
+      profitMargin: profitMargin?.toFixed(2) ?? "0",
+    } as const;
+
+    await updateIncome(id, dataToUpdate);
+    revalidatePath("/entradas");
     revalidatePath("/caixa");
     return { success: true, message: "Receita atualizada com sucesso!" };
   } catch (error) {
@@ -137,6 +182,7 @@ export async function actionUpdateIncome(
 export async function actionDeleteIncome(id: number) {
   await deleteIncome(id);
   revalidatePath("/caixa");
+  revalidatePath("/entradas");
 }
 
 // Server action to get an income entry by ID

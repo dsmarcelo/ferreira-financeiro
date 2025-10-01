@@ -70,7 +70,7 @@ export default function ResponsiveDialog({
           className={`${maxWidth} max-h-[90dvh] overflow-y-auto`}
           style={mobileMaxHeight ? { maxHeight: `${mobileMaxHeight}px` } : undefined}
         >
-          <DialogHeader className="sticky top-0 bg-background z-10 pb-4">
+          <DialogHeader className="sticky top-0 bg-background z-10 pb-2">
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>

@@ -1,9 +1,14 @@
-import { cashRegister } from "./cash-register";
+import { cashRegister } from "./cash-register-schema";
 import { expense } from "./expense-schema";
 import { profiles, userSessions } from "./user-profile";
 import { expenseCategory } from "./expense-category";
 import { incomes } from "./incomes-schema";
+import { sales } from "./sales-schema";
 import { users, accounts, sessions, verificationTokens } from "./auth-schema";
+import { products } from "./products-schema";
+import { saleProductItem } from "./sale-product-items";
+import { customers } from "./customers";
+import { incomeItem } from "./income-items";
 
 export const schema = {
   cashRegister,
@@ -12,6 +17,11 @@ export const schema = {
   userSessions,
   expenseCategory,
   incomes,
+  sales,
+  products,
+  cashRegisterItem: saleProductItem,
+  customers,
+  incomeItem,
   // Auth.js tables
   users,
   accounts,

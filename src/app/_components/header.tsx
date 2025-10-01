@@ -13,6 +13,8 @@ import {
   BanknoteArrowDown,
   User,
   Store,
+  Package,
+  HandCoins,
 } from "lucide-react";
 export default function Header({
   children,
@@ -45,6 +47,12 @@ export default function Header({
       testId: "nav-caixa",
     },
     {
+      label: "Vendas",
+      href: "/vendas",
+      icon: HandCoins,
+      testId: "nav-vendas",
+    },
+    {
       label: "Pessoais",
       href: "/despesas-pessoais",
       icon: User,
@@ -56,12 +64,12 @@ export default function Header({
       icon: Store,
       testId: "nav-loja",
     },
-    // {
-    //   label: "Produtos",
-    //   href: "/compras-produtos",
-    //   icon: PackagePlus,
-    //   testId: "nav-produtos",
-    // },
+    {
+      label: "Estoque",
+      href: "/estoque",
+      icon: Package,
+      testId: "nav-estoque",
+    },
   ];
   return (
     <header
@@ -73,7 +81,8 @@ export default function Header({
       <div className="mx-auto my-auto flex h-12 w-full max-w-screen-xl items-center justify-between gap-4 md:h-16">
         <nav className="hidden items-center gap-0 sm:flex">
           {navItems.map(({ href, icon: Icon, testId, label }) => {
-            const isActive = href === '/' ? pathname === href : pathname.startsWith(href);
+            const isActive =
+              href === "/" ? pathname === href : pathname.startsWith(href);
             return (
               <Link
                 key={href}
@@ -100,7 +109,7 @@ export default function Header({
                       aria-hidden="true"
                     />
                   </span>
-                  <p className="hidden lg:block text-sm">{label}</p>
+                  <p className="hidden text-sm lg:block">{label}</p>
                 </div>
               </Link>
             );
@@ -111,7 +120,8 @@ export default function Header({
             <ArrowLeft />
             Voltar
           </Button>
-        )}        {showDatePicker && (
+        )}{" "}
+        {showDatePicker && (
           <div className="w-full sm:w-fit">
             <DateRangePicker />
           </div>

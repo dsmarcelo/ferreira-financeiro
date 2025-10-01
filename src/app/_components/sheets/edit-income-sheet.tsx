@@ -54,11 +54,7 @@ export default function EditIncomeSheet({
           <DialogDescription className="hidden" aria-hidden="true" />
         </DialogHeader>
         <div className="py-4">
-          <EditIncomeForm
-            id="edit-income-form"
-            income={income}
-            onSuccess={() => setOpen(false)}
-          />
+          <EditIncomeForm id="edit-income-form" income={income} onSuccess={() => setOpen(false)} />
         </div>
         <DialogFooter className="gap-2">
           <Button

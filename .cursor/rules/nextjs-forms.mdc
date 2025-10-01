@@ -3,6 +3,7 @@ description: forms
 globs:
 alwaysApply: false
 ---
+
 # Forms
 
 - Use zod and server actions when creating forms
@@ -15,12 +16,7 @@ alwaysApply: false
 import { z } from 'zod'
 
 const addressSchema = z.object({
-  streetAddress: z.string().min(1, 'Street address is required'),
-  apartment: z.string().optional(),
-  city: z.string().min(1, 'City is required'),
-  state: z.string().min(1, 'State is required'),
-  zipCode: z.string().min(5, 'ZIP code must be at least 5 characters'),
-  country: z.string().min(1, 'Country is required'),
+  streetAddress: z.string().min(1, 'Street address is required')
 })
 
 ActionResponse = {
@@ -32,12 +28,7 @@ ActionResponse = {
 export async function submitAddress(prevState: ActionResponse | null, formData: FormData): Promise<ActionResponse> {
   try {
     const rawData: AddressFormData = {
-      streetAddress: formData.get('streetAddress') as string,
-      apartment: formData.get('apartment') as string,
-      city: formData.get('city') as string,
-      state: formData.get('state') as string,
-      zipCode: formData.get('zipCode') as string,
-      country: formData.get('country') as string,
+      streetAddress: formData.get('streetAddress') as string
     }
 
     // Validate the form data
@@ -51,9 +42,7 @@ export async function submitAddress(prevState: ActionResponse | null, formData: 
       }
     }
 
-    // Here you would typically save the address to your database
-    console.log('Address submitted:', validatedData.data)
-
+    // Here you would typically save the address the database
     revalidatePath(/"path")
 
     return {
@@ -74,17 +63,17 @@ Then, you can pass your action to the useActionState hook and use the returned s
 Form component:
 
 ```tsx
-'use client'
+"use client";
 
-import { useActionState } from 'react'
-import { createUser } from '@/app/actions'
+import { useActionState } from "react";
+import { createUser } from "@/app/actions";
 
 const initialState = {
-  message: '',
-}
+  message: "",
+};
 
 export function Signup() {
-  const [state, formAction, pending] = useActionState(createUser, initialState)
+  const [state, formAction, pending] = useActionState(createUser, initialState);
 
   return (
     <form action={formAction}>
@@ -94,6 +83,6 @@ export function Signup() {
       <p aria-live="polite">{state?.message}</p>
       <button disabled={pending}>Sign up</button>
     </form>
-  )
+  );
 }
 ```

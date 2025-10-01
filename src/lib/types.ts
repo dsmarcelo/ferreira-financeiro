@@ -1,4 +1,4 @@
-import type { CashRegisterInsert } from "@/server/db/schema/cash-register";
+import type { CashRegisterInsert } from "@/server/db/schema/cash-register-schema";
 
 export interface ActionResponse {
   success: boolean;

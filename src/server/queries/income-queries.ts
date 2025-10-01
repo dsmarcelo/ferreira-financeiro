@@ -2,6 +2,8 @@
 
 import { db } from "../db";
 import { incomes } from "../db/schema/incomes-schema";
+import { products } from "../db/schema/products-schema";
+import { incomeItem } from "../db/schema/income-items";
 import type {
   Income,
   IncomeInsert,
@@ -46,8 +48,11 @@ export async function updateIncome(
 
 // Delete an income entry by ID
 export async function deleteIncome(id: number): Promise<void> {
-  // Delete the record by its primary key
-  await db.delete(incomes).where(eq(incomes.id, id));
+  // Delete related items and the income in a single transaction
+  await db.transaction(async (tx) => {
+    await tx.delete(incomeItem).where(eq(incomeItem.incomeId, id));
+    await tx.delete(incomes).where(eq(incomes.id, id));
+  });
 }
 
 // List all income entries (by date range)
@@ -132,4 +137,153 @@ export async function sumTotalProfitByDateRange(
   }, { totalIncome: 0, totalProfitAmount: 0, totalBaseValue: 0 });
 
   return totals;
+}
+
+// Create income and decrement stock atomically
+export async function createIncomeAndDecrementStock(
+  data: IncomeInsert,
+  items: Array<{ productId: number; quantity: number }>,
+): Promise<Income> {
+  return db.transaction(async (tx) => {
+    // Decrement stock
+    for (const item of items) {
+      const [row] = await tx.select().from(products).where(eq(products.id, item.productId));
+      if (!row) throw new Error("Produto não encontrado");
+      const currentQty = Number(row.quantity ?? 0);
+      const newQty = currentQty - item.quantity;
+      if (newQty < 0) {
+        throw new Error(
+          `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
+        );
+      }
+      await tx
+        .update(products)
+        .set({ quantity: String(newQty) as typeof products.$inferInsert["quantity"] })
+        .where(eq(products.id, item.productId));
+    }
+
+    const [created] = await tx.insert(incomes).values(data).returning();
+    if (!created) throw new Error("Falha ao criar a entrada de receita.");
+    // Optionally record items when provided with price
+    // For existing callers, unitPrice is not provided here; keep backwards compatibility
+    return created;
+  });
+}
+
+export async function createIncomeWithItems(
+  data: IncomeInsert,
+  items: Array<{ productId: number; quantity: number; unitPrice: string }>,
+): Promise<Income> {
+  return db.transaction(async (tx) => {
+    // Decrement stock and verify availability
+    for (const item of items) {
+      const [row] = await tx.select().from(products).where(eq(products.id, item.productId));
+      if (!row) throw new Error("Produto não encontrado");
+      const currentQty = Number(row.quantity ?? 0);
+      const newQty = currentQty - item.quantity;
+      if (newQty < 0) {
+        throw new Error(
+          `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
+        );
+      }
+      await tx
+        .update(products)
+        .set({ quantity: String(newQty) as typeof products.$inferInsert["quantity"] })
+        .where(eq(products.id, item.productId));
+    }
+
+    const [created] = await tx.insert(incomes).values(data).returning();
+    if (!created) throw new Error("Falha ao criar a entrada de receita.");
+
+    for (const item of items) {
+      await tx.insert(incomeItem).values({
+        incomeId: created.id,
+        productId: item.productId,
+        quantity: String(item.quantity),
+        unitPrice: item.unitPrice,
+      });
+    }
+
+    return created;
+  });
+}
+
+// Update income and fully replace its items, restoring and reapplying stock
+export async function updateIncomeWithItems(
+  id: number,
+  data: Partial<IncomeInsert>,
+  items: Array<{ productId: number; quantity: number; unitPrice: string }>,
+): Promise<Income | undefined> {
+  return db.transaction(async (tx) => {
+    // Restore stock from existing items
+    const existingItems = await tx
+      .select()
+      .from(incomeItem)
+      .where(eq(incomeItem.incomeId, id));
+
+    for (const ex of existingItems) {
+      const [row] = await tx.select().from(products).where(eq(products.id, ex.productId));
+      if (!row) continue;
+      const restoredQty = Number(row.quantity ?? 0) + Number(ex.quantity ?? 0);
+      await tx
+        .update(products)
+        .set({ quantity: String(restoredQty) as typeof products.$inferInsert["quantity"] })
+        .where(eq(products.id, ex.productId));
+    }
+
+    // Remove existing item rows
+    await tx.delete(incomeItem).where(eq(incomeItem.incomeId, id));
+
+    // Decrement stock for new items and insert them
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const [row] = await tx.select().from(products).where(eq(products.id, item.productId));
+        if (!row) throw new Error("Produto não encontrado");
+        const currentQty = Number(row.quantity ?? 0);
+        const newQty = currentQty - item.quantity;
+        if (newQty < 0) {
+          throw new Error(
+            `Estoque insuficiente para o produto "${row.name}". Disponível: ${row.quantity}, solicitado: ${item.quantity}`,
+          );
+        }
+        await tx
+          .update(products)
+          .set({ quantity: String(newQty) as typeof products.$inferInsert["quantity"] })
+          .where(eq(products.id, item.productId));
+      }
+
+      for (const item of items) {
+        await tx.insert(incomeItem).values({
+          incomeId: id,
+          productId: item.productId,
+          quantity: String(item.quantity),
+          unitPrice: item.unitPrice,
+        });
+      }
+    }
+
+    // Update income itself
+    const [updated] = await tx
+      .update(incomes)
+      .set(data)
+      .where(eq(incomes.id, id))
+      .returning();
+    return updated;
+  });
+}
+
+// List items sold for a specific income (with product name)
+export async function listItemsForIncome(incomeId: number) {
+  return db
+    .select({
+      productId: incomeItem.productId,
+      quantity: incomeItem.quantity,
+      unitPrice: incomeItem.unitPrice,
+      name: products.name,
+      cost: products.cost,
+      price: products.price,
+    })
+    .from(incomeItem)
+    .leftJoin(products, eq(products.id, incomeItem.productId))
+    .where(eq(incomeItem.incomeId, incomeId));
 }

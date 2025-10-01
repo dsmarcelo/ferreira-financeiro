@@ -1,6 +1,6 @@
 import { formatCurrency } from "@/lib/utils";
 import { sharePDF, downloadPDF, type TableData } from "./pdf-tools";
-import type { CashRegister } from "@/server/db/schema/cash-register";
+import type { CashRegister } from "@/server/db/schema/cash-register-schema";
 import { formatInTimeZone } from "date-fns-tz";
 import autoTable from "jspdf-autotable";
 import jsPDF from "jspdf";

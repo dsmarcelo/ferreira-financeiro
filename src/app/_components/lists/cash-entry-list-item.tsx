@@ -1,7 +1,7 @@
 "use client";
 
 import { cn, formatCurrency } from "@/lib/utils";
-import type { CashRegister } from "@/server/db/schema/cash-register";
+import type { CashRegister } from "@/server/db/schema/cash-register-schema";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import * as React from "react";

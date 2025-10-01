@@ -1,3 +1,10 @@
+### Routes
+
+- `/entradas` Lista de receitas (com adicionar/editar)
+- `/entradas/adicionar` Formulário para adicionar receita
+- `/entradas/editar/[id]` Formulário para editar receita
+- `/caixa` Consolidação diária das receitas registradas
+
 # Ferreira Financeiro
 
 A production-ready financial management app built with Next.js 15 (App Router), TypeScript, Drizzle ORM, PostgreSQL, and Auth.js (NextAuth) credentials login. It tracks incomes, cash register, expenses (personal, store, and product purchases), recurring/parcelled payments, and generates PDFs.
@@ -32,7 +39,7 @@ pnpm install
 
 Create `.env.local` at the project root with at least:
 
-   ```env
+```env
 # Database
 DATABASE_URL="postgres://user:password@host:5432/dbname"
 
@@ -133,6 +140,9 @@ Reusable server-side functions (called by server actions):
     CRUD helpers, and sums.
 - Incomes: `src/server/queries/income-queries.ts`
   - CRUD, list by date range, and profit calculations.
+- Sales: `src/server/queries/sales-queries.ts`
+  - CRUD against `sales` table, list by date range, sums and product profit
+    aggregations. Items are stored in `income_item` with `sales_id` linkage.
 - Cash register: `src/server/queries/cash-register-queries.ts`
   - CRUD, list by date range, and sums.
 - Categories: `src/server/queries/expense-category-queries.ts`
@@ -147,6 +157,9 @@ Form submissions call server actions which validate inputs (Zod), call the query
 - Expenses: `src/actions/expense-actions.ts`
   - Add one-time, parcelled, recurring; update/delete; toggle `isPaid` with recurring occurrence handling.
 - Incomes: `src/actions/income-actions.ts`
+- Sales: `src/actions/sales-actions.ts`
+  - Create/update/delete/list sales using `sales-queries` (no income imports),
+    computes totals/discounts server-side and revalidates `/vendas` and `/caixa`.
 - Cash register: `src/actions/cash-register-actions.ts`
 - Categories: `src/server/actions/category-actions.ts` (page-specific flow under categories)
 - Page-specific actions also live alongside pages (e.g., `src/app/login/actions.ts`).
@@ -155,8 +168,20 @@ Form submissions call server actions which validate inputs (Zod), call the query
 
 - Core pages in `src/app/*/page.tsx`.
 - Shared forms in `src/app/_components/forms/*` (e.g., `add-expense-form.tsx` with tabs for one-time/parcelled/recurring).
+- Shared input components in `src/app/_components/inputs/*`:
+  - `currency-input.tsx` - Currency input with formatting and validation
+  - `discount-select.tsx` - Discount selector with percentage or fixed value modes
 - Responsive drawers/sheets: `src/app/_components/responsive-sheet.tsx` and `mobile-drawer.tsx`.
 - Lists and item components render entities and actions.
+
+### Income product editor (drawer)
+
+- The income product editor was refactored to a mobile-first drawer UI.
+- Component: `src/app/_components/forms/income/income-product-editor.tsx`.
+- Inside the drawer you can:
+  - Adjust quantities with +/- and a numeric input.
+  - Edit unit price per product.
+  - Add a new product via a dialog (name, price, stock). It uses the product create action and refreshes the list.
 
 ### API routes
 
@@ -172,11 +197,11 @@ Form submissions call server actions which validate inputs (Zod), call the query
 
 Most features follow this pattern:
 
-1) Data: add/modify a table in `src/server/db/schema/` and run migrations.
-2) Queries: create functions in `src/server/queries/<feature>-queries.ts`.
-3) Actions: expose server actions in `src/actions/<feature>-actions.ts` or a page `actions.ts`.
-4) UI: build or update pages/components in `src/app/**` and wire up forms to actions.
-5) Revalidation: ensure affected routes call `revalidatePath()` after writes.
+1. Data: add/modify a table in `src/server/db/schema/` and run migrations.
+2. Queries: create functions in `src/server/queries/<feature>-queries.ts`.
+3. Actions: expose server actions in `src/actions/<feature>-actions.ts` or a page `actions.ts`.
+4. UI: build or update pages/components in `src/app/**` and wire up forms to actions.
+5. Revalidation: ensure affected routes call `revalidatePath()` after writes.
 
 Minimal examples:
 
@@ -222,6 +247,60 @@ Hook up a form in a page/component and use a server action as the form `action`.
 - Default profit margin: change `NEXT_PUBLIC_DEFAULT_PROFIT_MARGIN` in `.env.local`.
 - Currency/locale formatting: see helpers in `src/lib/utils.ts`.
 - Category ordering: POST to `/api/categorias/update-order` with `order: number[]`.
+
+### Income form state (Zustand)
+
+The Add Income form (`src/app/_components/forms/add-income-form.tsx`) uses a persisted Zustand store instead of direct `localStorage`.
+
+- Store: `src/stores/income-form-store.ts` holds description, date/time, extra value, profit margin, discount (type/value), customer, and selected products.
+- No direct `localStorage` reads/writes in components; persistence is handled by the store.
+- After a successful submission, the form calls `clearFormData()` to reset state.
+
+### Income form components refactoring
+
+The Add Income form has been refactored into smaller, reusable mini components following good code practices:
+
+**State Store and Hooks:**
+
+- `src/stores/income-form-store.ts` - Zustand store (persisted) for income form state
+- `src/hooks/use-income-data.ts` - Handles data fetching for products and customers
+  - The store exposes `hasHydrated` to ensure UI reads persisted values after hydration.
+
+**Mini Components (in `src/app/_components/forms/income/`):**
+
+- `income-basic-fields.tsx` - Description, date, time, extra value, profit margin fields
+- `income-product-selection.tsx` - Product selection display and navigation
+- `income-customer-selector.tsx` - Customer selection with add customer dialog
+- `income-discount-section.tsx` - Discount selection and calculation display (persists type/value)
+- `income-summary.tsx` - Totals calculation and display breakdown
+- `income-form-actions.tsx` - Hidden form inputs and submit button
+- `index.ts` - Clean exports for all components
+
+**Benefits:**
+
+- Improved maintainability with single responsibility principle
+- Better testability of individual components
+- Reusable components across different forms
+- Cleaner separation of concerns
+- Easier to debug and modify specific functionality
+
+The main `AddIncomeForm` gates the Customer and Discount sections until the store has hydrated to avoid default values overwriting persisted ones. The discount component also posts `discountType`/`discountValue` fields expected by the action while preserving legacy field names for compatibility.
+
+### Changes
+
+- Fix: Prevented a submit-time re-render loop ("Maximum update depth exceeded") in `src/app/_components/forms/add-income-form.tsx` by:
+
+  - Selecting a stable `clearFormData` function from the Zustand store instead of referencing the whole store in effect deps.
+  - Narrowing the toast/navigation effect dependencies to `state.success` and `state.message`.
+  - This avoids effects retriggering due to store object identity changes after submit while preserving the same UX and behavior.
+
+- Refactor: `src/app/_components/forms/edit-income-form.tsx` now uses the shared income components in `src/app/_components/forms/income/`:
+
+  - `IncomeBasicFields`, `IncomeCustomerSelector`, `IncomeDiscountSection`, `IncomeSummary`, `IncomeFormActions`.
+  - Edit flow mirrors Add flow: `value` sent to the server is computed as `totalSelectedValue + extraValue` (does not include profit), and discount fields map UI type `percentage|fixed` to server `percent|fixed`.
+  - Items shown as read-only; hidden inputs submit the same structure used by Add.
+
+- Action: `actionUpdateIncome` accepts `totalValue`/`extraValue` and discount fields (`discountType`/`discountValue`) consistently with create. It normalizes values and updates the DB accordingly.
 
 ## Scripts
 

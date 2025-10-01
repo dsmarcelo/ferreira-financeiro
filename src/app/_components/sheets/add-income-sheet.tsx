@@ -35,10 +35,7 @@ export default function AddIncomeSheet({
           <DialogDescription className="hidden" aria-hidden="true" />
         </DialogHeader>
         <div className="py-4">
-          <AddIncomeForm
-            id="add-income-form"
-            onSuccess={() => setOpen(false)}
-          />
+          <AddIncomeForm id="add-income-form" onSuccess={() => setOpen(false)} />
         </div>
         <DialogFooter className="gap-2">
           <DialogClose asChild>

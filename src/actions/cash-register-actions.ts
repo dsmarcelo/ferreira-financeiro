@@ -7,14 +7,17 @@ import {
   deleteCashRegister,
   listCashRegisters,
   sumCashRegisterByDateRange,
+  createCashRegisterWithItems,
 } from "@/server/queries/cash-register-queries";
 import { revalidatePath } from "next/cache";
-import type { CashRegisterInsert } from "@/server/db/schema/cash-register";
+import type { CashRegisterInsert } from "@/server/db/schema/cash-register-schema";
 import { z } from "zod";
 
 const cashRegisterInsertSchema = z.object({
   date: z.string({ message: "Data inválida" }),
-  value: z.number().min(0, { message: "Valor inválido" }),
+  totalValue: z.number().min(0, { message: "Valor inválido" }).optional(),
+  extraValue: z.number().min(0).optional(),
+  soldItemsJson: z.string().optional(),
 });
 
 // Define a common ActionResponse interface for form actions
@@ -34,11 +37,25 @@ export async function actionCreateCashRegister(
 ): Promise<ActionResponse> {
   // Parse form data
   const date = formData.get("date");
-  const valueStr = formData.get("amount");
-  const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
+  const totalValueStr = formData.get("totalValue");
+  const extraValueStr = formData.get("extraValue");
+  const soldItemsJson = formData.get("soldItemsJson");
+  const totalValue =
+    typeof totalValueStr === "string" && totalValueStr.length > 0
+      ? Number(totalValueStr)
+      : undefined;
+  const extraValue =
+    typeof extraValueStr === "string" && extraValueStr.length > 0
+      ? Number(extraValueStr)
+      : 0;
 
   // Validate using Zod, passing raw values
-  const result = cashRegisterInsertSchema.safeParse({ date, value });
+  const result = cashRegisterInsertSchema.safeParse({
+    date,
+    totalValue,
+    extraValue,
+    soldItemsJson,
+  });
   if (!result.success) {
     // Return field-level errors and a general message
     return {
@@ -49,9 +66,52 @@ export async function actionCreateCashRegister(
   }
 
   try {
-    // Format value for DB (always as string with 2 decimals)
-    const dbValue = value !== undefined ? value.toFixed(2) : undefined;
-    await createCashRegister({ date: date as string, value: dbValue! });
+    const items: Array<{ productId: number; quantity: number; unitPrice: string }> = [];
+    if (typeof soldItemsJson === "string" && soldItemsJson.trim().length > 0) {
+      try {
+        const parsed = JSON.parse(soldItemsJson) as Array<{
+          productId: number;
+          quantity: number;
+          unitPrice: number;
+        }>;
+        for (const it of parsed) {
+          if (
+            typeof it.productId === "number" &&
+            typeof it.quantity === "number" &&
+            it.quantity > 0
+          ) {
+            const unitPrice =
+              typeof it.unitPrice === "number" ? it.unitPrice.toFixed(2) : "0.00";
+            items.push({ productId: it.productId, quantity: it.quantity, unitPrice });
+          }
+        }
+      } catch {
+        // ignore json errors
+      }
+    }
+
+    if (items.length > 0) {
+      const itemsTotal = items.reduce(
+        (sum, it) => sum + Number(it.unitPrice) * it.quantity,
+        0,
+      );
+      const finalTotal = itemsTotal + (extraValue ?? 0);
+      await createCashRegisterWithItems(
+        {
+          date: date as string,
+          value: finalTotal.toFixed(2),
+          profit: (extraValue ?? 0).toFixed(2),
+        },
+        items,
+      );
+    } else {
+      const finalTotal = (totalValue ?? 0) + (extraValue ?? 0);
+      await createCashRegister({
+        date: date as string,
+        value: finalTotal.toFixed(2),
+        profit: (extraValue ?? 0).toFixed(2),
+      });
+    }
     revalidatePath("/caixa");
     return { success: true, message: "Caixa adicionado com sucesso!" };
   } catch (error) {
@@ -72,11 +132,23 @@ export async function actionUpdateCashRegister(
     return { success: false, message: "ID inválido" };
   }
   const date = formData.get("date");
-  const valueStr = formData.get("amount");
-  const value = typeof valueStr === "string" ? Number(valueStr) : undefined;
+  const totalValueStr = formData.get("totalValue");
+  const extraValueStr = formData.get("extraValue");
+  const totalValue =
+    typeof totalValueStr === "string" && totalValueStr.length > 0
+      ? Number(totalValueStr)
+      : undefined;
+  const extraValue =
+    typeof extraValueStr === "string" && extraValueStr.length > 0
+      ? Number(extraValueStr)
+      : 0;
 
   // Validate using Zod, passing raw values
-  const result = cashRegisterInsertSchema.safeParse({ date, value });
+  const result = cashRegisterInsertSchema.safeParse({
+    date,
+    totalValue,
+    extraValue,
+  });
   if (!result.success) {
     return {
       success: false,
@@ -86,9 +158,11 @@ export async function actionUpdateCashRegister(
   }
 
   try {
+    const finalTotal = (totalValue ?? 0) + (extraValue ?? 0);
     await updateCashRegister(id, {
       date: date as string,
-      value: value!.toFixed(2),
+      value: finalTotal.toFixed(2),
+      profit: (extraValue ?? 0).toFixed(2),
     });
     revalidatePath("/caixa");
     return { success: true, message: "Caixa atualizado com sucesso!" };
