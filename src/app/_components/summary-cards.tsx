@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { sumExpensesByDateRangeWithSource } from "@/server/queries/summary-queries";
-import { sumIncomesByDateRange } from "@/server/queries/income-queries";
 import { formatCurrency } from "@/lib/utils";
 import { sumSalesByDateRange } from "@/server/queries/sales-queries";
 import { getProfit } from "@/server/queries/summary-queries";
@@ -16,8 +15,7 @@ export default async function SummaryCards({ from, to }: SummaryCardsProps) {
   // Fetch all summary data in parallel for performance
   const [totalSales, profit, personalExpenses, storeExpenses] =
     await Promise.all([
-      (await sumIncomesByDateRange(from, to)) +
-        (await sumSalesByDateRange(from, to)),
+      await sumSalesByDateRange(from, to),
       getProfit(from, to),
       sumExpensesByDateRangeWithSource({
         startDate: from,

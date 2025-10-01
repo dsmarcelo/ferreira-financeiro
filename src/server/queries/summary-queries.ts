@@ -7,7 +7,6 @@ import { and, gte, lte, sum } from "drizzle-orm";
 import { getExpensesByPeriod } from "./expense-queries";
 import { type ExpenseSource } from "../db/schema/expense-schema";
 import { sumProfitAmountsByDateRange } from "./income-queries";
-import { sumSalesProductProfitByDateRange } from "./sales-queries";
 
 export async function sumCashRegisterByDateRange(
   startDate: string,
@@ -55,14 +54,12 @@ export async function sumExpensesByDateRangeWithSource({
   return sum;
 }
 
-// Calculate profit using income data (profit amounts from income - personal expenses + store expenses)
+// Calculate profit: income - expenses
 export async function getProfit(startDate: string, endDate: string) {
-  const [incomeProfitAmounts, salesProductProfit, personalExpensesSum, storeExpensesSum] =
+  const [incomeProfitAmounts, personalExpensesSum, storeExpensesSum] =
     await Promise.all([
       // Profit computed from income entries: value * (profitMargin/100)
       sumProfitAmountsByDateRange(startDate, endDate),
-      // Profit computed from sales items: (unit_price - product.cost) * quantity
-      sumSalesProductProfitByDateRange(startDate, endDate),
       sumExpensesByDateRangeWithSource({
         startDate,
         endDate,
@@ -76,7 +73,7 @@ export async function getProfit(startDate: string, endDate: string) {
     ]);
 
   const totalExpenses = personalExpensesSum + storeExpensesSum;
-  const profit = incomeProfitAmounts + salesProductProfit - totalExpenses;
+  const profit = incomeProfitAmounts - totalExpenses;
 
   return profit;
 }
